@@ -37,9 +37,16 @@ const nextConfig = {
   },
 
   // The container rootfs is read-only outside of a few bind-mounted paths;
-  // see cache-handler.mjs for why this is required rather than optional.
+  // see cache-handler.mjs for why this is required rather than optional there.
   // Next only consults this for production builds, not `next dev`.
-  cacheHandler: fileURLToPath(new URL("./cache-handler.mjs", import.meta.url)),
+  //
+  // Omitted on Vercel, which supplies its own ISR cache and does not support a
+  // custom cacheHandler. Ours also assumes a writable bind-mounted directory
+  // that does not exist on a serverless filesystem, so leaving it in place
+  // means every revalidation write fails.
+  ...(process.env.VERCEL
+    ? {}
+    : { cacheHandler: fileURLToPath(new URL("./cache-handler.mjs", import.meta.url)) }),
 };
 
 export default nextConfig;
