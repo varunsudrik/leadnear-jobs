@@ -1408,6 +1408,10 @@ img { max-width: 100%; }
   border: 1px solid #d6d9e0;
   border-radius: 8px;
   font-size: 0.95rem;
+  /* Tailwind preflight is disabled, so form controls default to Arial instead
+     of inheriting the page font. The adjacent textarea already inherits;
+     without this the inputs beside it render in a different typeface. */
+  font-family: inherit;
 }
 .auth-form input:focus {
   outline: 2px solid #3b45f5;
@@ -1417,6 +1421,7 @@ img { max-width: 100%; }
 .auth-form button {
   margin-top: 1.35rem;
   padding: 0.7rem 1rem;
+  font-family: inherit;
   border: 0;
   border-radius: 8px;
   background: #3b45f5;
@@ -1513,3 +1518,59 @@ button.nav-primary {
   padding: 0.6rem 0.8rem;
   font-size: 0.9rem;
 }
+
+/* ── Marketing search autocomplete ───────────────────────────────────────────
+   Ported verbatim from leadnear-main/styles/globals.css (the .jobs-autocomplete-*
+   block). The marketing homepage markup came across but this CSS did not, so the
+   suggestions rendered as unstyled inline boxes instead of a positioned panel.
+   The wrapping <label> markup is identical to leadnear-main's, so the :has()
+   selectors apply unchanged. Distinct from the job board's own .autocomplete-menu
+   styles above — the two dropdowns are separate components. */
+.search-field:has(.jobs-autocomplete-menu),
+label:has(.jobs-autocomplete-menu) { position: relative; z-index: 2; }
+.search-field:has(.jobs-autocomplete-menu) .autocomplete-wrap,
+label:has(.jobs-autocomplete-menu) > div.relative:has(> .jobs-autocomplete-menu) { position: static; }
+
+/* Compact, readable suggestions for the Jobs search controls. */
+.jobs-autocomplete-menu {
+  position: absolute;
+  z-index: 30;
+  top: 100%;
+  margin-top: clamp(.5rem, 1vw, .75rem);
+  left: -.5rem;
+  width: calc(100% + .5rem);
+  max-width: 520px;
+  overflow: visible;
+  border: 1px solid #e2e8f0;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(15,23,42,.1);
+  text-align: left;
+  font-size: .875rem;
+  animation: jobs-autocomplete-expand .16s ease-out both;
+  transform-origin: top left;
+}
+@keyframes jobs-autocomplete-expand { from { opacity: 0; transform: translateY(-4px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.jobs-autocomplete-option {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  border: 0;
+  border-bottom: 1px solid #e8eef5;
+  background: #fff;
+  padding: .55rem 1.25rem .55rem 2.25rem;
+  color: #0f172a;
+  text-align: left;
+  font-family: inherit !important;
+  font-size: .875rem !important;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.jobs-autocomplete-option:last-child { border-bottom: 0; }
+.jobs-autocomplete-option:hover, .jobs-autocomplete-option.highlighted { background: #f8fafc; }
+.jobs-autocomplete-value { display: block; min-width: 0; overflow: hidden; color: #172554 !important; font-size: .875rem !important; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.jobs-autocomplete-kind { flex: 0 0 auto; padding: 0; color: #94a3b8 !important; font-size: .68rem !important; font-weight: 600; letter-spacing: .04em; line-height: 1; text-transform: uppercase; }
+.jobs-autocomplete-status { padding: .75rem .8rem; color: #64748b; font-size: .8rem; }

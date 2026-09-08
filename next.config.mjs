@@ -18,6 +18,24 @@ const nextConfig = {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
 
+  // Every route lives under basePath, so the bare origin matches nothing and
+  // returns a stock 404 — which reads like a broken app rather than a wrong
+  // URL. `basePath: false` lets this one redirect be declared outside the
+  // prefix, sending http://host/ to http://host/jobs.
+  //
+  // Harmless in production: there the app is reached through a rewrite that
+  // only ever forwards /jobs/*, so nothing hits this app's root.
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: basePath,
+        permanent: false, // 307 — keeps the door open to serving / later
+        basePath: false,
+      },
+    ];
+  },
+
   // The container rootfs is read-only outside of a few bind-mounted paths;
   // see cache-handler.mjs for why this is required rather than optional.
   // Next only consults this for production builds, not `next dev`.

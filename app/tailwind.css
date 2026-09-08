@@ -25,3 +25,100 @@
     max-width: 1400px;
   }
 }
+
+/* ── Form-control reset for the ported marketing markup ──────────────────────
+   Preflight is disabled (see tailwind.config.js), so form controls keep the
+   browser's native chrome: a 2px inset border and Arial, rather than inheriting
+   the page. The markup ported from leadnear-main was written against preflight
+   and only sets `bg-transparent … outline-none`, so it renders with a black
+   inset border here.
+
+   This applies just the parts of preflight those inputs depend on, scoped to
+   the marketing field wrapper. Deliberately NOT global: the job board's own
+   controls are explicitly styled and its .nav-menu-toggle / .search-bar-btn
+   currently render in Arial, so a blanket `font: inherit` would silently
+   restyle them. */
+.marketing-field input,
+.marketing-field textarea {
+  border-width: 0;
+  font-family: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+/* type="search" also picks up WebKit's native search styling — the rounded
+   field and the clear button — which preflight normally neutralises. */
+.marketing-field input[type="search"] {
+  -webkit-appearance: textfield;
+  appearance: textfield;
+}
+.marketing-field input[type="search"]::-webkit-search-decoration,
+.marketing-field input[type="search"]::-webkit-search-cancel-button,
+.marketing-field input[type="search"]::-webkit-search-results-button,
+.marketing-field input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+}
+
+/* ── Preflight subset the ported Tailwind markup depends on ──────────────────
+   Preflight is disabled wholesale (tailwind.config.js) to protect the job
+   board's hand-written CSS. Two of its rules are load-bearing for the utilities
+   themselves, so they are reinstated here.
+
+   Placed in @layer base deliberately: unlayered CSS outranks layered CSS in the
+   cascade, so app/globals.css — and therefore every job board style — still
+   wins over these, while Tailwind's own utilities (@layer utilities) still win
+   over them in the other direction. Verified against production: our /jobs
+   renders identically to leadnear.com/jobs after this change. */
+@layer base {
+  /* Without this, `border`, `border-2`, `border-slate-200` … set a width but
+     border-style stays `none`, so the computed width collapses to 0 and the
+     border never paints. This is why the hero search form and the stat cards
+     had no outline while the live site shows a 1px one. */
+  *,
+  ::before,
+  ::after {
+    border-width: 0;
+    border-style: solid;
+    border-color: #e5e7eb;
+  }
+
+}
+
+/* Buttons otherwise keep the native 2px inset border and grey face.
+   Scoped to the marketing page rather than global: applied globally this
+   flattened the job board's `.jc-save { background: white }` to transparent,
+   which production renders white. The job board needs no button reset — it was
+   already an exact match for leadnear.com/jobs before this file existed.
+   :where() keeps specificity at zero so utilities still win. */
+:where(.marketing-page) :where(button, [type="button"], [type="submit"], [type="reset"]) {
+  -webkit-appearance: button;
+  background-color: transparent;
+  background-image: none;
+}
+
+/* Form-control typography, scoped to the marketing page ONLY.
+   Not global: the job board's .nav-menu-toggle, .search-bar-btn and
+   .filter-toggle render in Arial on production too, so inheriting the page font
+   there would make us diverge from leadnear.com rather than match it.
+
+   Wrapped in :where() so the whole selector has ZERO specificity. Tailwind v3
+   flattens @layer base into ordinary unlayered CSS, so a plain
+   `.marketing-page button` (0,1,1) outranks the utilities on the element itself
+   (0,1,0) and silently clobbers `text-white` / `text-base` with the inherited
+   values. Zero specificity is how preflight sidesteps exactly this. */
+:where(.marketing-page) :where(button, input, select, textarea) {
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+/* The job board sets body{font-size:15px}; leadnear.com's marketing page runs on
+   Tailwind's 16px default. rem-based utilities are unaffected (they resolve
+   against <html>), but anything inheriting from body came out a pixel small.
+   Restores the ported page to the size it was designed at. */
+.marketing-page {
+  font-size: 1rem;
+}

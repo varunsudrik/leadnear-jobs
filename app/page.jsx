@@ -1,43 +1,21 @@
-// Marketing homepage — the role leadnear.com's root page plays, ported here so
-// this standalone project has it. The previous search-and-listing landing page
-// now lives at /browse (and /search), so nothing was lost.
-//
-// leadnear-main fetched this data over HTTP from ${JOBS_ORIGIN}/jobs/api/homepage
-// with an 8s timeout, which silently fell back to an empty page whenever the
-// jobs service was cold. This project owns the data, so it calls getHomepageData()
-// directly: no network hop, no timeout, no empty-state fallback to get wrong.
+import { Suspense } from "react";
+import Link from "next/link";
+import { searchJobs } from "@/lib/jobs";
+import JobCard from "@/components/JobCard";
+import Filters from "@/components/Filters";
+import Pagination from "@/components/Pagination";
+import SearchBox from "./SearchBox";
+import LiveJobCount from "./LiveJobCount";
 
-import { getHomepageData } from "@/lib/jobs";
-import LeadNearJobsHome from "@/components/marketing/LeadNearJobsHome";
-
-export const revalidate = 600;
-
+export const dynamic = "force-dynamic";
 export const metadata = {
-  title: "LeadNear Jobs | Find Jobs, Remote Roles & High-Paying Careers",
-  description:
-    "Find your next opportunity from thousands of companies worldwide. Search remote jobs, software engineering jobs, high-paying roles, and jobs near you.",
+  title: "Search Jobs by Company, Location & Title | LeadNear Jobs",
+  description: "Search jobs from companies worldwide. Filter by role, location, salary, category, and remote work.",
   alternates: { canonical: "https://www.leadnear.com/jobs" },
 };
 
-const EMPTY_HOMEPAGE_DATA = {
-  totals: {},
-  latestJobs: [],
-  remoteRoles: [],
-  salaryTiers: [],
-  topCompanies: [],
-  topLocations: [],
-  countries: [],
-  topTitles: [],
-  unavailable: true,
-};
-
-export default async function HomePage() {
-  // The component renders a degraded but valid page from `unavailable`, so a
-  // database blip costs the marketing content rather than the whole route.
-  const data = await getHomepageData().catch((error) => {
-    console.error("Unable to load homepage data", error);
-    return EMPTY_HOMEPAGE_DATA;
-  });
-
-  return <LeadNearJobsHome data={data} />;
+export default async function JobsPage({ searchParams }) {
+  const sp = (await searchParams) || {};
+  const results = await searchJobs({ q: sp.q, location: sp.location, remote: sp.remote, type: sp.type, salary_min: sp.salary_min, category: sp.category, days: sp.days, page: sp.page || 1 }).catch(() => ({ jobs: [], total: 0, page: 1, pageSize: 20 }));
+  return <div><section className="directory-hero"><div className="container"><span className="eyebrow">LeadNear Jobs</span><h1>Find your next opportunity</h1><p>Search current openings by role, company, location, salary, and work style.</p><SearchBox initialQuery={sp.q || ""} initialLocation={sp.location || ""} /></div></section><div className="container directory-content"><Suspense><Filters /></Suspense><div className="results-header"><h1 className="results-count"><LiveJobCount initialCount={Number(results.total)} /> jobs available</h1><Link href="/remote" className="section-action-btn">Browse remote jobs</Link></div>{results.jobs.length ? <><div className="job-list">{results.jobs.map((job) => <JobCard key={job.db_id} job={job} />)}</div><Suspense><Pagination total={results.total} pageSize={20} /></Suspense></> : <div className="empty-box"><div className="em-icon">⌕</div><p>No jobs found. Try changing your search or filters.</p></div>}</div></div>;
 }

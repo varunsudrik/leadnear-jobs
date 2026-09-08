@@ -85,7 +85,7 @@ export default function AutocompleteInput({ value, onChange, kind, label, placeh
   };
 
   return (
-    <div className="relative min-w-0 flex-1">
+    <div className="marketing-field relative min-w-0 flex-1">
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
