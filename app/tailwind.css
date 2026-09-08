@@ -1,0 +1,27 @@
+/* Tailwind utilities for the pages ported from leadnear-main (about, services,
+   privacy-policy, toc, contact-us, opt-out and the marketing homepage).
+   Preflight is disabled in tailwind.config.js — see the note there. */
+/* `base` is required even with preflight off. Beyond the reset (which
+   corePlugins.preflight:false removes), this layer emits the `--tw-*` custom
+   property defaults on the universal selector. Gradients, shadows, rings,
+   transforms and filters are all built on those variables — omit this and
+   `bg-gradient-to-r … bg-clip-text text-transparent` renders as invisible text,
+   because the clip and transparent colour apply while the gradient never does. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom container class the ported markup expects; copied from
+   leadnear-main/styles/globals.css so those pages lay out identically. */
+.tailwind-container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 2rem;
+  padding-left: 2rem;
+}
+@media (min-width: 1400px) {
+  .tailwind-container {
+    max-width: 1400px;
+  }
+}

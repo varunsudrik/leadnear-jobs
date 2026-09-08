@@ -1,0 +1,2 @@
+ALTER TABLE jobs
+  ALTER COLUMN job_slug SET NOT NULL;

@@ -1,0 +1,4 @@
+import Link from "next/link";
+const tiers = [["100k-plus", "$100K+ Jobs"], ["150k-plus", "$150K+ Jobs"], ["200k-plus", "$200K+ Jobs"]];
+export const metadata = { title: "Salary Explorer | LeadNear Jobs", description: "Explore jobs with disclosed high salaries.", alternates: { canonical: "https://www.leadnear.com/jobs/salaries" } };
+export default function SalariesPage() { return <div className="container hub-page"><div className="list-page-heading"><span className="eyebrow">Salary transparency</span><h1>Find high-paying opportunities</h1><p>Browse roles with disclosed annual compensation.</p></div><div className="hub-grid salary-hub">{tiers.map(([tier, label]) => <Link key={tier} href={`/salary/${tier}`} className="hub-card"><h2>{label}</h2><p>Roles with disclosed compensation at or above {label.replace(" Jobs", "")}.</p><span>Explore roles →</span></Link>)}</div></div>; }
