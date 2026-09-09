@@ -619,12 +619,29 @@ img { max-width: 100%; }
 .listing-count-heading.has-subtitle { margin-bottom: .35rem; }
 .listing-subtitle { color: var(--text2); font-size: .9rem; margin-bottom: 1.25rem; }
 
-/* ─── Footer ─────────────────────────────────── */
+/* ─── Footer ─────────────────────────────────────────────────────────────
+   Direction C flat footer (spec 412-464, "C Mobile"): a single wrapping link
+   row plus a provenance line, replacing the earlier dark four-column layout
+   that used to live further down this file next to .hub-card. */
 .site-footer {
   border-top: 1px solid var(--border);
-  text-align: center; padding: 2rem 1rem;
-  font-size: .82rem; color: var(--text3); margin-top: 4rem;
+  margin-top: 4rem;
 }
+.footer-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 1.375rem 1.5rem 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  font-size: .82rem;
+  color: var(--text4);
+}
+.footer-links { display: flex; flex-wrap: wrap; gap: 1.15rem; }
+.footer-links a { color: var(--text3); }
+.footer-links a:hover { color: var(--text); }
 
 /* ─── Deleted banner ─────────────────────────── */
 .deleted-banner {
@@ -1135,22 +1152,13 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 .hub-card h2 { color: var(--text); font-size: 1.15rem; }
 .hub-card p { margin: .55rem 0 1rem; color: var(--text3); }
 .hub-card span { color: var(--accent); font-size: .82rem; font-weight: 850; }
-.site-footer { margin-top: 0; padding: 0; background: var(--text); color: var(--text4); }
-.footer-inner { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: 1.4fr repeat(3,1fr); gap: 2.5rem; padding: 3.5rem 1.25rem; }
-.footer-inner > div { display: flex; flex-direction: column; align-items: flex-start; gap: .65rem; }
-.footer-inner strong, .footer-logo { color: white; font-weight: 850; }
-.footer-logo { font-size: 1.35rem; }
-.footer-inner a { color: var(--text4); font-size: .84rem; }
-.footer-inner a:hover { color: white; }
-.footer-bottom { border-top: 1px solid #1e293b; padding: 1rem 1.25rem; text-align: center; font-size: .78rem; }
 @media (max-width: 1050px) { .nav-links { display: none; } .site-header .inner { justify-content: space-between; } }
 /* .jobs-layout/.job-preview used to be reset here too (Task 5: stack instead
    of hide, at this same 760px breakpoint). Superseded by the single 900px
    rule next to their base definitions above (Task 8) — see the comment
    there for why hiding, not stacking, is correct, and why one rule replaces
    two. Do not reintroduce a `.jobs-layout`/`.job-preview` override here. */
-@media (max-width: 760px) { .nav-post, .auth-nav .nav-primary { display: none; } .search-wrap-two { grid-template-columns: 1fr; } .search-field { border-right: 0; border-bottom: 1px solid var(--border); } .search-field.location-field { border-bottom: 0; } .job-list, .hub-grid { grid-template-columns: 1fr; } .footer-inner { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 480px) { .footer-inner { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .nav-post, .auth-nav .nav-primary { display: none; } .search-wrap-two { grid-template-columns: 1fr; } .search-field { border-right: 0; border-bottom: 1px solid var(--border); } .search-field.location-field { border-bottom: 0; } .job-list, .hub-grid { grid-template-columns: 1fr; } }
 .req-count-badge {
   background: rgba(248, 113, 113, 0.15);
   color: var(--bad-fg);
