@@ -6,12 +6,12 @@
 //   loading    -> `auth-nav-placeholder` (keeps the navbar from shifting
 //                 while the session resolves; sized in globals.css)
 //   signed out -> "Log in", class `nav-login`         (plain text link)
-//   signed in, desktop -> scan-pips + avatar, matching the Direction C
-//                 header mockup. The avatar has no menu yet, so there is
-//                 intentionally no sign-out affordance here.
+//   signed in, desktop -> scan-pips + avatar. The avatar has no menu, so it
+//                 doubles as the sign-out control itself (clicking it signs
+//                 out) rather than opening an account/settings surface that
+//                 does not exist yet.
 //   signed in, mobile  -> `mobile-auth-link` pill (`.dashboard` variant)
-//                 that still carries the sign-out action, since the
-//                 desktop avatar can't yet.
+//                 that carries the same sign-out action.
 //
 // The scan-pips ("N/3 free scans") describe a Resume feature that has not
 // shipped yet: `scansUsed` is hardcoded to 0 and the control is a plain,
@@ -58,9 +58,15 @@ export default function AuthNav({ mobile = false }) {
           </span>
           <span className="mono">{3 - scansUsed}</span>/3 free scans
         </span>
-        <span className="avatar" title={session.user.email ?? undefined}>
+        <button
+          type="button"
+          className="avatar"
+          title={session.user.email ?? undefined}
+          aria-label="Sign out"
+          onClick={() => signOut({ callbackUrl: "/" })}
+        >
           {initials(session.user.name || session.user.email)}
-        </span>
+        </button>
       </>
     );
   }
