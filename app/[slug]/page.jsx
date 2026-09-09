@@ -9,7 +9,7 @@ import { fmtSalary, fmtDate, initials } from "@/lib/format";
 import { decodeEntities, sanitiseHtml as sanitise } from "@/lib/sanitize";
 import { buildJobPostingJsonLd } from "@/lib/job-jsonld";
 import { formatAtsLabel } from "@/lib/ats";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import JobCard from "@/components/JobCard";
 
 export const revalidate = false;
@@ -405,7 +405,7 @@ export default async function JobDetailPage({ params }) {
                       ? ["Source ATS", formatAtsLabel(job.source)]
                       : null,
                     date
-                      ? ["Posted", date]
+                      ? ["Posted", <span key="posted" className="mono">{date}</span>]
                       : null,
                     job.canonical_title && job.canonical_title !== job.title
                       ? ["Role Type", job.canonical_title]
