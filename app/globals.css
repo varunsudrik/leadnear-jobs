@@ -299,8 +299,8 @@ img { max-width: 100%; }
    desktop width (checked at 900px, 1400px and 1440px, with web fonts fully
    loaded — `.nav-links` visibility, which itself toggles at 1050px, made no
    difference). The split-pane grid below only ever renders 2-up above the
-   760px breakpoint, i.e. only at desktop widths — so 64px, not 62px, is the
-   figure that matches how this actually renders. top:64px and
+   900px breakpoint (Task 8), i.e. only at desktop widths — so 64px, not
+   62px, is the figure that matches how this actually renders. top:64px and
    max-height:calc(100vh - 84px) (64 + 20px breathing room, matching the
    spec's own +20 convention). */
 .jobs-layout {
@@ -311,6 +311,22 @@ img { max-width: 100%; }
 .job-preview {
   background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow);
   position: sticky; top: 64px; max-height: calc(100vh - 84px); overflow: auto;
+}
+/* Below 900px the split pane collapses to a single column and the preview
+   is hidden outright (Task 8) — not just stacked (an earlier Task 5 rule at
+   760px kept `.job-preview` in flow below the list via position:static,
+   which is what "stops being sticky" meant before this task existed). The
+   spec's own C Mobile screen (spec lines 412-464) has no inline preview at
+   all; a stacked panel below the whole list is also poor UX (you'd scroll
+   past every card to reach it, and selecting a card wouldn't scroll you
+   there). This is the ONE rule governing that behaviour — do not add a
+   second breakpoint for `.jobs-layout`/`.job-preview` elsewhere.
+   JobsSplitView.jsx mirrors this same 900px breakpoint in JS (via
+   matchMedia) so JobCard stops intercepting clicks for the (now invisible)
+   preview and instead navigates normally — see the comment there. */
+@media (max-width: 900px) {
+  .jobs-layout { grid-template-columns: minmax(0, 1fr); }
+  .job-preview { display: none; }
 }
 .job-preview.is-empty, .job-preview.is-error {
   padding: 32px 24px; color: var(--text3); font-size: 13.5px;
@@ -1113,7 +1129,12 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 .footer-inner a:hover { color: white; }
 .footer-bottom { border-top: 1px solid #1e293b; padding: 1rem 1.25rem; text-align: center; font-size: .78rem; }
 @media (max-width: 1050px) { .nav-links { display: none; } .site-header .inner { justify-content: space-between; } }
-@media (max-width: 760px) { .nav-post, .auth-nav .nav-primary { display: none; } .search-wrap-two { grid-template-columns: 1fr; } .search-field { border-right: 0; border-bottom: 1px solid var(--border); } .search-field.location-field { border-bottom: 0; } .job-list, .hub-grid { grid-template-columns: 1fr; } .footer-inner { grid-template-columns: 1fr 1fr; } .jobs-layout { grid-template-columns: 1fr; } .job-preview { position: static; max-height: none; } }
+/* .jobs-layout/.job-preview used to be reset here too (Task 5: stack instead
+   of hide, at this same 760px breakpoint). Superseded by the single 900px
+   rule next to their base definitions above (Task 8) — see the comment
+   there for why hiding, not stacking, is correct, and why one rule replaces
+   two. Do not reintroduce a `.jobs-layout`/`.job-preview` override here. */
+@media (max-width: 760px) { .nav-post, .auth-nav .nav-primary { display: none; } .search-wrap-two { grid-template-columns: 1fr; } .search-field { border-right: 0; border-bottom: 1px solid var(--border); } .search-field.location-field { border-bottom: 0; } .job-list, .hub-grid { grid-template-columns: 1fr; } .footer-inner { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 480px) { .footer-inner { grid-template-columns: 1fr; } }
 .req-count-badge {
   background: rgba(248, 113, 113, 0.15);
@@ -1465,10 +1486,17 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 
 @media (min-width: 768px) {
   .site-header .nav-actions { display: flex; }
-  .site-header .nav-menu-toggle { display: none; }
 }
+/* .nav-menu-toggle used to hide at this same 768px breakpoint — but
+   .nav-links only appears at min-width:1280px (its own rule below), so a
+   toggle hidden from 768px left a 768-1279px dead zone with no way to reach
+   Jobs/Remote Jobs/Categories/Salary Explorer/Discover/Services at all
+   (nav-actions' auth buttons were still visible there, but that's not
+   primary navigation). Keep the hamburger up through that gap and only
+   hand off to the inline nav-links once they actually appear (Task 8). */
 @media (min-width: 1280px) {
   .site-header .nav-links { display: flex; }
+  .site-header .nav-menu-toggle { display: none; }
 }
 /* Below 768px the desktop nav-actions (scan-pips/avatar/login) are hidden in
    favour of the hamburger + mobile-navigation panel above, so the inline
