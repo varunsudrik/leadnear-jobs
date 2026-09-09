@@ -17,20 +17,25 @@ const DAYS_OPTS = [
   { label:"Last 7 days", value:"7" },
   { label:"Last 30 days",value:"30" },
 ];
-// The seven categories from the Direction C spec (spec lines 76-85), each
-// checked against real category_slugs values in the seeded DB before wiring
-// (all seven have non-zero job counts). Three more slugs exist in the data —
-// operations-jobs (148 jobs), customer-success-jobs (66), people-hr-jobs (26)
-// — but the design doesn't list them, so they're intentionally left out here.
+// Full set of real category_slugs values in the seeded DB (all ten have
+// non-zero job counts), ordered by job count desc. The Direction C spec
+// (spec lines 76-85) only mock-listed seven of these; the other three —
+// operations-jobs (148, the single largest category), customer-success-jobs
+// (66), and people-hr-jobs (26) — are real categories the filter must cover.
+// Labels keep the design's abbreviated tone ("Software Eng", "DevOps/Cloud").
 const CATEGORIES = [
+  { slug:"operations-jobs",           label:"Operations" },
   { slug:"software-engineering-jobs", label:"Software Eng" },
-  { slug:"devops-cloud-jobs",         label:"DevOps/Cloud" },
+  { slug:"sales-jobs",                label:"Sales" },
+  { slug:"customer-success-jobs",     label:"Customer Success" },
   { slug:"data-ai-jobs",              label:"Data & AI" },
   { slug:"product-jobs",              label:"Product" },
-  { slug:"design-jobs",               label:"Design" },
-  { slug:"sales-jobs",                label:"Sales" },
   { slug:"marketing-jobs",            label:"Marketing" },
+  { slug:"people-hr-jobs",            label:"People & HR" },
+  { slug:"devops-cloud-jobs",         label:"DevOps/Cloud" },
+  { slug:"design-jobs",               label:"Design" },
 ];
+const SORTS = ["newest", "salary"];
 
 // "12 min ago" / "3 hrs ago" — matches the spec's count-line wording
 // (spec lines 76-85: "128,431 roles · updated 12 min ago").
@@ -47,7 +52,7 @@ function formatUpdated(updatedAt) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-export default function Filters() {
+export default function Filters({ initialCount = 0 }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -63,12 +68,13 @@ export default function Filters() {
 
   const remote = get("remote"), type = get("type"), salary_min = get("salary_min");
   const category = get("category"), days = get("days");
-  const sort = get("sort") || "newest";
-  const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location");
+  const rawSort = get("sort");
+  const sort = SORTS.includes(rawSort) ? rawSort : "newest";
+  const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location") || rawSort;
 
   const clearAll = () => {
     const next = new URLSearchParams(sp.toString());
-    ["ats","location","remote","type","salary_min","category","days","page"].forEach((k) => next.delete(k));
+    ["ats","location","remote","type","salary_min","category","days","page","sort"].forEach((k) => next.delete(k));
     router.push(`${pathname}?${next.toString()}`);
   };
 
@@ -83,7 +89,7 @@ export default function Filters() {
   return (
     <div className="filter-bar">
       <span className="filter-count">
-        <b><LiveJobCount initialCount={0} onSnapshot={handleSnapshot} /></b> roles
+        <b><LiveJobCount initialCount={initialCount} onSnapshot={handleSnapshot} /></b> roles
         {updatedLabel ? ` · updated ${updatedLabel}` : ""}
       </span>
       <button type="button" className="filter-toggle" aria-pressed={remote === "1"}

@@ -57,7 +57,7 @@ export default async function SearchPage({ searchParams }) {
 
       {/* Filters */}
       <Suspense>
-        <Filters />
+        <Filters initialCount={Number(results.total)} />
       </Suspense>
 
       {results.jobs.length === 0 ? (

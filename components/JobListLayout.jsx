@@ -29,7 +29,7 @@ export default function JobListLayout({
       )}
 
       {mode === "remote" && (
-        <Suspense><Filters /></Suspense>
+        <Suspense><Filters initialCount={Number(total)} /></Suspense>
       )}
 
       {jobs.length === 0 ? (
