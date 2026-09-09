@@ -44,13 +44,14 @@ export default async function JobsPage({ searchParams }) {
           <h1 className="results-count">{results.total.toLocaleString()} jobs available</h1>
           <Link href="/remote" className="section-action-btn">Browse remote jobs</Link>
         </div>
-        {/* key forces a remount (and a fresh "select the first result"
-            default) whenever the query changes — pagination, a filter, or a
-            new search all produce a new `results.jobs` array from the same
-            client-component instance, and without a key React would keep the
-            old `selectedSlug` state, leaving no card visually selected and
-            the preview pinned to a job that may no longer be in the list. */}
-        <JobsSplitView key={JSON.stringify(sp)} jobs={results.jobs} total={results.total} />
+        {/* JobsSplitView validates `selectedSlug` against the incoming `jobs`
+            itself (falling back to the first row when the previous selection
+            isn't in the new result set) — see the effect there. No `key` here:
+            keying on the raw searchParams would remount on any unrelated
+            param and would also discard a still-valid selection whenever the
+            new jobs array happens to contain it (e.g. a sort-order change),
+            forcing a needless preview refetch and loading flash. */}
+        <JobsSplitView jobs={results.jobs} total={results.total} />
       </div>
     </div>
   );
