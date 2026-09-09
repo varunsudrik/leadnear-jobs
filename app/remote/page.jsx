@@ -15,7 +15,7 @@ export async function generateMetadata() {
 export default async function RemotePage({ searchParams }) {
   const sp = (await searchParams) || {};
   const data = await searchJobs({ remote: "1", type: sp.type, salary_min: sp.salary_min,
-    category: sp.category, days: sp.days, page: sp.page || 1 }).catch(() => ({ jobs: [], total: 0 }));
+    category: sp.category, days: sp.days, sort: sp.sort, page: sp.page || 1 }).catch(() => ({ jobs: [], total: 0 }));
   return <JobListLayout heading="Remote Jobs" prefix="🌍" mode="remote"
     subtitle="work from anywhere" jobs={data.jobs} total={data.total} />;
 }

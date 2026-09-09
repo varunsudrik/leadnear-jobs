@@ -9,11 +9,17 @@ function formatCount(value) {
   return Number(value || 0).toLocaleString();
 }
 
-export default function LiveJobCount({ initialCount }) {
+export default function LiveJobCount({ initialCount, onSnapshot }) {
   const [displayedCount, setDisplayedCount] = useState(initialCount);
   const displayedCountRef = useRef(initialCount);
   const animationFrameRef = useRef(null);
   const reducedMotionRef = useRef(false);
+  // Kept in a ref (not the effect's dependency array) so an inline/unmemoized
+  // onSnapshot from the caller doesn't restart the poll interval every render.
+  const onSnapshotRef = useRef(onSnapshot);
+  useEffect(() => {
+    onSnapshotRef.current = onSnapshot;
+  }, [onSnapshot]);
 
   const stopAnimation = useCallback(() => {
     if (animationFrameRef.current) {
@@ -82,8 +88,11 @@ export default function LiveJobCount({ initialCount }) {
         if (!response.ok) return;
 
         const body = await response.json();
+        if (cancelled) return;
+
         const nextCount = Number(body.totalJobs);
-        if (!cancelled && Number.isFinite(nextCount)) animateTo(nextCount);
+        if (Number.isFinite(nextCount)) animateTo(nextCount);
+        onSnapshotRef.current?.(body);
       } catch {
         // Keep the last known value until the next scheduled refresh succeeds.
       }

@@ -31,6 +31,7 @@ export default async function SearchPage({ searchParams }) {
     salary_min: sp.salary_min,
     category:   sp.category,
     days:       sp.days,
+    sort:       sp.sort,
     page:       sp.page || 1,
   }).catch(() => ({ jobs: [], total: 0, page: 1 }));
 

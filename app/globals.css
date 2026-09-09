@@ -287,33 +287,33 @@ img { max-width: 100%; }
 .job-list { display: flex; flex-direction: column; gap: .6rem; }
 
 
-/* ─── Filters strip ──────────────────────────── */
-.filters-strip {
-  display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: .65rem 1rem; margin-bottom: 1.25rem;
-}
-.filter-label { font-size: .78rem; color: var(--text3); font-weight: 600; white-space: nowrap; }
-.filter-toggle {
-  background: var(--bg3); border: 1px solid var(--border);
-  color: var(--text2); border-radius: 50px; padding: .3rem .85rem;
-  font-size: .78rem; font-weight: 600; cursor: pointer; transition: all .15s;
-}
-.filter-toggle.active { border-color: var(--accent); color: #a78bfa; background: rgba(124,58,237,.15); }
-.filter-toggle:hover { border-color: var(--accent-hover); color: var(--text); }
+/* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */
+.filter-bar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
+.filter-count { font-size: 12.5px; color: var(--text3); margin-right: 4px; }
+.filter-count b { color: var(--text); font-family: var(--font-mono), monospace; font-weight: 500; }
 .filter-select {
-  background: var(--bg3); border: 1px solid var(--border);
-  color: var(--text2); border-radius: 8px; padding: .3rem .65rem;
-  font-size: .78rem; font-family: inherit; cursor: pointer; outline: none;
-  transition: border-color .15s;
+  background: var(--bg); border: 0; box-shadow: 0 0 0 1px rgba(21,23,28,.07);
+  border-radius: var(--radius-pill); padding: 7px 12px; font-size: 12.5px;
+  font-weight: 500; cursor: pointer; color: var(--text2); font-family: inherit;
 }
-.filter-select:focus { border-color: var(--accent); }
+.filter-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.filter-toggle {
+  background: var(--bg); border: 0; box-shadow: 0 0 0 1px rgba(21,23,28,.07);
+  border-radius: var(--radius-pill); padding: 7px 13px; font-size: 12.5px;
+  font-weight: 600; cursor: pointer; color: var(--text2); font-family: inherit;
+}
+.filter-toggle[aria-pressed="true"] { background: var(--text); color: #fff; box-shadow: none; }
 .filter-clear {
-  background: none; border: 1px solid rgba(248,113,113,.3);
-  color: var(--bad-fg); border-radius: 50px; padding: .3rem .75rem;
-  font-size: .75rem; font-weight: 700; cursor: pointer; transition: all .15s;
+  background: none; border: 0; box-shadow: 0 0 0 1px rgba(168,52,26,.25);
+  color: var(--bad-fg); border-radius: var(--radius-pill); padding: 7px 13px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit;
 }
-.filter-clear:hover { background: rgba(248,113,113,.1); }
+.filter-clear:hover { background: var(--bad-bg); }
+.filter-spacer { flex: 1 1 auto; }
+.sort-select {
+  background: transparent; border: 0; padding: 7px 4px;
+  font-size: 12.5px; font-weight: 600; cursor: pointer; color: var(--text2); font-family: inherit;
+}
 
 /* ─── Pagination ─────────────────────────────── */
 .pagination { display: flex; gap: .4rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
@@ -859,10 +859,7 @@ img { max-width: 100%; }
 .search-bar::placeholder { color: var(--text4); }
 .search-bar-btn { border-radius: 11px; background: linear-gradient(135deg,var(--accent),#4f46e5); padding: .8rem 1.2rem; }
 .directory-content { padding-top: 2rem; padding-bottom: 4rem; }
-.filters-strip { background: var(--bg2); border: 1px solid var(--border); }
-.filter-select, .filter-toggle { background: var(--bg); color: var(--text2); border-color: #cbd5e1; }
 .filter-select option { color: var(--text); background: var(--bg); }
-.filter-toggle.active { color: white; background: var(--accent); }
 .job-list { display: grid; grid-template-columns: minmax(0,1fr); gap: .75rem; }
 .job-card-inner {
   position: relative; display: grid;
@@ -997,14 +994,10 @@ img { max-width: 100%; }
   .search-field span { font-size: 1.7rem; }
   .search-bar { font-size: 1.45rem; }
   .search-bar-btn { width: 100%; margin-top: .6rem; padding: 1.15rem 1.75rem; font-size: 1.35rem; }
-  .filters-strip {
-    display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
-    align-items: center; gap: .8rem; padding: 1.25rem 1.4rem;
-    border-radius: 18px; margin-bottom: 1.5rem;
-  }
-  .filter-label { align-self: center; font-size: 1.2rem; }
-  .filter-toggle { justify-self: center; padding: .6rem 1.15rem; font-size: 1.2rem; }
-  .filter-select { width: 100%; min-height: 48px; padding: .55rem 1rem; font-size: 1.2rem; }
+  .filter-bar { gap: .8rem; margin-bottom: 1.5rem; }
+  .filter-count { font-size: 1.1rem; }
+  .filter-toggle, .sort-select { padding: .6rem 1.15rem; font-size: 1.2rem; }
+  .filter-select { min-height: 48px; padding: .55rem 1rem; font-size: 1.2rem; }
   .filter-clear { padding: .55rem 1rem; font-size: 1.1rem; }
   .job-list { gap: 1.25rem; }
   .job-card-inner {
