@@ -29,7 +29,10 @@ export default function JobListLayout({
       )}
 
       {mode === "remote" && (
-        <Suspense><Filters initialCount={Number(total)} /></Suspense>
+        // pollOnly: this page's result set is always scoped to remote jobs,
+        // which isn't a URL filter param Filters' own hasFilters can see, so
+        // /api/live-count's sitewide number must never be displayed here.
+        <Suspense><Filters initialCount={Number(total)} pollOnly /></Suspense>
       )}
 
       {jobs.length === 0 ? (

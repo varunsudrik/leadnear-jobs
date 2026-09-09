@@ -246,13 +246,13 @@ img { max-width: 100%; }
 
 /* ─── Job Card (Direction C re-skin) ─────────── */
 /* Whole card is a single Link (Task 5 wires selected/onSelect on top of this).
-   Superseded the old "v2" job-card-link/job-card-inner/jc-pills family below —
+   Superseded the old "v2" job-card-link/job-card-inner/jc-pills family —
    verified repo-wide that nothing outside this file and components/JobCard.jsx
    referenced those class names before removing them. A second, older
-   "directory" job-card-inner definition (interleaved with unrelated
-   directory-hero/hub-page media queries later in this file) still exists but
-   is now unreachable too — left in place rather than risk a surgical
-   extraction from shared breakpoints; see task-3-report.md concerns. */
+   "directory" job-card-inner definition used to sit further down this file,
+   interleaved with unrelated directory-hero/hub-page media queries; it was
+   unreachable dead code (no JSX referenced job-card-inner or its jc-* family)
+   and has been removed — see the final-fix-report for the extraction. */
 .job-card {
   display: block; background: var(--bg); border-radius: 14px; padding: 13px 16px;
   cursor: pointer; box-shadow: var(--shadow);
@@ -978,128 +978,12 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 .search-bar-btn { border-radius: 11px; background: linear-gradient(135deg,var(--accent),#4f46e5); padding: .8rem 1.2rem; }
 .directory-content { padding-top: 2rem; padding-bottom: 4rem; }
 .filter-select option { color: var(--text); background: var(--bg); }
-.job-list { display: grid; grid-template-columns: minmax(0,1fr); gap: .75rem; }
-.job-card-inner {
-  position: relative; display: grid;
-  grid-template-columns: minmax(0,1.25fr) minmax(250px,.9fr) auto;
-  grid-template-areas: "identity metadata actions";
-  align-items: center; gap: 1.5rem; min-height: 116px;
-  padding: 1.15rem 1.25rem; overflow: hidden;
-  border: 1px solid #dbe4f0; border-radius: 16px; background: var(--bg);
-  box-shadow: 0 3px 14px rgba(15,23,42,.045);
-  transition: transform .18s, border-color .18s, box-shadow .18s;
-}
-.job-card-inner::before {
-  content: ""; position: absolute; inset: 0 auto 0 0; width: 3px;
-  background: linear-gradient(180deg,var(--accent-hover),#4f46e5); opacity: 0;
-  transition: opacity .18s;
-}
-.job-card-inner:hover {
-  transform: translateY(-1px); border-color: #b8cdfa;
-  box-shadow: 0 12px 28px rgba(30,64,175,.09);
-}
-.job-card-inner:hover::before { opacity: 1; }
-.job-card-inner.high-pay { border-color: #fde68a; background: linear-gradient(90deg,#fffbeb 0,white 18%); }
-.job-card-inner.high-pay::before { background: #f59e0b; opacity: 1; }
-.jc-header {
-  grid-area: identity; display: grid; grid-template-columns: 48px minmax(0,1fr);
-  align-items: center; gap: .9rem; min-width: 0; margin: 0;
-}
-.jc-avatar {
-  width: 48px; height: 48px; border-radius: 13px;
-  background: linear-gradient(135deg,var(--accent-hover),#4f46e5); color: white;
-  box-shadow: 0 8px 18px rgba(37,99,235,.2);
-}
-.jc-title-col { min-width: 0; }
-.jc-title {
-  display: block; color: var(--text); font-size: 1rem; font-weight: 850;
-  line-height: 1.35; overflow-wrap: anywhere; transition: color .15s;
-}
-.jc-title:hover { color: var(--accent); }
-.jc-company {
-  margin-top: .22rem; color: var(--text3); font-size: .8rem;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.jc-meta {
-  grid-area: metadata; display: flex; flex-direction: column; gap: .55rem;
-  min-width: 0; padding-left: 1.5rem; border-left: 1px solid var(--border);
-}
-.jc-pills { margin: 0; gap: .4rem; }
-.jc-pill { padding: .24rem .62rem; line-height: 1.25; }
-.jc-footer {
-  justify-content: flex-start; flex-wrap: wrap; gap: .35rem .9rem;
-  color: var(--text3); font-size: .75rem;
-}
-.jc-loc { min-width: 0; overflow-wrap: anywhere; }
-.jc-date { flex-shrink: 0; color: var(--text4); }
-.jc-actions {
-  grid-area: actions; display: flex; align-items: center; justify-self: end; gap: .6rem;
-}
-.jc-save {
-  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
-  min-height: 40px; padding: .55rem .72rem; border: 1px solid #dbe4f0;
-  border-radius: 10px; background: var(--bg); color: var(--text3);
-  font: inherit; font-size: .75rem; font-weight: 800; cursor: pointer;
-  transition: color .15s, border-color .15s, background .15s;
-}
-.jc-save:hover { color: var(--text2); border-color: #cbd5e1; background: var(--bg2); }
-.jc-save.saved { border-color: #bfdbfe; background: var(--accent-tint); color: var(--accent); }
-.jc-apply-badge {
-  display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
-  min-height: 42px; margin: 0; padding: .65rem 1rem; border-radius: 10px;
-  background: linear-gradient(135deg,var(--accent),#4338ca); color: white;
-  font-size: .78rem; font-weight: 850; white-space: nowrap;
-  box-shadow: 0 8px 16px rgba(37,99,235,.2);
-  transition: transform .15s, box-shadow .15s, opacity .15s;
-}
-.jc-apply-badge:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(37,99,235,.28); }
-@media (max-width: 960px) {
-  .job-card-inner {
-    grid-template-columns: minmax(0,1fr) auto;
-    grid-template-areas: "identity actions" "metadata metadata";
-    gap: .9rem 1rem;
-  }
-  .jc-meta { padding: .85rem 0 0; border-left: 0; border-top: 1px solid var(--border); }
-}
-@media (max-width: 600px),
-  (min-width: 601px) and (max-width: 1080px) and (orientation: portrait) {
-  .job-list { gap: .7rem; }
-  .job-card-inner {
-    grid-template-columns: minmax(0,1fr) auto;
-    grid-template-rows: auto minmax(0,1fr) auto;
-    grid-template-areas: "identity save" "metadata metadata" "apply apply";
-    gap: 1rem .75rem; min-height: 240px; padding: 1rem; border-radius: 14px;
-  }
-  .jc-header { grid-template-columns: 44px minmax(0,1fr); gap: .75rem; }
-  .jc-avatar { width: 44px; height: 44px; border-radius: 12px; }
-  .jc-company { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
-  .jc-meta { align-self: start; gap: .8rem; padding: .2rem 0 0; border-top: 0; }
-  .jc-footer { flex-direction: column; align-items: flex-start; gap: .35rem; }
-  .jc-actions { display: contents; }
-  .jc-save { grid-area: save; align-self: start; justify-self: end; }
-  .jc-apply-badge { grid-area: apply; flex: none; justify-self: start; min-height: 44px; }
-}
 @media (min-width: 601px) and (max-width: 1080px) and (orientation: portrait) {
   .container { max-width: 920px; padding-inline: 2rem; }
   .site-header .inner {
-    display: flex; max-width: 920px; min-height: 140px; gap: 1.25rem;
+    display: flex; max-width: 920px; min-height: 64px; gap: 1.25rem;
     padding: 1.25rem 2rem; justify-content: space-between;
   }
-  .logo { gap: 1rem; font-size: 2rem; }
-  .logo-mark { width: 64px; height: 64px; border-radius: 16px; font-size: 1.15rem; }
-  .nav-links { display: none; }
-  .nav-actions { margin-left: auto; }
-  .nav-actions, .auth-nav { gap: .5rem; }
-  .nav-login { padding: .8rem .7rem; font-size: 1.25rem; }
-  .nav-actions > .nav-primary { padding: 1rem 1.35rem; font-size: 1.25rem; }
-  .auth-nav .nav-primary, .nav-post { display: none; }
-  .container > nav { margin-bottom: 1.5rem !important; font-size: 1.25rem !important; }
-  .listing-page-title,
-  .listing-count-heading { font-size: 3rem; line-height: 1.15; letter-spacing: -.025em; }
-  .listing-page-title { margin-bottom: .65rem; }
-  .listing-count-heading { margin-bottom: 1.5rem; }
-  .listing-count-heading.has-subtitle { margin-bottom: .65rem; }
-  .listing-subtitle { margin-bottom: 1.75rem; font-size: 1.5rem; line-height: 1.45; }
   .search-wrap-two {
     grid-template-columns: 1fr; max-width: none !important;
     min-height: 0; gap: 0; padding: 1rem; border-radius: 22px;
@@ -1110,37 +994,6 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   }
   .search-field.location-field { border-bottom: 0; }
   .search-field span { font-size: 1.7rem; }
-  .search-bar { font-size: 1.45rem; }
-  .search-bar-btn { width: 100%; margin-top: .6rem; padding: 1.15rem 1.75rem; font-size: 1.35rem; }
-  .filter-bar { gap: .8rem; margin-bottom: 1.5rem; }
-  .filter-count { font-size: 1.1rem; }
-  .filter-toggle, .sort-select { padding: .6rem 1.15rem; font-size: 1.2rem; }
-  .filter-select { min-height: 48px; padding: .55rem 1rem; font-size: 1.2rem; }
-  .filter-clear { padding: .55rem 1rem; font-size: 1.1rem; }
-  .job-list { gap: 1.25rem; }
-  .job-card-inner {
-    grid-template-rows: auto auto minmax(72px,1fr); min-height: 420px;
-    padding: 2rem 2.25rem; gap: 1.25rem 1.5rem; border-radius: 24px;
-    box-shadow: 0 10px 28px rgba(15,23,42,.07);
-  }
-  .jc-header { grid-template-columns: 96px minmax(0,1fr); align-items: start; gap: 1.4rem; max-width: 590px; }
-  .jc-avatar { width: 96px; height: 96px; border-radius: 20px; font-size: 1.25rem; }
-  .jc-title { font-size: 2.2rem; line-height: 1.25; letter-spacing: -.015em; }
-  .jc-company { margin-top: .5rem; font-size: 1.55rem; line-height: 1.35; }
-  .jc-meta { gap: 1.1rem; padding-top: .25rem; }
-  .jc-pills { gap: .75rem; }
-  .jc-pill { padding: .5rem 1rem; font-size: 1.2rem; }
-  .jc-footer { gap: .7rem; font-size: 1.25rem; }
-  .jc-save { min-width: 145px; min-height: 66px; padding: .9rem 1.2rem; font-size: 1.15rem; }
-  .jc-apply-badge {
-    align-self: end; min-width: 220px; min-height: 64px; padding: .85rem 1.4rem;
-    background: linear-gradient(135deg,var(--accent),#4338ca); font-size: 1.25rem;
-    box-shadow: 0 10px 22px rgba(15,23,42,.22);
-  }
-}
-@media (max-width: 380px) {
-  .jc-footer { flex-direction: column; align-items: flex-start; }
-  .jc-save { padding-inline: .65rem; }
 }
 .hub-page { padding-top: 3.5rem; padding-bottom: 5rem; }
 .list-page-heading { margin-bottom: 2rem; }
@@ -1158,7 +1011,7 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
    rule next to their base definitions above (Task 8) — see the comment
    there for why hiding, not stacking, is correct, and why one rule replaces
    two. Do not reintroduce a `.jobs-layout`/`.job-preview` override here. */
-@media (max-width: 760px) { .nav-post, .auth-nav .nav-primary { display: none; } .search-wrap-two { grid-template-columns: 1fr; } .search-field { border-right: 0; border-bottom: 1px solid var(--border); } .search-field.location-field { border-bottom: 0; } .job-list, .hub-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .nav-post, .auth-nav .nav-primary { display: none; } .search-wrap-two { grid-template-columns: 1fr; } .search-field { border-right: 0; border-bottom: 1px solid var(--border); } .search-field.location-field { border-bottom: 0; } .hub-grid { grid-template-columns: 1fr; } }
 .req-count-badge {
   background: rgba(248, 113, 113, 0.15);
   color: var(--bad-fg);

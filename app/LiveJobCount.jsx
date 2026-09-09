@@ -9,7 +9,7 @@ function formatCount(value) {
   return Number(value || 0).toLocaleString();
 }
 
-export default function LiveJobCount({ initialCount, onSnapshot }) {
+export default function LiveJobCount({ initialCount, onSnapshot, pollOnly = false }) {
   const [displayedCount, setDisplayedCount] = useState(initialCount);
   const displayedCountRef = useRef(initialCount);
   const animationFrameRef = useRef(null);
@@ -20,6 +20,12 @@ export default function LiveJobCount({ initialCount, onSnapshot }) {
   useEffect(() => {
     onSnapshotRef.current = onSnapshot;
   }, [onSnapshot]);
+  // Same reasoning: pollOnly can flip (e.g. a filter is applied without this
+  // component remounting) without needing to tear down and restart the poll.
+  const pollOnlyRef = useRef(pollOnly);
+  useEffect(() => {
+    pollOnlyRef.current = pollOnly;
+  }, [pollOnly]);
 
   const stopAnimation = useCallback(() => {
     if (animationFrameRef.current) {
@@ -91,7 +97,11 @@ export default function LiveJobCount({ initialCount, onSnapshot }) {
         if (cancelled) return;
 
         const nextCount = Number(body.totalJobs);
-        if (Number.isFinite(nextCount)) animateTo(nextCount);
+        // pollOnly callers scope a filtered/route-specific result set that
+        // /api/live-count (unfiltered site_metrics.total_jobs) can't answer,
+        // so we still fetch/poll for onSnapshot's updatedAt but never animate
+        // the display toward the sitewide number.
+        if (!pollOnlyRef.current && Number.isFinite(nextCount)) animateTo(nextCount);
         onSnapshotRef.current?.(body);
       } catch {
         // Keep the last known value until the next scheduled refresh succeeds.
@@ -113,5 +123,13 @@ export default function LiveJobCount({ initialCount, onSnapshot }) {
     };
   }, [animateTo]);
 
-  return <strong className="live-job-count">{formatCount(displayedCount)}</strong>;
+  // pollOnly renders the caller-supplied (SSR-correct) initialCount directly
+  // rather than the animated/polled value, and reads it straight from the
+  // prop so it stays correct even if this instance persists (unremounted)
+  // across a navigation that changes initialCount without pollOnly changing.
+  return (
+    <strong className="live-job-count">
+      {pollOnly ? formatCount(initialCount) : formatCount(displayedCount)}
+    </strong>
+  );
 }

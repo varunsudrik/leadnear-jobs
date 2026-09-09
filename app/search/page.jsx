@@ -56,8 +56,11 @@ export default async function SearchPage({ searchParams }) {
       </div>
 
       {/* Filters */}
+      {/* pollOnly: this page's result set is always scoped by `q` (which
+          Filters' own hasFilters doesn't track), so /api/live-count's
+          sitewide number must never be displayed here. */}
       <Suspense>
-        <Filters initialCount={Number(results.total)} />
+        <Filters initialCount={Number(results.total)} pollOnly />
       </Suspense>
 
       {results.jobs.length === 0 ? (

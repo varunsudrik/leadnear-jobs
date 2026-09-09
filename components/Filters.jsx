@@ -52,7 +52,7 @@ function formatUpdated(updatedAt) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-export default function Filters({ initialCount = 0 }) {
+export default function Filters({ initialCount = 0, pollOnly = false }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -71,6 +71,13 @@ export default function Filters({ initialCount = 0 }) {
   const rawSort = get("sort");
   const sort = SORTS.includes(rawSort) ? rawSort : "newest";
   const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location") || rawSort;
+  // /api/live-count answers an unfiltered, sitewide question, so its number
+  // can't be trusted whenever this result set is scoped: `pollOnly` forces
+  // that (always true for callers whose whole page is scoped, e.g. /search
+  // and /remote, since their scoping isn't always visible in `hasFilters` —
+  // /search's `q` isn't tracked above, /remote's scope isn't a URL param at
+  // all), and otherwise falls back to this page's own filter state.
+  const scopedResults = pollOnly || Boolean(hasFilters);
 
   const clearAll = () => {
     const next = new URLSearchParams(sp.toString());
@@ -89,7 +96,7 @@ export default function Filters({ initialCount = 0 }) {
   return (
     <div className="filter-bar">
       <span className="filter-count">
-        <b><LiveJobCount initialCount={initialCount} onSnapshot={handleSnapshot} /></b> roles
+        <b><LiveJobCount initialCount={initialCount} onSnapshot={handleSnapshot} pollOnly={scopedResults} /></b> roles
         {updatedLabel ? ` · updated ${updatedLabel}` : ""}
       </span>
       <button type="button" className="filter-toggle" aria-pressed={remote === "1"}

@@ -451,8 +451,8 @@ export default function ServicesPage() {
         .proof-copy span,
         .node-top span,
         .pipeline-node span {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-          color: #5b4ef0;
+          font-family: var(--font-mono), ui-monospace, monospace;
+          color: #a78bfa;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           font-size: 0.75rem;
@@ -505,8 +505,8 @@ export default function ServicesPage() {
           transition: 160ms ease;
         }
         .service-btn.primary {
-          background: #5b4ef0;
-          border: 1px solid #4a3ee0;
+          background: var(--accent);
+          border: 1px solid var(--accent-hover);
           color: white;
         }
         .service-btn.secondary {
@@ -535,7 +535,7 @@ export default function ServicesPage() {
         }
         .metrics-panel strong {
           display: block;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-family: var(--font-mono), ui-monospace, monospace;
           color: #f4f4f5;
           font-size: 2.35rem;
           font-weight: 800;
@@ -545,7 +545,7 @@ export default function ServicesPage() {
           display: block;
           margin-top: 10px;
           color: #a1a1aa;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-family: var(--font-mono), ui-monospace, monospace;
           font-size: 0.78rem;
           font-weight: 800;
           letter-spacing: 0.09em;
@@ -659,7 +659,7 @@ export default function ServicesPage() {
           height: 44px;
           display: grid;
           place-items: center;
-          color: #5b4ef0;
+          color: #a78bfa;
           background: rgba(91, 78, 240, 0.12);
           border: 1px solid rgba(91, 78, 240, 0.22);
           border-radius: 8px;
@@ -735,14 +735,14 @@ export default function ServicesPage() {
         }
         .node-proof svg,
         .capability-card svg {
-          color: #5b4ef0;
+          color: #a78bfa;
           flex: 0 0 auto;
         }
         .node-card a {
           display: inline-flex;
           align-items: center;
           gap: 7px;
-          color: #5b4ef0;
+          color: #a78bfa;
           text-decoration: none;
           margin-top: 22px;
           font-weight: 700;
@@ -785,7 +785,7 @@ export default function ServicesPage() {
           padding: 58px 34px;
         }
         .contact-panel svg {
-          color: #5b4ef0;
+          color: #a78bfa;
         }
         .contact-panel p {
           max-width: 650px;
