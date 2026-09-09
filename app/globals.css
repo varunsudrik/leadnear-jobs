@@ -235,76 +235,53 @@ img { max-width: 100%; }
   color: var(--text); letter-spacing: -.01em;
 }
 
-/* ─── Job Card (v2 — full card is a Link) ────── */
+/* ─── Job Card (Direction C re-skin) ─────────── */
+/* Whole card is a single Link (Task 5 wires selected/onSelect on top of this).
+   Superseded the old "v2" job-card-link/job-card-inner/jc-pills family below —
+   verified repo-wide that nothing outside this file and components/JobCard.jsx
+   referenced those class names before removing them. A second, older
+   "directory" job-card-inner definition (interleaved with unrelated
+   directory-hero/hub-page media queries later in this file) still exists but
+   is now unreachable too — left in place rather than risk a surgical
+   extraction from shared breakpoints; see task-3-report.md concerns. */
+.job-card {
+  display: block; background: var(--bg); border-radius: 14px; padding: 13px 16px;
+  cursor: pointer; box-shadow: var(--shadow);
+  transition: box-shadow .15s, transform .15s;
+}
+.job-card:hover { box-shadow: var(--shadow-ring); transform: translateY(-1px); }
+.job-card.selected, .job-card.strong { box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(91,78,240,.22); }
 
-/* Outer link wrapper */
-.job-card-link {
-  display: block; text-decoration: none;
-  border-radius: var(--radius);
-  transition: transform .12s, box-shadow .15s;
+.job-card .jc-row {
+  display: flex; justify-content: space-between; gap: 10px; align-items: flex-start;
 }
-.job-card-link:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(0,0,0,.35); }
-.job-card-link.high-pay .job-card-inner { border-color: rgba(240,180,41,.25); }
-.job-card-link.high-pay:hover .job-card-inner { border-color: rgba(240,180,41,.55); }
-.job-card-link.deleted-card .job-card-inner { opacity: .65; }
+.job-card .jc-main { display: flex; gap: 11px; min-width: 0; }
+.job-card .jc-avatar {
+  width: 32px; height: 32px; border-radius: var(--radius-sm); flex-shrink: 0;
+  background: var(--border); color: #4b4d58; box-shadow: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.job-card .jc-info { min-width: 0; }
+.job-card .jc-name {
+  font-weight: 600; font-size: 14.5px; line-height: 1.3; letter-spacing: -.01em;
+  color: var(--text);
+}
+.job-card .jc-sub { color: var(--text3); margin-top: 1px; }
 
-/* Inner article */
-.job-card-inner {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.15rem 1.4rem;
-  transition: border-color .15s;
-}
-.job-card-link:hover .job-card-inner { border-color: rgba(124,58,237,.5); }
+.job-card .jc-posted, .job-card .jc-salary { font-family: var(--font-mono), monospace; }
+.job-card .jc-posted { font-size: 11px; color: var(--text4); white-space: nowrap; padding-top: 2px; }
 
-/* Header row */
-.jc-header {
-  display: flex; align-items: flex-start; gap: .9rem;
-  margin-bottom: .65rem;
+.job-card .jc-foot {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  margin-top: 10px; padding-left: 43px; /* clears the 32px avatar + 11px gap */
 }
-.jc-avatar {
-  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-  display: flex; align-items: center; justify-content: center;
-  font-size: .68rem; font-weight: 900; color: #fff;
-}
-.jc-title-col { flex: 1; min-width: 0; }
-.jc-title {
-  font-weight: 700; font-size: .99rem; color: var(--text);
-  line-height: 1.35; transition: color .15s;
-}
-.job-card-link:hover .jc-title { color: var(--accent-hover); }
-.jc-company { font-size: .82rem; color: var(--text3); margin-top: .2rem; font-weight: 500; }
+.job-card .jc-salary { font-size: 12px; color: var(--text2); }
 
-/* View badge */
-.jc-apply-badge {
-  flex-shrink: 0; font-size: .78rem; font-weight: 700;
-  color: var(--text3); border: 1px solid var(--border);
-  border-radius: 8px; padding: .3rem .75rem;
-  transition: all .15s; white-space: nowrap;
-}
-.job-card-link:hover .jc-apply-badge {
-  border-color: var(--accent-hover); color: var(--accent-hover);
-  background: rgba(56,189,248,.07);
-}
-
-/* Pills */
-.jc-pills { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .6rem; }
-.jc-pill {
-  font-size: .72rem; font-weight: 600; padding: .18rem .6rem;
-  border-radius: 50px; border: 1px solid;
-}
-.jcp-remote  { color: #34d399; border-color: rgba(52,211,153,.3);  background: rgba(52,211,153,.08); }
-.jcp-type    { color: var(--text3); border-color: var(--border); background: var(--bg3); }
-.jcp-salary  { color: #fbbf24; border-color: rgba(251,191,36,.3);  background: rgba(251,191,36,.08); }
-.jcp-hipay   { color: #fbbf24; border-color: rgba(251,191,36,.45); background: rgba(251,191,36,.14); font-weight: 800; }
-.jcp-closed  { color: var(--bad-fg); border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.08); }
-
-/* Footer */
-.jc-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: .77rem; color: var(--text3);
-}
-.jc-date { color: var(--text3); }
+.fit-badge { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-pill); }
+.fit-badge.strong { background: var(--accent-tint); color: var(--accent-hover); }
+.fit-badge.good   { background: var(--bg2); color: var(--text3); }
+.fit-badge.low    { background: transparent; color: var(--text4); }
 
 /* ─── Job list ───────────────────────────────── */
 .job-list { display: flex; flex-direction: column; gap: .6rem; }
