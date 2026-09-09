@@ -21,7 +21,8 @@
     "autocomplete:test": "node scripts/test-autocomplete.mjs",
     "live-count:test": "node scripts/test-live-count.mjs",
     "job-slug:test": "node scripts/test-job-slug.mjs",
-    "job-slug:backfill": "node scripts/backfill-job-slugs.mjs"
+    "job-slug:backfill": "node scripts/backfill-job-slugs.mjs",
+    "design-tokens:test": "node scripts/test-design-tokens.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",

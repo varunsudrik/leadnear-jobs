@@ -3,6 +3,7 @@ import "./globals.css";
 // Imported after globals.css so Tailwind utilities win on the ported pages.
 import "./tailwind.css";
 import Link from "next/link";
+import { sans, mono } from "@/app/fonts";
 import SiteNavbar from "@/components/SiteNavbar";
 import SessionProvider from "@/components/SessionProvider";
 
@@ -19,7 +20,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="en"><body>
+  return <html lang="en" className={`${sans.variable} ${mono.variable}`}><body>
     <SessionProvider>
     <SiteNavbar />
     <main className="site-main">{children}</main>
