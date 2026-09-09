@@ -8,6 +8,14 @@ assert.equal(isAiConfigured(), false);
 const off = await chat({ system: "s", user: "u" });
 assert.deepEqual(off, { ok: false, reason: "unconfigured" });
 
+// Regression: chat(null) must not throw, even though null is not undefined.
+const nullArg = await chat(null);
+assert.deepEqual(nullArg, { ok: false, reason: "unconfigured" });
+
+// Regression: chat() with no arguments must not throw.
+const noArg = await chat();
+assert.deepEqual(noArg, { ok: false, reason: "unconfigured" });
+
 // With a key, it must POST to OpenRouter with the DeepSeek model.
 process.env.OPENROUTER_API_KEY = "test-key";
 const seen = {};
