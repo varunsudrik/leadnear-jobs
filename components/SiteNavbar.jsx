@@ -27,9 +27,14 @@ function MenuIcon({ open }) {
     : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>;
 }
 
+function SearchIcon() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>;
+}
+
 export default function SiteNavbar() {
   const [open, setOpen] = useState(false);
   const [discoverOpen, setDiscoverOpen] = useState(false);
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   const closeNavigation = () => {
     setOpen(false);
@@ -40,9 +45,21 @@ export default function SiteNavbar() {
     <header className="site-header">
       <div className="inner">
         <a href="/" className="logo" aria-label="LeadNear home">
-          <img src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/images/LandingPage/leadnear-logo.svg`} alt="LeadNear" width="30" height="30" />
-          <span className="logo-word">LeadNear</span>
+          <img src={`${basePath}/images/LandingPage/leadnear-logo.svg`} alt="" width="24" height="24" />
+          <span className="logo-word">LeadNear<span className="logo-word-sub"> Jobs</span></span>
         </a>
+
+        {/* Keeps the header's own compact search distinct from the full
+            autocomplete search on /search — same target route and param
+            names (q, location) as SearchBox.jsx, plain inputs so this stays
+            a lightweight, no-JS-required form. */}
+        <form className="header-search" action={`${basePath}/search`} method="get" role="search">
+          <SearchIcon />
+          <input type="text" name="q" placeholder="Title, skill or company" aria-label="Job title, skill, or company" />
+          <span className="header-search-divider" aria-hidden="true" />
+          <input type="text" name="location" placeholder="Anywhere" aria-label="Location" />
+          <button type="submit">Search</button>
+        </form>
 
         <nav className="nav-links" aria-label="Primary navigation">
           {links.map(([label, href]) => <a key={label} href={href}>{label}</a>)}
