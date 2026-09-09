@@ -8,6 +8,7 @@ import { getJobCached, getRelatedJobs } from "@/lib/jobs";
 import { fmtSalary, fmtDate, initials } from "@/lib/format";
 import { decodeEntities, sanitiseHtml as sanitise } from "@/lib/sanitize";
 import { buildJobPostingJsonLd } from "@/lib/job-jsonld";
+import { formatAtsLabel } from "@/lib/ats";
 import { notFound } from "next/navigation";
 import JobCard from "@/components/JobCard";
 
@@ -168,13 +169,8 @@ function buildJsonLd(job, faqs) {
   return [jobPosting, faqPage].filter(Boolean);
 }
 
-// ─── Source badge helpers ─────────────────────────────────────────────────────
-const SOURCE_LABELS = {
-  ashby:    "Ashby ATS",    lever:    "Lever",    greenhouse: "Greenhouse",
-  workday:  "Workday",      bamboo:   "BambooHR", taleo:      "Oracle Taleo",
-  linkedin: "LinkedIn",     indeed:   "Indeed",   smartrecruiters: "SmartRecruiters",
-};
-function sourceLabel(src) { return SOURCE_LABELS[src?.toLowerCase()] || src; }
+// Source badge label — formatAtsLabel() (lib/ats.js) is the shared helper also
+// used by components/JobPreview.jsx; a local copy here would drift from it.
 
 // ─── Page component ───────────────────────────────────────────────────────────
 export default async function JobDetailPage({ params }) {
@@ -233,213 +229,221 @@ export default async function JobDetailPage({ params }) {
         {/* Deleted banner */}
         {deleted && (
           <div className="deleted-banner" role="alert">
-            ⚠️ This position is no longer active. The listing has been closed or removed.
+            This position is no longer active. The listing has been closed or removed.
           </div>
         )}
 
-        {/* ── Header card ─────────────────────────────── */}
-        <div className="jd-header-card">
-          {/* Top row: logo + title + apply */}
-          <div className="jd-top-row">
-            <div className="jd-logo" aria-hidden="true">{initials(job.company)}</div>
+        {/* ── Job card — single elevated surface, header + two-col body ── */}
+        <div className="jd-card">
+          <div className="jd-card-header">
+            {/* Top row: logo + title + apply */}
+            <div className="jd-top-row">
+              <div className="jd-logo" aria-hidden="true">{initials(job.company)}</div>
 
-            <div className="jd-title-block">
-              <h1 className="jd-title">{job.title}</h1>
-              <div className="jd-company-row">
-                <Link href={`/company/${job.company_slug}`} className="jd-company-link">
-                  {job.company}
-                </Link>
-                {job.department && (
-                  <span className="jd-dept">· {job.department}</span>
-                )}
+              <div className="jd-title-block">
+                <h1 className="jd-title">{job.title}</h1>
+                <div className="jd-company-row">
+                  <Link href={`/company/${job.company_slug}`} className="jd-company-link">
+                    {job.company}
+                  </Link>
+                  {job.department && (
+                    <span className="jd-dept">· {job.department}</span>
+                  )}
+                </div>
               </div>
+
+              {!deleted && job.apply_url && (
+                <div className="jd-header-actions">
+                  <a
+                    id="apply-btn-top"
+                    className="jd-apply-btn"
+                    href={job.apply_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Apply Now ↗
+                  </a>
+                </div>
+              )}
             </div>
 
-            {!deleted && job.apply_url && (
-              <a
-                id="apply-btn-top"
-                className="jd-apply-btn"
-                href={job.apply_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Apply Now ↗
-              </a>
+            {/* Meta pills */}
+            <div className="jd-meta-row">
+              {job.remote ? <span className="jd-pill">Remote</span> : null}
+              {locs.map((l) => (
+                <Link key={l} href={`/location/${l.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")}`}
+                  className="jd-pill jd-pill-link">
+                  {l}
+                </Link>
+              ))}
+              {job.employment_type ? (
+                <span className="jd-pill">{job.employment_type.replace(/[-_]/g," ")}</span>
+              ) : null}
+              {salary ? (
+                <span className="jd-pill mono">{salary}</span>
+              ) : null}
+              {date ? (
+                <time className="jd-pill mono" dateTime={job.posted_at?.toString()}>
+                  Posted {date}
+                </time>
+              ) : null}
+              {job.source ? (
+                <span className="jd-pill jd-pill-muted">via {formatAtsLabel(job.source)}</span>
+              ) : null}
+            </div>
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="jd-tags-row">
+                {tags.map((t) => (
+                  <span key={t} className="jd-tag">{t}</span>
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Meta pills */}
-          <div className="jd-meta-row">
-            {job.remote ? <span className="jd-pill pill-remote">🌍 Remote</span> : null}
-            {locs.map((l) => (
-              <Link key={l} href={`/location/${l.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")}`}
-                className="jd-pill pill-loc">
-                📍 {l}
-              </Link>
-            ))}
-            {job.employment_type ? (
-              <span className="jd-pill pill-type">{job.employment_type.replace(/[-_]/g," ")}</span>
-            ) : null}
-            {salary ? (
-              <span className="jd-pill pill-salary">💰 {salary}</span>
-            ) : null}
-            {date ? (
-              <time className="jd-pill pill-date" dateTime={job.posted_at?.toString()}>
-                🗓 Posted {date}
-              </time>
-            ) : null}
-          </div>
+          {/* ── Two column layout ────────────────────────── */}
+          <div className="jd-two-col">
 
-          {/* Tags */}
-          {tags.length > 0 && (
-            <div className="jd-tags-row">
-              {tags.map((t) => (
-                <span key={t} className="jd-tag">{t}</span>
-              ))}
-            </div>
-          )}
-        </div>
+            {/* LEFT — Description + FAQ */}
+            <div className="jd-main">
 
-        {/* ── Two column layout ────────────────────────── */}
-        <div className="jd-two-col">
-
-          {/* LEFT — Description + FAQ */}
-          <div className="jd-main">
-
-            {/* Description */}
-            <section className="jd-section" aria-label="Job description">
-              <h2 className="jd-section-title">About this role</h2>
-              {cleanDesc.trim() ? (
-                isHtml ? (
-                  <div className="jd-description"
-                    dangerouslySetInnerHTML={{ __html: cleanDesc }} />
+              {/* Description */}
+              <section className="jd-section" aria-label="Job description">
+                <h2 className="jd-section-title">About this role</h2>
+                {cleanDesc.trim() ? (
+                  isHtml ? (
+                    <div className="jd-description"
+                      dangerouslySetInnerHTML={{ __html: cleanDesc }} />
+                  ) : (
+                    <div className="jd-description" style={{ whiteSpace: "pre-wrap" }}>
+                      {cleanDesc}
+                    </div>
+                  )
                 ) : (
-                  <div className="jd-description" style={{ whiteSpace: "pre-wrap" }}>
-                    {cleanDesc}
+                  <div className="jd-description">
+                    <p>Full job description is available on {job.company}&apos;s careers page.</p>
+                    {job.apply_url && (
+                      <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
+                        View full details ↗
+                      </a>
+                    )}
                   </div>
-                )
-              ) : (
-                <div className="jd-description">
-                  <p>Full job description is available on {job.company}&apos;s careers page.</p>
-                  {job.apply_url && (
-                    <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
-                      View full details ↗
-                    </a>
+                )}
+              </section>
+
+              {/* FAQ section */}
+              <section className="jd-section jd-faq" aria-label="Frequently asked questions">
+                <h2 className="jd-section-title">Frequently Asked Questions</h2>
+                <div className="faq-list">
+                  {faqs.map(({ q, a }, i) => (
+                    <details key={i} className="faq-item" open={i === 0}>
+                      <summary className="faq-q">{q}</summary>
+                      <div className="faq-a">{a}</div>
+                    </details>
+                  ))}
+                </div>
+              </section>
+
+            </div>
+
+            {/* RIGHT — Sidebar */}
+            <aside className="jd-sidebar">
+
+              {/* Apply CTA */}
+              {!deleted && job.apply_url && (
+                <div className="jd-sidebar-card jd-apply-card">
+                  <h3>Ready to apply?</h3>
+                  <p>Join {job.company} as a <strong>{job.title}</strong></p>
+                  <a
+                    id="apply-btn-sidebar"
+                    className="jd-apply-btn jd-apply-full"
+                    href={job.apply_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Apply Now ↗
+                  </a>
+                  {job.source && (
+                    <p className="jd-source-note">
+                      via {formatAtsLabel(job.source)}
+                      {job.source_slug ? ` · ${job.source_slug}` : ""}
+                    </p>
                   )}
                 </div>
               )}
-            </section>
 
-            {/* FAQ section */}
-            <section className="jd-section jd-faq" aria-label="Frequently asked questions">
-              <h2 className="jd-section-title">Frequently Asked Questions</h2>
-              <div className="faq-list">
-                {faqs.map(({ q, a }, i) => (
-                  <details key={i} className="faq-item" open={i === 0}>
-                    <summary className="faq-q">{q}</summary>
-                    <div className="faq-a">{a}</div>
-                  </details>
-                ))}
-              </div>
-            </section>
+              {/* Job details */}
+              <div className="jd-sidebar-section">
+                <h3 className="jd-section-title">Job Details</h3>
+                <dl className="jd-detail-list">
 
-          </div>
-
-          {/* RIGHT — Sidebar */}
-          <aside className="jd-sidebar">
-
-            {/* Apply CTA */}
-            {!deleted && job.apply_url && (
-              <div className="jd-sidebar-card jd-apply-card">
-                <h3>Ready to apply?</h3>
-                <p>Join {job.company} as a <strong>{job.title}</strong></p>
-                <a
-                  id="apply-btn-sidebar"
-                  className="jd-apply-btn jd-apply-full"
-                  href={job.apply_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Apply Now ↗
-                </a>
-                {job.source && (
-                  <p className="jd-source-note">
-                    via {sourceLabel(job.source)}
-                    {job.source_slug ? ` · ${job.source_slug}` : ""}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Job details card */}
-            <div className="jd-sidebar-card">
-              <h3>Job Details</h3>
-              <dl className="jd-detail-list">
-
-                {[
-                  ["Company",     <Link key="co" href={`/company/${job.company_slug}`}
-                                    className="jd-detail-link">{job.company}</Link>],
-                  ["Job Title",   job.title],
-                  job.department ? ["Department", job.department] : null,
-                  job.employment_type
-                    ? ["Employment", job.employment_type.replace(/[-_]/g," ")]
-                    : null,
-                  job.remote
-                    ? ["Location", "🌍 Remote"]
-                    : locs.length
-                      ? ["Location", locs.join(", ")]
+                  {[
+                    ["Company",     <Link key="co" href={`/company/${job.company_slug}`}
+                                      className="jd-detail-link">{job.company}</Link>],
+                    ["Job Title",   job.title],
+                    job.department ? ["Department", job.department] : null,
+                    job.employment_type
+                      ? ["Employment", job.employment_type.replace(/[-_]/g," ")]
                       : null,
-                  job.salary_min || job.salary_max
-                    ? ["Salary", <span key="sal" className="jd-salary-value">💰 {salary}</span>]
-                    : null,
-                  job.salary_currency
-                    ? ["Currency", job.salary_currency]
-                    : null,
-                  job.salary_period
-                    ? ["Pay Period", job.salary_period.replace(/[-_]/g," ")]
-                    : null,
-                  job.source
-                    ? ["Source ATS", sourceLabel(job.source)]
-                    : null,
-                  date
-                    ? ["Posted", date]
-                    : null,
-                  job.canonical_title && job.canonical_title !== job.title
-                    ? ["Role Type", job.canonical_title]
-                    : null,
-                ].filter(Boolean).map(([label, value]) => (
-                  <div key={label} className="jd-detail-row">
-                    <dt>{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            {/* Category links */}
-            {catSlugs.length > 0 && (
-              <div className="jd-sidebar-card">
-                <h3>Related Categories</h3>
-                <div className="jd-cat-links">
-                  {catSlugs.map((slug) => (
-                    <Link key={slug} href={`/category/${slug}`} className="jd-cat-link">
-                      {slug.replace(/-jobs$/, "").replace(/-/g, " ")
-                        .replace(/\b\w/g, (c) => c.toUpperCase())} →
-                    </Link>
+                    job.remote
+                      ? ["Location", "Remote"]
+                      : locs.length
+                        ? ["Location", locs.join(", ")]
+                        : null,
+                    // fmtSalary() returns null when absent — render the em
+                    // dash here rather than hiding the row, so "salary not
+                    // disclosed" reads as a fact instead of a layout gap.
+                    ["Salary", <span key="sal" className="jd-salary-value mono">{salary ?? "—"}</span>],
+                    job.salary_currency
+                      ? ["Currency", job.salary_currency]
+                      : null,
+                    job.salary_period
+                      ? ["Pay Period", job.salary_period.replace(/[-_]/g," ")]
+                      : null,
+                    job.source
+                      ? ["Source ATS", formatAtsLabel(job.source)]
+                      : null,
+                    date
+                      ? ["Posted", date]
+                      : null,
+                    job.canonical_title && job.canonical_title !== job.title
+                      ? ["Role Type", job.canonical_title]
+                      : null,
+                  ].filter(Boolean).map(([label, value]) => (
+                    <div key={label} className="jd-detail-row">
+                      <dt>{label}</dt>
+                      <dd>{value}</dd>
+                    </div>
                   ))}
-                </div>
+                </dl>
               </div>
-            )}
 
-            {/* More from company */}
-            <div className="jd-sidebar-card">
-              <h3>More from {job.company}</h3>
-              <Link href={`/company/${job.company_slug}`} className="jd-more-link">
-                All open positions at {job.company} →
-              </Link>
-            </div>
+              {/* Category links */}
+              {catSlugs.length > 0 && (
+                <div className="jd-sidebar-section">
+                  <h3 className="jd-section-title">Related Categories</h3>
+                  <div className="jd-cat-links">
+                    {catSlugs.map((slug) => (
+                      <Link key={slug} href={`/category/${slug}`} className="jd-cat-link">
+                        {slug.replace(/-jobs$/, "").replace(/-/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())} →
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          </aside>
+              {/* More from company */}
+              <div className="jd-sidebar-section">
+                <h3 className="jd-section-title">More from {job.company}</h3>
+                <Link href={`/company/${job.company_slug}`} className="jd-more-link">
+                  All open positions at {job.company} →
+                </Link>
+              </div>
+
+            </aside>
+          </div>
         </div>
 
         {relatedJobs.length > 0 && (
@@ -459,7 +463,7 @@ export default async function JobDetailPage({ params }) {
             <div className="jd-bottom-cta-inner">
               <div>
                 <div className="jd-bottom-role">{job.title}</div>
-                <div className="jd-bottom-co">{job.company}{salary ? ` · 💰 ${salary}` : ""}</div>
+                <div className="jd-bottom-co">{job.company}{salary ? ` · ${salary}` : ""}</div>
               </div>
               <a
                 id="apply-btn-bottom"
@@ -473,7 +477,7 @@ export default async function JobDetailPage({ params }) {
             </div>
             <p className="jd-redirect-note">
               You&apos;ll be redirected to {job.company}&apos;s official application page
-              {job.source ? ` on ${sourceLabel(job.source)}` : ""}.
+              {job.source ? ` on ${formatAtsLabel(job.source)}` : ""}.
             </p>
           </div>
         )}
