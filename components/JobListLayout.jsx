@@ -6,7 +6,7 @@ import Filters from "@/components/Filters";
 import Pagination from "@/components/Pagination";
 
 export default function JobListLayout({
-  heading, prefix = "📋", subtitle, jobs = [], total = 0, mode, highlightSalary = false,
+  heading, prefix = "📋", subtitle, jobs = [], total = 0, mode,
 }) {
   return (
     <div className="container" style={{ paddingTop: "1.5rem", paddingBottom: "3rem" }}>
@@ -40,7 +40,7 @@ export default function JobListLayout({
       ) : (
         <>
           <div className="job-list">
-            {jobs.map((job) => <JobCard key={job.db_id} job={job} highlightSalary={highlightSalary} />)}
+            {jobs.map((job) => <JobCard key={job.db_id} job={job} />)}
           </div>
           <Suspense>
             <Pagination total={total} pageSize={20} />
