@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Instrument Sans",sans-serif;background:#f4f4f6;color:#15171c;font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:#15171c;text-decoration:none}
+a:hover{color:#5b4ef0}
+input::placeholder{color:#9a9aa4}
+button,select,input{font-family:inherit}
+::selection{background:#ddd8ff}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column">
+  <div style="position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:2px;padding:7px 16px;background:#15171c;color:#a7a8b3;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.04em;overflow-x:auto">
+    <span style="color:#a99cff;margin-right:12px;white-space:nowrap">Direction C · Console, modern</span>
+    <button type="button" onClick="{{ goHome }}" style="background:{{ tabHome }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Home</button>
+    <button type="button" onClick="{{ goJob }}" style="background:{{ tabJob }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Job</button>
+    <button type="button" onClick="{{ goResume }}" style="background:{{ tabResume }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Resume / ATS</button>
+    <button type="button" onClick="{{ goMatches }}" style="background:{{ tabMatches }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Matches</button>
+    <button type="button" onClick="{{ goAuto }}" style="background:{{ tabAuto }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Auto-apply</button>
+    <button type="button" onClick="{{ goUpgrade }}" style="background:{{ tabUpgrade }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Upgrade</button>
+    <button type="button" onClick="{{ goRemote }}" style="background:{{ tabRemote }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Remote</button>
+    <button type="button" onClick="{{ goMobile }}" style="background:{{ tabMobile }};border:0;color:inherit;padding:6px 11px;cursor:pointer;font:inherit;border-radius:999px;white-space:nowrap" style-hover="background:#2b2d36;color:#fff">Mobile</button>
+  </div>
+
+  <header style="background:rgba(244,244,246,.86);backdrop-filter:blur(12px);position:sticky;top:35px;z-index:150">
+    <div style="max-width:1440px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:14px;white-space:nowrap">
+      <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:9px;font-weight:600;font-size:15.5px;letter-spacing:-.015em" style-hover="color:#15171c"><img src="assets/leadnear-logo.svg" alt="" width="24" height="24" style="width:24px;height:24px">LeadNear<span style="color:#8b8d99;font-weight:500"> Jobs</span></a>
+      <form style="flex:1 1 240px;min-width:180px;max-width:520px;display:flex;align-items:center;gap:8px;height:38px;background:#fff;border-radius:999px;padding:0 6px 0 14px;box-shadow:0 1px 2px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9a9aa4" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <input type="text" placeholder="Title, skill or company" style="flex:1;min-width:0;border:0;background:transparent;font-size:13.5px;outline:none;color:#15171c">
+        <span style="width:1px;height:18px;background:#e7e7ec;flex-shrink:0"></span>
+        <input type="text" placeholder="Anywhere" style="width:96px;flex:0 0 auto;border:0;background:transparent;font-size:13.5px;outline:none;color:#15171c">
+        <button type="button" style="border:0;background:#15171c;color:#fff;border-radius:999px;height:28px;padding:0 14px;font-weight:600;font-size:12.5px;cursor:pointer;flex-shrink:0" style-hover="background:#5b4ef0">Search</button>
+      </form>
+      <nav style="display:flex;align-items:center;gap:2px;flex:0 1 auto;min-width:0;overflow:hidden;margin-left:auto">
+        <a href="#" onClick="{{ goRemote }}" style="padding:7px 10px;color:#5c5e69;font-weight:500;border-radius:8px" style-hover="background:#eaeaef;color:#15171c">Remote</a>
+        <a href="#" style="padding:7px 10px;color:#5c5e69;font-weight:500;border-radius:8px" style-hover="background:#eaeaef;color:#15171c">Companies</a>
+        <a href="#" style="padding:7px 10px;color:#5c5e69;font-weight:500;border-radius:8px" style-hover="background:#eaeaef;color:#15171c">Salaries</a>
+        <a href="#" onClick="{{ goMatches }}" style="padding:7px 10px;color:#5c5e69;font-weight:500;border-radius:8px" style-hover="background:#eaeaef;color:#15171c">Matches</a>
+        <a href="#" onClick="{{ goAuto }}" style="padding:7px 10px;color:#5c5e69;font-weight:500;border-radius:8px" style-hover="background:#eaeaef;color:#15171c">Auto-apply</a>
+      </nav>
+      <button type="button" onClick="{{ goResume }}" style="display:inline-flex;align-items:center;gap:7px;border:0;background:#ecebff;color:#4a3ee0;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap" style-hover="background:#e0deff"><span style="display:inline-flex;gap:3px"><sc-for list="{{ pips }}" as="p" hint-placeholder-count="3"><span style="width:6px;height:6px;border-radius:999px;background:{{ p.color }}"></span></sc-for></span>{{ scansLeftText }}</button>
+      <a href="#" style="padding:7px 4px;font-weight:600;color:#5c5e69;white-space:nowrap" style-hover="color:#15171c">Log in</a>
+      <span style="width:30px;height:30px;border-radius:999px;background:#15171c;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0">AM</span>
+    </div>
+  </header>
+
+  <main style="flex:1">
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+  <section data-screen-label="C Home" style="max-width:1440px;margin:0 auto;padding:8px 24px 56px">
+    <div style="position:relative;overflow:hidden;border-radius:20px;background:#15171c;color:#fff;padding:26px 30px;margin-bottom:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:center">
+      <div style="position:absolute;right:-80px;top:-120px;width:360px;height:360px;border-radius:999px;background:radial-gradient(circle,rgba(122,105,255,.5),transparent 65%)"></div>
+      <div style="position:relative;min-width:0">
+        <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.1);border-radius:999px;padding:5px 11px;font-size:11.5px;font-weight:600;letter-spacing:.03em;color:#c9c2ff;margin-bottom:14px"><span style="width:6px;height:6px;border-radius:999px;background:#a99cff"></span>AI resume match</div>
+        <h1 style="font-size:26px;font-weight:600;letter-spacing:-.025em;line-height:1.2;margin-bottom:8px;max-width:640px;text-wrap:pretty">Drop your resume. Get an ATS score and every open role ranked by fit.</h1>
+        <p style="color:#a7a8b3;max-width:560px;font-size:14px">PDF or DOCX, up to 5 MB. Three free scans, no card. Your resume is never shared with employers.</p>
+      </div>
+      <div style="position:relative;display:flex;gap:9px;align-items:center">
+        <button type="button" onClick="{{ goResume }}" style="background:#fff;color:#15171c;border:0;border-radius:999px;padding:12px 20px;font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.28)" style-hover="background:#ecebff">Upload resume</button>
+        <button type="button" onClick="{{ goResume }}" style="background:rgba(255,255,255,.08);color:#fff;border:0;border-radius:999px;padding:12px 18px;font-weight:600;font-size:13.5px;cursor:pointer;white-space:nowrap" style-hover="background:rgba(255,255,255,.16)">How scoring works</button>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px">
+      <span style="font-size:12.5px;color:#6b6d78;margin-right:4px"><b style="color:#15171c;font-family:'IBM Plex Mono',monospace;font-weight:500">128,431</b> roles · updated 12 min ago</span>
+      <button type="button" style="background:#15171c;color:#fff;border:0;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer">Remote</button>
+      <select style="background:#fff;border:0;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;cursor:pointer;color:#3d3f4a"><option>Any type</option><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option><option>Freelance</option></select>
+      <select style="background:#fff;border:0;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;cursor:pointer;color:#3d3f4a"><option>Any salary</option><option>$50K+</option><option>$100K+</option><option>$150K+</option><option>$200K+</option></select>
+      <select style="background:#fff;border:0;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;cursor:pointer;color:#3d3f4a"><option>All categories</option><option>Software Eng</option><option>DevOps/Cloud</option><option>Data &amp; AI</option><option>Product</option><option>Design</option><option>Sales</option><option>Marketing</option></select>
+      <select style="background:#fff;border:0;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;cursor:pointer;color:#3d3f4a"><option>Any time</option><option>Last 24h</option><option>Last 7 days</option><option>Last 30 days</option></select>
+      <span style="flex:1"></span>
+      <select style="background:transparent;border:0;padding:7px 4px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a"><option>Sort: newest</option><option>Sort: salary</option><option>Sort: best fit</option></select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(300px,2fr) minmax(0,3fr);gap:16px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ jobs }}" as="job" hint-placeholder-count="10">
+          <div style="background:{{ job.cardBg }};border-radius:14px;padding:13px 16px;cursor:pointer;box-shadow:{{ job.cardShadow }}" style-hover="box-shadow:0 4px 16px rgba(21,23,28,.09),0 0 0 1px rgba(91,78,240,.22);transform:translateY(-1px)">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+              <div style="display:flex;gap:11px;min-width:0">
+                <span style="width:32px;height:32px;border-radius:10px;background:#eaeaef;color:#4b4d58;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">{{ job.initials }}</span>
+                <div style="min-width:0"><div style="font-weight:600;font-size:14.5px;line-height:1.3;letter-spacing:-.01em">{{ job.title }}</div><div style="color:#6b6d78;margin-top:1px">{{ job.company }} · {{ job.location }}</div></div>
+              </div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9a9aa4;white-space:nowrap;padding-top:2px">{{ job.posted }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:8px;margin-top:10px;align-items:center;padding-left:43px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3d3f4a">{{ job.salary }}</span>
+              <span style="font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:{{ job.fitBg }};color:{{ job.fitFg }}">{{ job.fit }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 6px 0;font-size:12px;color:#6b6d78"><span style="font-family:'IBM Plex Mono',monospace">1–20 of 128,431</span><div style="display:flex;gap:6px"><button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;width:28px;height:28px;color:#c3c3cb">‹</button><button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;width:28px;height:28px;cursor:pointer;font-weight:600" style-hover="background:#15171c;color:#fff">›</button></div></div>
+      </div>
+
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);position:sticky;top:96px;max-height:calc(100vh - 116px);overflow:auto">
+        <div style="padding:22px 24px 18px">
+          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+            <div style="min-width:0">
+              <h1 style="font-size:23px;font-weight:600;letter-spacing:-.025em;line-height:1.2;margin-bottom:5px">Senior Backend Engineer (Go)</h1>
+              <div style="color:#6b6d78;font-size:14px"><a href="#" style="font-weight:600;color:#15171c">Northwind Labs</a> · Platform Engineering · Remote, US time zones</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;font-size:12px"><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a">Full-time</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a;font-family:'IBM Plex Mono',monospace">USD 150–190K /yr</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a">Posted Sep 6</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#6b6d78">Greenhouse</span></div>
+            </div>
+            <div style="display:flex;gap:7px"><button type="button" style="border:0;background:#f4f4f6;border-radius:999px;padding:9px 14px;font-weight:600;font-size:13px;cursor:pointer;color:#3d3f4a" style-hover="background:#eaeaef">Save</button><a href="#" style="display:inline-block;background:#15171c;color:#fff;border-radius:999px;padding:10px 18px;font-weight:600;font-size:13px" style-hover="background:#5b4ef0;color:#fff">Apply ↗</a></div>
+          </div>
+        </div>
+        <div style="margin:0 24px 20px;border-radius:14px;background:linear-gradient(180deg,#f3f1ff,#ecebff);padding:14px 16px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center">
+          <span style="font-size:11.5px;font-weight:600;background:#5b4ef0;color:#fff;padding:5px 11px;border-radius:999px;white-space:nowrap">Strong fit</span>
+          <div style="color:#3a2fa8;min-width:0;font-size:13px">Matches Go, PostgreSQL, gRPC and 6+ years. Missing Kubernetes. ATS score for this posting <b style="font-family:'IBM Plex Mono',monospace;font-weight:500">81</b>.</div>
+          <button type="button" onClick="{{ goAuto }}" style="border:0;background:#fff;color:#4a3ee0;border-radius:999px;padding:8px 13px;font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgba(59,47,168,.14)" style-hover="background:#f6f5ff">+ Auto-apply queue</button>
+        </div>
+        <div style="padding:0 24px 20px;font-size:14px;line-height:1.65;color:#3d3f4a;max-width:720px">
+          <p style="margin-bottom:12px">Northwind Labs builds inventory forecasting for mid-market retailers. The Platform team owns the ingestion pipeline, the internal API gateway, and the shared Go service toolkit used by twelve product teams.</p>
+          <h2 style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin:22px 0 8px">What you will do</h2>
+          <ul style="padding-left:18px"><li style="margin-bottom:5px">Design and ship Go services that process 40M events per day with p99 under 200ms.</li><li style="margin-bottom:5px">Own the gRPC contract layer and its backward-compatibility policy.</li><li style="margin-bottom:5px">Lead incident reviews and drive fixes across team boundaries.</li><li>Mentor two mid-level engineers through design reviews and pairing.</li></ul>
+          <h2 style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin:22px 0 8px">What we look for</h2>
+          <ul style="padding-left:18px"><li style="margin-bottom:5px">6+ years building production backend systems, 3+ in Go.</li><li style="margin-bottom:5px">Deep PostgreSQL experience: query planning, partitioning, replication.</li><li style="margin-bottom:5px">Comfort operating services on Kubernetes with Prometheus and Grafana.</li><li>Located in the United States; we operate on US time zones.</li></ul>
+        </div>
+        <div style="padding:14px 24px;border-top:1px solid #f0f0f3;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px"><span style="color:#6b6d78">You will be redirected to Northwind Labs on Greenhouse.</span><a href="#" onClick="{{ goJob }}" style="font-weight:600;color:#5b4ef0">Open full page →</a></div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isJob }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Job" style="max-width:1120px;margin:0 auto;padding:12px 24px 64px">
+    <nav style="font-size:12.5px;color:#6b6d78;display:flex;gap:7px;margin-bottom:16px"><a href="#" onClick="{{ goHome }}" style="color:#6b6d78">Jobs</a><span style="color:#c3c3cb">/</span><a href="#" style="color:#6b6d78">Northwind Labs</a><span style="color:#c3c3cb">/</span><span style="color:#15171c">Senior Backend Engineer (Go)</span></nav>
+    <div style="background:#fff;border-radius:20px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);overflow:hidden">
+      <div style="padding:28px 30px 22px;display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="display:flex;gap:16px;min-width:0">
+          <div style="width:52px;height:52px;border-radius:14px;background:#15171c;color:#a99cff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0">NL</div>
+          <div style="min-width:0">
+            <h1 style="font-size:29px;font-weight:600;letter-spacing:-.03em;line-height:1.12;margin-bottom:6px">Senior Backend Engineer (Go)</h1>
+            <div style="color:#6b6d78;font-size:14px"><a href="#" style="font-weight:600;color:#15171c">Northwind Labs</a> · Platform Engineering · 210 employees</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;font-size:12px"><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a">Remote · US</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a">Full-time</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a;font-family:'IBM Plex Mono',monospace">USD 150–190K /yr</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#3d3f4a">Posted Sep 6, 2026</span><span style="background:#f4f4f6;border-radius:999px;padding:4px 11px;color:#6b6d78">via Greenhouse</span></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px"><button type="button" style="border:0;background:#f4f4f6;border-radius:999px;padding:10px 15px;font-weight:600;font-size:13px;cursor:pointer;color:#3d3f4a" style-hover="background:#eaeaef">Save</button><a href="#" style="display:inline-block;background:#15171c;color:#fff;border-radius:999px;padding:11px 20px;font-weight:600;font-size:13px" style-hover="background:#5b4ef0;color:#fff">Apply on Greenhouse ↗</a></div>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:0">
+        <div style="padding:4px 30px 28px;font-size:14px;line-height:1.65;color:#3d3f4a">
+          <p style="margin-bottom:12px">Northwind Labs builds inventory forecasting for mid-market retailers. The Platform team owns the ingestion pipeline, the internal API gateway, and the shared Go service toolkit used by twelve product teams.</p>
+          <h2 style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin:22px 0 8px">What you will do</h2>
+          <ul style="padding-left:18px"><li style="margin-bottom:5px">Design and ship Go services that process 40M events per day with p99 under 200ms.</li><li style="margin-bottom:5px">Own the gRPC contract layer and its backward-compatibility policy.</li><li style="margin-bottom:5px">Lead incident reviews and drive fixes across team boundaries.</li><li>Mentor two mid-level engineers through design reviews and pairing.</li></ul>
+          <h2 style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin:22px 0 8px">What we look for</h2>
+          <ul style="padding-left:18px"><li style="margin-bottom:5px">6+ years building production backend systems, 3+ in Go.</li><li style="margin-bottom:5px">Deep PostgreSQL experience: query planning, partitioning, replication.</li><li style="margin-bottom:5px">Comfort operating services on Kubernetes with Prometheus and Grafana.</li><li>Located in the United States; we operate on US time zones.</li></ul>
+          <h2 style="font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin:28px 0 4px">Questions candidates ask</h2>
+          <details open style="padding:11px 0;border-bottom:1px solid #f0f0f3"><summary style="cursor:pointer;font-weight:600;font-size:13.5px;list-style:none;color:#15171c">Is this role fully remote?</summary><p style="margin-top:6px;color:#6b6d78;font-size:13px">Yes, with team members based in the United States. Work hours follow US time zones.</p></details>
+          <details style="padding:11px 0;border-bottom:1px solid #f0f0f3"><summary style="cursor:pointer;font-weight:600;font-size:13.5px;list-style:none;color:#15171c">How do I apply?</summary><p style="margin-top:6px;color:#6b6d78;font-size:13px">Apply opens Northwind Labs' Greenhouse page. Pro members can queue it for auto-apply instead.</p></details>
+          <details style="padding:11px 0"><summary style="cursor:pointer;font-weight:600;font-size:13.5px;list-style:none;color:#15171c">When was it posted?</summary><p style="margin-top:6px;color:#6b6d78;font-size:13px">September 6, 2026. Early applications are usually reviewed first.</p></details>
+        </div>
+        <aside style="padding:4px 24px 28px;display:flex;flex-direction:column;gap:20px">
+          <div style="border-radius:16px;background:linear-gradient(180deg,#f3f1ff,#ecebff);padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5b4ef0">Your fit</span><span style="font-size:11.5px;font-weight:600;background:#5b4ef0;color:#fff;padding:4px 10px;border-radius:999px">Strong</span></div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <sc-for list="{{ fitRows }}" as="f" hint-placeholder-count="5">
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#2f2a6b"><span>{{ f.skill }}</span><span style="font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:{{ f.bg }};color:{{ f.fg }}">{{ f.state }}</span></div>
+              </sc-for>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(91,78,240,.16);font-size:13px"><span style="color:#4a3ee0">ATS score for this posting</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:500;color:#2f2a6b">81 / 100</span></div>
+            <button type="button" onClick="{{ goAuto }}" style="width:100%;margin-top:14px;border:0;background:#fff;color:#4a3ee0;border-radius:999px;padding:10px;font-weight:600;font-size:13px;cursor:pointer;box-shadow:0 1px 2px rgba(59,47,168,.14)" style-hover="background:#f6f5ff">Add to auto-apply queue</button>
+          </div>
+          <dl style="font-size:13px">
+            <div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0f3"><dt style="color:#9a9aa4">Employment</dt><dd style="color:#3d3f4a">Full-time</dd></div>
+            <div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0f3"><dt style="color:#9a9aa4">Hires in</dt><dd style="color:#3d3f4a">United States</dd></div>
+            <div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0f3"><dt style="color:#9a9aa4">Salary</dt><dd style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3d3f4a">USD 150,000–190,000 /yr</dd></div>
+            <div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0f3"><dt style="color:#9a9aa4">Source</dt><dd style="color:#3d3f4a">Greenhouse · northwindlabs</dd></div>
+            <div style="display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 0"><dt style="color:#9a9aa4">Categories</dt><dd><a href="#" style="color:#5b4ef0">Software Engineering</a>, <a href="#" style="color:#5b4ef0">DevOps / Cloud</a></dd></div>
+          </dl>
+          <div>
+            <div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin-bottom:10px">More at Northwind Labs</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ moreJobs }}" as="job" hint-placeholder-count="3">
+                <a href="#" style="display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:12px;background:#f4f4f6;font-size:13px" style-hover="background:#eaeaef;color:#15171c"><span style="font-weight:600">{{ job.title }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#6b6d78;white-space:nowrap">{{ job.salary }}</span></a>
+              </sc-for>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isResume }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Resume ATS" style="max-width:1440px;margin:0 auto;padding:8px 24px 56px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h1 style="font-size:22px;font-weight:600;letter-spacing:-.025em">Resume scan</h1><span style="font-size:12.5px;color:#6b6d78">arjun-mehta-resume.pdf · 2 pages · scanned today 14:02 in 18s</span></div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#6b6d78"><span style="display:inline-flex;gap:3px"><sc-for list="{{ pips }}" as="p" hint-placeholder-count="3"><span style="width:6px;height:6px;border-radius:999px;background:{{ p.color }}"></span></sc-for></span>{{ scansUsedText }}</span>
+        <sc-if value="{{ trialExhausted }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ goUpgrade }}" style="background:#5b4ef0;color:#fff;border:0;border-radius:999px;padding:8px 14px;font-weight:600;font-size:12.5px;cursor:pointer" style-hover="background:#4a3ee0">Unlock unlimited</button></sc-if>
+        <button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:8px 13px;font-weight:600;font-size:12.5px;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Upload revised</button>
+        <button type="button" onClick="{{ goMatches }}" style="background:#15171c;color:#fff;border:0;border-radius:999px;padding:9px 15px;font-weight:600;font-size:12.5px;cursor:pointer" style-hover="background:#5b4ef0">View 214 matches →</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(250px,1fr) minmax(0,2.2fr);gap:16px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin-bottom:12px"><span>Preview</span><span style="font-family:'IBM Plex Mono',monospace;letter-spacing:0;text-transform:none">page 1 / 2</span></div>
+          <div style="aspect-ratio:8.5/11;border-radius:12px;background:#f4f4f6;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;font-size:12px;color:#9a9aa4;line-height:1.5">rendered resume page<br>with flagged regions highlighted</div>
+        </div>
+        <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:16px">
+          <label style="display:block;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin-bottom:8px">Scored against</label>
+          <select style="width:100%;background:#f4f4f6;border:0;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:600;color:#15171c;cursor:pointer"><option>Senior Backend Engineer · 214 postings</option><option>Staff Engineer · 88 postings</option><option>Platform Engineer · 161 postings</option></select>
+          <div style="color:#6b6d78;margin-top:8px;font-size:12.5px">Keywords weighted by how often they appear in current postings for this title.</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:24px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:32px;align-items:center">
+          <div style="position:relative;width:132px;height:132px;flex-shrink:0;border-radius:999px;background:conic-gradient(#5b4ef0 0 72%,#eaeaef 72% 100%);display:flex;align-items:center;justify-content:center">
+            <div style="width:106px;height:106px;border-radius:999px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-.03em;line-height:1">72</span><span style="font-size:11px;color:#9a9aa4;letter-spacing:.04em">ATS SCORE</span></div>
+          </div>
+          <div style="min-width:0">
+            <div style="font-size:16px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px">Passes most ATS filters. Keyword coverage is the drag.</div>
+            <div style="color:#6b6d78;margin-bottom:16px;font-size:13.5px">Four terms that appear in over half of Senior Backend postings are missing. Clearing the two High items is worth about +11.</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+              <sc-for list="{{ scoreParts }}" as="p" hint-placeholder-count="4">
+                <div><div style="display:flex;justify-content:space-between;font-size:11.5px;color:#6b6d78;margin-bottom:6px"><span>{{ p.label }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#15171c">{{ p.value }}</span></div><div style="height:5px;background:#f0f0f3;border-radius:999px;overflow:hidden"><div style="height:100%;border-radius:999px;background:{{ p.color }};width:{{ p.width }}"></div></div></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4"><span>Fixes · 5 open</span><span>Est. impact</span></div>
+          <sc-for list="{{ issues }}" as="i" hint-placeholder-count="5">
+            <label style="display:grid;grid-template-columns:18px 70px minmax(0,1fr) 44px;gap:14px;padding:13px 18px;border-top:1px solid #f4f4f6;align-items:start;cursor:pointer" style-hover="background:#fafafb">
+              <input type="checkbox" style="margin-top:2px;accent-color:#5b4ef0;width:15px;height:15px">
+              <span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;text-align:center;background:{{ i.bg }};color:{{ i.fg }}">{{ i.sev }}</span>
+              <span style="font-size:13.5px;line-height:1.45"><span style="font-weight:600">{{ i.issue }}</span><span style="color:#6b6d78"> — {{ i.fix }}</span></span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:right;color:#12876b">{{ i.impact }}</span>
+            </label>
+          </sc-for>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px"><div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin-bottom:12px">Keywords found · 9</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Go</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">PostgreSQL</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">gRPC</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">AWS</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Terraform</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">REST</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">CI/CD</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Redis</span><span style="background:#e7f6f1;color:#0e6e57;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Microservices</span></div></div>
+          <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px"><div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin-bottom:12px">Missing · 4</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span style="background:#fdeeea;color:#a8341a;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Kubernetes · 71%</span><span style="background:#fdeeea;color:#a8341a;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Kafka · 58%</span><span style="background:#fdeeea;color:#a8341a;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Observability · 54%</span><span style="background:#fdeeea;color:#a8341a;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Mentoring · 52%</span></div><div style="color:#6b6d78;margin-top:10px;font-size:12.5px">Share of current postings that mention the term.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isMatches }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Matches" style="max-width:1440px;margin:0 auto;padding:8px 24px 56px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><h1 style="font-size:22px;font-weight:600;letter-spacing:-.025em">214 matches</h1><span style="font-size:12.5px;color:#6b6d78">from arjun-mehta-resume.pdf · Senior Backend Engineer · refreshed 2h ago</span></div>
+      <div style="display:flex;gap:7px"><button type="button" style="background:#15171c;color:#fff;border:0;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer">Remote</button><button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Salary listed</button><button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Hide applied</button></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px 12px"><span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#5b4ef0"></span>Strong<span style="font-family:'IBM Plex Mono',monospace;color:#9a9aa4;font-weight:400">18</span></span><button type="button" onClick="{{ goAuto }}" style="border:0;background:#ecebff;color:#4a3ee0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:#e0deff">Queue all 18</button></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ strongMatches }}" as="m" hint-placeholder-count="4">
+            <div style="background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(21,23,28,.05),0 0 0 1px rgba(91,78,240,.16)" style-hover="box-shadow:0 4px 16px rgba(21,23,28,.09),0 0 0 1px rgba(91,78,240,.3)">
+              <a href="#" onClick="{{ goJob }}" style="font-weight:600;font-size:14.5px;line-height:1.3;letter-spacing:-.01em;display:block">{{ m.title }}</a>
+              <div style="color:#6b6d78;margin-top:2px">{{ m.company }} · {{ m.location }}</div>
+              <div style="margin-top:10px;font-size:12.5px;color:#3a2fa8;padding:8px 10px;background:#f3f1ff;border-radius:10px;line-height:1.45">{{ m.why }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3d3f4a">{{ m.salary }}</span><div style="display:flex;gap:6px"><button type="button" onClick="{{ goAuto }}" style="border:0;background:#f4f4f6;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="background:#eaeaef">+ Queue</button><button type="button" onClick="{{ goJob }}" style="border:0;background:#15171c;color:#fff;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:#5b4ef0">Apply</button></div></div>
+            </div>
+          </sc-for>
+          <button type="button" style="border:0;background:transparent;padding:8px;font-size:12.5px;font-weight:600;color:#6b6d78;cursor:pointer" style-hover="color:#5b4ef0">Show 14 more</button>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px 12px"><span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#a3a4af"></span>Good<span style="font-family:'IBM Plex Mono',monospace;color:#9a9aa4;font-weight:400">63</span></span></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ goodMatches }}" as="m" hint-placeholder-count="3">
+            <div style="background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 1px 2px rgba(21,23,28,.05),0 0 0 1px rgba(21,23,28,.05)" style-hover="box-shadow:0 4px 16px rgba(21,23,28,.08),0 0 0 1px rgba(21,23,28,.1)">
+              <a href="#" onClick="{{ goJob }}" style="font-weight:600;font-size:14.5px;line-height:1.3;letter-spacing:-.01em;display:block">{{ m.title }}</a>
+              <div style="color:#6b6d78;margin-top:2px">{{ m.company }} · {{ m.location }}</div>
+              <div style="margin-top:10px;font-size:12.5px;color:#3d3f4a;padding:8px 10px;background:#f4f4f6;border-radius:10px;line-height:1.45">{{ m.why }}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3d3f4a">{{ m.salary }}</span><div style="display:flex;gap:6px"><button type="button" onClick="{{ goAuto }}" style="border:0;background:#f4f4f6;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="background:#eaeaef">+ Queue</button><button type="button" onClick="{{ goJob }}" style="border:0;background:#f4f4f6;color:#15171c;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:#15171c;color:#fff">Apply</button></div></div>
+            </div>
+          </sc-for>
+          <button type="button" style="border:0;background:transparent;padding:8px;font-size:12.5px;font-weight:600;color:#6b6d78;cursor:pointer" style-hover="color:#5b4ef0">Show 60 more</button>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px 12px"><span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#6b6d78"><span style="width:8px;height:8px;border-radius:999px;background:#d5d5db"></span>Low<span style="font-family:'IBM Plex Mono',monospace;color:#9a9aa4;font-weight:400">133</span></span><span style="font-size:12px;color:#9a9aa4">collapsed</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ lowMatches }}" as="m" hint-placeholder-count="2">
+            <div style="background:#fafafb;border-radius:16px;padding:14px 16px;box-shadow:0 0 0 1px rgba(21,23,28,.04)" style-hover="background:#fff">
+              <a href="#" style="font-weight:600;font-size:14px;line-height:1.3;display:block;color:#4b4d58">{{ m.title }}</a>
+              <div style="margin-top:2px;color:#8b8d99">{{ m.company }} · {{ m.location }}</div>
+              <div style="margin-top:8px;font-size:12.5px;color:#8b8d99">{{ m.why }}</div>
+            </div>
+          </sc-for>
+          <div style="padding:14px 16px;font-size:12.5px;color:#6b6d78;line-height:1.5;background:#fff;border-radius:16px;box-shadow:0 0 0 1px rgba(21,23,28,.05)">Low-fit roles are excluded from auto-apply. Add a target title or close a missing keyword to move roles up.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isAuto }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Auto-apply" style="max-width:1440px;margin:0 auto;padding:8px 24px 56px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><h1 style="font-size:22px;font-weight:600;letter-spacing:-.025em">Auto-apply</h1><span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#0e6e57;background:#e7f6f1;padding:5px 11px;border-radius:999px;font-weight:600"><span style="width:7px;height:7px;border-radius:999px;background:#12876b"></span>Running · next batch 18:00</span><span style="font-size:11.5px;font-weight:600;background:#ecebff;color:#4a3ee0;padding:5px 10px;border-radius:999px">Pro</span></div>
+      <div style="display:flex;gap:7px"><button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:8px 14px;font-weight:600;font-size:12.5px;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Pause</button><button type="button" onClick="{{ goMatches }}" style="background:#15171c;color:#fff;border:0;border-radius:999px;padding:9px 15px;font-weight:600;font-size:12.5px;cursor:pointer" style-hover="background:#5b4ef0">Add from matches</button></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px">
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px"><div style="font-size:12px;color:#6b6d78">Queued</div><div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:500;letter-spacing:-.03em;line-height:1.1;margin-top:6px">14</div></div>
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px"><div style="font-size:12px;color:#6b6d78">Submitted this week</div><div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:500;letter-spacing:-.03em;line-height:1.1;margin-top:6px">32</div></div>
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px"><div style="font-size:12px;color:#6b6d78">Replies</div><div style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:500;letter-spacing:-.03em;line-height:1.1;margin-top:6px;color:#12876b">3</div></div>
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#6b6d78"><span>Weekly cap</span><span style="font-family:'IBM Plex Mono',monospace;color:#15171c">32 / 50</span></div><div style="height:6px;background:#f0f0f3;border-radius:999px;margin-top:22px;overflow:hidden"><div style="height:100%;width:64%;border-radius:999px;background:#5b4ef0"></div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start">
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4">Rules</div>
+        <div><label style="display:block;font-size:12.5px;color:#6b6d78;margin-bottom:6px">Target roles</label><div style="display:flex;flex-wrap:wrap;gap:5px"><span style="background:#f4f4f6;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Senior Backend Engineer ×</span><span style="background:#f4f4f6;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Staff Engineer ×</span><span style="background:#f4f4f6;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Platform Engineer ×</span><span style="background:transparent;box-shadow:0 0 0 1px #dcdce2 inset;padding:5px 10px;border-radius:999px;font-size:12.5px;color:#6b6d78;cursor:pointer">+ Add</span></div></div>
+        <div><label style="display:block;font-size:12.5px;color:#6b6d78;margin-bottom:6px">Minimum fit</label><select style="width:100%;background:#f4f4f6;border:0;border-radius:10px;padding:9px 11px;font-size:13.5px;font-weight:600;cursor:pointer"><option>Strong only</option><option>Strong and Good</option></select></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label style="display:block;font-size:12.5px;color:#6b6d78;margin-bottom:6px">Min salary</label><input type="text" value="USD 140,000" style="width:100%;background:#f4f4f6;border:0;border-radius:10px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;outline:none"></div><div><label style="display:block;font-size:12.5px;color:#6b6d78;margin-bottom:6px">Daily cap</label><input type="text" value="10" style="width:100%;background:#f4f4f6;border:0;border-radius:10px;padding:9px 11px;font-size:13px;font-family:'IBM Plex Mono',monospace;outline:none"></div></div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <label style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:9px 0;border-top:1px solid #f4f4f6;cursor:pointer">Remote only<input type="checkbox" checked style="accent-color:#5b4ef0;width:16px;height:16px"></label>
+          <label style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:9px 0;border-top:1px solid #f4f4f6;cursor:pointer">Tailored cover letter<input type="checkbox" checked style="accent-color:#5b4ef0;width:16px;height:16px"></label>
+          <label style="display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:9px 0;border-top:1px solid #f4f4f6;cursor:pointer;gap:12px"><span>Hold when a question is unanswered</span><input type="checkbox" checked style="accent-color:#5b4ef0;width:16px;height:16px;flex-shrink:0"></label>
+        </div>
+        <div style="border-top:1px solid #f4f4f6;padding-top:12px"><label style="display:block;font-size:12.5px;color:#6b6d78;margin-bottom:6px">Excluded companies</label><div style="display:flex;gap:5px;flex-wrap:wrap"><span style="background:#f4f4f6;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Current employer ×</span><span style="background:#f4f4f6;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:500">Bluepine ×</span></div></div>
+        <button type="button" style="background:#15171c;color:#fff;border:0;border-radius:999px;padding:11px;font-weight:600;font-size:13px;cursor:pointer" style-hover="background:#5b4ef0">Save rules</button>
+      </div>
+      <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);overflow:hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;font-size:12.5px"><span style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4">Activity</span><div style="display:flex;gap:6px"><span style="background:#15171c;color:#fff;padding:5px 11px;border-radius:999px;font-weight:600;font-size:12px">All 46</span><span style="background:#f4f4f6;color:#3d3f4a;padding:5px 11px;border-radius:999px;font-weight:600;font-size:12px;cursor:pointer">Needs input 1</span><span style="background:#f4f4f6;color:#3d3f4a;padding:5px 11px;border-radius:999px;font-weight:600;font-size:12px;cursor:pointer">Replied 3</span></div></div>
+        <sc-for list="{{ apps }}" as="a" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:66px 8px minmax(0,1fr) auto;gap:14px;padding:14px 18px;border-top:1px solid #f4f4f6;align-items:start" style-hover="background:#fafafb">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9a9aa4;padding-top:3px">{{ a.date }} {{ a.time }}</span>
+            <span style="width:8px;height:8px;border-radius:999px;margin-top:6px;background:{{ a.dot }};box-shadow:0 0 0 3px {{ a.ring }}"></span>
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:14px;line-height:1.3">{{ a.title }}</div>
+              <div style="color:#8b8d99;font-size:12.5px;margin-top:1px">{{ a.company }} · via {{ a.via }}</div>
+              <div style="margin-top:6px;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap"><span style="font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:{{ a.badgeBg }};color:{{ a.badgeFg }};white-space:nowrap">{{ a.status }}</span><span style="color:#3d3f4a;font-size:13px;line-height:1.45">{{ a.event }}</span></div>
+            </div>
+            <button type="button" style="border:0;background:#f4f4f6;border-radius:999px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;color:#3d3f4a" style-hover="background:#eaeaef">{{ a.action }}</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isUpgrade }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Upgrade" style="position:relative;min-height:calc(100vh - 120px)">
+    <div style="max-width:1440px;margin:0 auto;padding:8px 24px;opacity:.4;filter:blur(2px);pointer-events:none">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:16px"><h1 style="font-size:22px;font-weight:600;letter-spacing:-.025em">Resume scan</h1><span style="font-size:12.5px;color:#6b6d78">arjun-mehta-resume-v2.pdf · uploaded just now</span></div>
+      <div style="background:#fff;border-radius:18px;height:420px;box-shadow:0 1px 3px rgba(21,23,28,.06)"></div>
+    </div>
+    <div style="position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding:48px 24px">
+      <div style="width:100%;max-width:660px;background:#fff;border-radius:22px;box-shadow:0 30px 70px rgba(21,23,28,.22);overflow:hidden">
+        <div style="padding:26px 28px 22px">
+          <div style="display:inline-flex;align-items:center;gap:8px;background:#f4f4f6;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;color:#6b6d78;margin-bottom:14px"><span style="display:inline-flex;gap:3px"><span style="width:7px;height:7px;border-radius:999px;background:#5b4ef0"></span><span style="width:7px;height:7px;border-radius:999px;background:#5b4ef0"></span><span style="width:7px;height:7px;border-radius:999px;background:#5b4ef0"></span></span>3 of 3 free scans used</div>
+          <h2 style="font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin-bottom:8px;text-wrap:pretty">This scan needs Pro.</h2>
+          <p style="color:#6b6d78;font-size:14.5px;text-wrap:pretty;max-width:480px">Your matches, saved jobs and search stay free. Pro removes the scan limit and turns on auto-apply.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 28px 4px">
+          <div style="border-radius:16px;background:#f4f4f6;padding:18px 20px"><div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4">Free</div><div style="font-size:22px;font-weight:600;margin:4px 0 12px;letter-spacing:-.02em">$0</div><ul style="list-style:none;display:flex;flex-direction:column;gap:7px;color:#3d3f4a;font-size:13.5px"><li>3 ATS scans total</li><li>Roles ranked by fit</li><li>Saved jobs and weekly alerts</li><li style="color:#9a9aa4">No auto-apply</li></ul></div>
+          <div style="border-radius:16px;background:linear-gradient(180deg,#f3f1ff,#ecebff);padding:18px 20px;box-shadow:0 0 0 1px rgba(91,78,240,.2)"><div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5b4ef0">Pro</div><div style="font-size:22px;font-weight:600;margin:4px 0 12px;letter-spacing:-.02em">$9<span style="font-size:13.5px;color:#6b6d78;font-weight:500"> /month</span></div><ul style="list-style:none;display:flex;flex-direction:column;gap:7px;color:#2f2a6b;font-size:13.5px"><li>Unlimited scans and rescans</li><li>Matches refreshed daily</li><li>Auto-apply, up to 50 per week</li><li>Tailored cover letters, instant alerts</li></ul></div>
+        </div>
+        <div style="padding:20px 28px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><button type="button" onClick="{{ goMatches }}" style="background:none;border:0;color:#6b6d78;font-weight:600;font-size:13px;cursor:pointer;padding:8px 0" style-hover="color:#15171c">Not now, back to matches</button><div style="display:flex;align-items:center;gap:14px"><span style="font-size:12.5px;color:#9a9aa4">Cancel any time</span><button type="button" style="background:#5b4ef0;color:#fff;border:0;border-radius:999px;padding:12px 22px;font-weight:600;font-size:13.5px;cursor:pointer;box-shadow:0 6px 18px rgba(91,78,240,.32)" style-hover="background:#4a3ee0">Start Pro · $9/mo</button></div></div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isRemote }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Remote" style="max-width:1440px;margin:0 auto;padding:8px 24px 56px">
+    <div style="background:#fff;border-radius:20px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);padding:26px 28px;margin-bottom:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,1.1fr);gap:36px;align-items:center">
+      <div>
+        <h1 style="font-size:27px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin-bottom:8px">41,203 remote roles. 9,412 will hire in India.</h1>
+        <p style="color:#6b6d78;font-size:14px;text-wrap:pretty;max-width:520px">"Remote" usually means a country or a time zone. Set where you are and we filter out the roles you cannot take.</p>
+        <div style="display:flex;gap:8px;margin-top:16px;align-items:center;flex-wrap:wrap"><select style="background:#f4f4f6;border:0;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer"><option>India · UTC+5:30</option><option>United States · UTC−5 to −8</option><option>United Kingdom · UTC+0</option><option>Germany · UTC+1</option><option>Brazil · UTC−3</option></select><button type="button" style="background:#15171c;color:#fff;border:0;border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer">Eligible for me</button><button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.09);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.25)">≥ 4h overlap</button></div>
+      </div>
+      <div style="background:#fafafb;border-radius:16px;padding:18px">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;color:#6b6d78;margin-bottom:10px"><span>Your day · IST</span><span>Overlap with employer hours</span></div>
+        <div style="position:relative;height:26px;background:#f0f0f3;border-radius:999px;overflow:hidden"><div style="position:absolute;left:37.5%;width:37.5%;top:0;bottom:0;background:#dcdce2"></div><div style="position:absolute;left:37.5%;width:12.5%;top:0;bottom:0;background:#5b4ef0"></div></div>
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#9a9aa4;margin-top:6px"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+        <div style="display:flex;gap:16px;margin-top:12px;font-size:12.5px;color:#6b6d78;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:3px;background:#dcdce2"></span>Your 09–18</span><span style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:3px;background:#5b4ef0"></span>Northwind Labs (US East) 09–18</span></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:14px">
+      <span style="font-size:12.5px;color:#6b6d78;margin-right:2px">Hires in</span>
+      <button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Worldwide · 12,904</button>
+      <button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Asia-Pacific · 3,311</button>
+      <button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">EMEA · 8,207</button>
+      <button type="button" style="border:0;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="box-shadow:0 0 0 1px rgba(21,23,28,.2)">Americas · 9,612</button>
+      <button type="button" style="border:0;background:#eeeef1;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:#9a9aa4;text-decoration:line-through;cursor:pointer">US only · 14,873</button>
+    </div>
+    <div style="background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);overflow:hidden">
+      <div style="display:grid;grid-template-columns:minmax(0,1.6fr) 130px 120px 150px 64px 118px;gap:14px;padding:13px 18px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4"><span>Role</span><span>Hires in</span><span>Salary</span><span>Overlap</span><span>Posted</span><span></span></div>
+      <sc-for list="{{ remoteJobs }}" as="job" hint-placeholder-count="8">
+        <div style="display:grid;grid-template-columns:minmax(0,1.6fr) 130px 120px 150px 64px 118px;gap:14px;align-items:center;padding:13px 18px;border-top:1px solid #f4f4f6" style-hover="background:#fafafb">
+          <div style="min-width:0"><a href="#" onClick="{{ goJob }}" style="font-weight:600;font-size:14px;display:block;line-height:1.3;letter-spacing:-.01em">{{ job.title }}</a><div style="color:#8b8d99;font-size:12.5px">{{ job.company }}</div></div>
+          <span style="color:#3d3f4a;font-size:12.5px">{{ job.hires }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#3d3f4a">{{ job.salary }}</span>
+          <div style="display:flex;align-items:center;gap:9px"><div style="flex:1;height:5px;background:#f0f0f3;border-radius:999px;overflow:hidden"><div style="height:100%;border-radius:999px;background:#5b4ef0;width:{{ job.overlapW }}"></div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;width:26px;color:#6b6d78">{{ job.overlap }}</span></div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#9a9aa4">{{ job.posted }}</span>
+          <div style="display:flex;justify-content:flex-end;gap:6px"><button type="button" style="border:0;background:#f4f4f6;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#3d3f4a" style-hover="background:#eaeaef">Save</button><button type="button" onClick="{{ goJob }}" style="border:0;background:#15171c;color:#fff;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:#5b4ef0">Apply</button></div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+  <section data-screen-label="C Mobile" style="max-width:1340px;margin:0 auto;padding:24px 24px 64px">
+    <div style="font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4;margin-bottom:20px">Mobile · Home, ATS result, matches</div>
+    <div style="display:flex;gap:28px;flex-wrap:wrap;justify-content:center">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+        <div style="font-family:'Instrument Sans',sans-serif;background:#f4f4f6;min-height:100%;color:#15171c;padding-top:58px;font-size:13.5px">
+          <div style="padding:8px 18px 12px;display:flex;justify-content:space-between;align-items:center"><span style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:15px"><img src="assets/leadnear-logo.svg" alt="" style="width:20px;height:20px">LeadNear<span style="color:#8b8d99;font-weight:500"> Jobs</span></span><span style="width:30px;height:30px;border-radius:999px;background:#15171c;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:600">AM</span></div>
+          <div style="padding:0 18px 12px"><div style="display:flex;align-items:center;gap:8px;height:42px;background:#fff;border-radius:999px;padding:0 14px;box-shadow:0 1px 2px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9a9aa4" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input type="text" placeholder="Title, skill or company" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:13.5px;outline:none"></div></div>
+          <div style="margin:0 18px 14px;border-radius:18px;background:#15171c;color:#fff;padding:18px;position:relative;overflow:hidden"><div style="position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:999px;background:radial-gradient(circle,rgba(122,105,255,.5),transparent 65%)"></div><div style="position:relative"><div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;color:#c9c2ff;margin-bottom:10px"><span style="width:5px;height:5px;border-radius:999px;background:#a99cff"></span>AI resume match</div><div style="font-size:18px;font-weight:600;line-height:1.25;letter-spacing:-.02em;margin-bottom:6px">Drop your resume. Get an ATS score and every role ranked by fit.</div><div style="color:#a7a8b3;font-size:12.5px;margin-bottom:14px">3 free scans · no card</div><button type="button" style="width:100%;background:#fff;color:#15171c;border:0;border-radius:999px;padding:13px;font-weight:600;font-size:13.5px;min-height:46px">Upload resume</button></div></div>
+          <div style="display:flex;gap:7px;padding:0 18px 12px;overflow-x:auto"><span style="background:#15171c;color:#fff;border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;white-space:nowrap">Remote</span><span style="background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:500;white-space:nowrap;color:#3d3f4a">Any type</span><span style="background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:500;white-space:nowrap;color:#3d3f4a">Any salary</span><span style="background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:500;white-space:nowrap;color:#3d3f4a">Newest</span></div>
+          <div style="padding:0 18px 24px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ mobileJobs }}" as="job" hint-placeholder-count="4">
+              <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 2px rgba(21,23,28,.05),0 0 0 1px rgba(21,23,28,.05)"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div style="display:flex;gap:11px;min-width:0"><span style="width:32px;height:32px;border-radius:10px;background:#eaeaef;color:#4b4d58;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">{{ job.initials }}</span><div style="min-width:0"><div style="font-weight:600;font-size:14.5px;line-height:1.3">{{ job.title }}</div><div style="color:#6b6d78;font-size:12.5px;margin-top:1px">{{ job.company }} · {{ job.location }}</div></div></div><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9a9aa4;white-space:nowrap">{{ job.posted }}</span></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-left:43px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3d3f4a">{{ job.salary }}</span><span style="font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:{{ job.fitBg }};color:{{ job.fitFg }}">{{ job.fit }}</span></div></div>
+            </sc-for>
+          </div>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+        <div style="font-family:'Instrument Sans',sans-serif;background:#f4f4f6;min-height:100%;color:#15171c;padding-top:58px;font-size:13.5px">
+          <div style="padding:10px 18px;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600;font-size:15px">‹ Resume scan</span><span style="font-size:11.5px;color:#6b6d78">{{ scansUsedText }}</span></div>
+          <div style="margin:8px 18px 14px;background:#fff;border-radius:18px;padding:20px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);display:flex;flex-direction:column;align-items:center;text-align:center">
+            <div style="position:relative;width:132px;height:132px;border-radius:999px;background:conic-gradient(#5b4ef0 0 72%,#eaeaef 72% 100%);display:flex;align-items:center;justify-content:center;margin-bottom:14px"><div style="width:106px;height:106px;border-radius:999px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-family:'IBM Plex Mono',monospace;font-size:38px;font-weight:500;letter-spacing:-.03em;line-height:1">72</span><span style="font-size:11px;color:#9a9aa4;letter-spacing:.04em">ATS SCORE</span></div></div>
+            <div style="font-size:15px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px">Passes most ATS filters</div>
+            <div style="color:#6b6d78;font-size:13px">Keyword coverage is the drag. Four high-frequency terms are missing.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin-top:18px;width:100%;text-align:left"><sc-for list="{{ scoreParts }}" as="p" hint-placeholder-count="4"><div><div style="display:flex;justify-content:space-between;font-size:11.5px;color:#6b6d78;margin-bottom:5px"><span>{{ p.label }}</span><span style="font-family:'IBM Plex Mono',monospace;color:#15171c">{{ p.value }}</span></div><div style="height:5px;background:#f0f0f3;border-radius:999px;overflow:hidden"><div style="height:100%;border-radius:999px;background:{{ p.color }};width:{{ p.width }}"></div></div></div></sc-for></div>
+          </div>
+          <div style="margin:0 18px 14px;background:#fff;border-radius:18px;box-shadow:0 1px 3px rgba(21,23,28,.06),0 0 0 1px rgba(21,23,28,.05);overflow:hidden"><div style="padding:14px 16px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9aa4">Fixes · 5 open</div>
+            <sc-for list="{{ issues }}" as="i" hint-placeholder-count="5"><label style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:11px;padding:13px 16px;border-top:1px solid #f4f4f6;align-items:start"><input type="checkbox" style="margin-top:3px;accent-color:#5b4ef0;width:16px;height:16px"><div><div style="display:flex;gap:8px;align-items:center;margin-bottom:4px"><span style="font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:{{ i.bg }};color:{{ i.fg }}">{{ i.sev }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#12876b">{{ i.impact }}</span></div><div style="font-weight:600;line-height:1.35">{{ i.issue }}</div><div style="color:#6b6d78;margin-top:2px;font-size:13px">{{ i.fix }}</div></div></label></sc-for>
+          </div>
+          <div style="padding:0 18px 32px"><button type="button" style="width:100%;background:#15171c;color:#fff;border:0;border-radius:999px;padding:14px;font-weight:600;font-size:13.5px;min-height:46px">View 214 matches →</button></div>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+        <div style="font-family:'Instrument Sans',sans-serif;background:#f4f4f6;min-height:100%;color:#15171c;padding-top:58px;font-size:13.5px">
+          <div style="padding:10px 18px 14px"><div style="font-size:19px;font-weight:600;letter-spacing:-.025em">214 matches</div><div style="font-size:12px;color:#6b6d78;margin-top:2px">Senior Backend Engineer · refreshed 2h ago</div><div style="display:flex;gap:7px;margin-top:12px"><span style="flex:1;text-align:center;background:#15171c;color:#fff;border-radius:999px;padding:8px;font-size:12px;font-weight:600">Strong 18</span><span style="flex:1;text-align:center;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:8px;font-size:12px;font-weight:600;color:#3d3f4a">Good 63</span><span style="flex:1;text-align:center;background:#fff;box-shadow:0 0 0 1px rgba(21,23,28,.07);border-radius:999px;padding:8px;font-size:12px;font-weight:600;color:#9a9aa4">Low 133</span></div></div>
+          <div style="padding:0 18px 24px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ strongMatches }}" as="m" hint-placeholder-count="4">
+              <div style="background:#fff;border-radius:16px;padding:15px;box-shadow:0 1px 2px rgba(21,23,28,.05),0 0 0 1px rgba(91,78,240,.16)"><div style="font-weight:600;font-size:14.5px;line-height:1.3;letter-spacing:-.01em">{{ m.title }}</div><div style="color:#6b6d78;font-size:12.5px;margin-top:2px">{{ m.company }} · {{ m.location }}</div><div style="margin-top:10px;font-size:12.5px;color:#3a2fa8;padding:8px 10px;background:#f3f1ff;border-radius:10px;line-height:1.45">{{ m.why }}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#3d3f4a">{{ m.salary }}</span><div style="display:flex;gap:7px"><button type="button" style="border:0;background:#f4f4f6;border-radius:999px;padding:10px 13px;font-size:12px;font-weight:600;min-height:42px;color:#3d3f4a">+ Queue</button><button type="button" style="border:0;background:#15171c;color:#fff;border-radius:999px;padding:10px 15px;font-size:12px;font-weight:600;min-height:42px">Apply</button></div></div></div>
+            </sc-for>
+          </div>
+        </div>
+      </x-import>
+    </div>
+  </section>
+  </sc-if>
+  </main>
+
+  <footer style="margin-top:auto">
+    <div style="max-width:1440px;margin:0 auto;padding:22px 24px 32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:12.5px;color:#8b8d99;border-top:1px solid #e7e7ec">
+      <div style="display:flex;gap:18px;flex-wrap:wrap"><a href="#" style="color:#6b6d78">Search jobs</a><a href="#" style="color:#6b6d78">Remote</a><a href="#" style="color:#6b6d78">Resume scan</a><a href="#" style="color:#6b6d78">Salaries</a><a href="#" style="color:#6b6d78">Post a job</a><a href="#" style="color:#6b6d78">About</a><a href="#" style="color:#6b6d78">Privacy</a><a href="#" style="color:#6b6d78">Terms</a><a href="#" style="color:#6b6d78">Opt-out</a></div>
+      <span>© 2026 LeadNear Jobs · jobs from career pages and ATS feeds, refreshed nightly</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scansUsed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Trial&quot;},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;home&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;job&quot;,&quot;resume&quot;,&quot;matches&quot;,&quot;auto&quot;,&quot;upgrade&quot;,&quot;remote&quot;,&quot;mobile&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Screen&quot;}}">
+class Component extends DCLogic {
+  state = { screen: null };
+  renderVals() {
+    const screen = this.state.screen ?? this.props.startScreen ?? "home";
+    const used = Math.max(0, Math.min(3, Number(this.props.scansUsed ?? 2)));
+    const go = (s) => (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ screen: s }); window.scrollTo(0, 0); };
+    const tab = (s) => (screen === s ? "#3d3f4a" : "transparent");
+    const pips = [0, 1, 2].map((i) => ({ color: i < used ? "#5b4ef0" : "#c3bffa" }));
+    const fitStyle = (t) => t === "Strong fit" ? { fitBg:"#ecebff", fitFg:"#4a3ee0" } : t === "Good fit" ? { fitBg:"#f4f4f6", fitFg:"#6b6d78" } : { fitBg:"transparent", fitFg:"#9a9aa4" };
+    const mk = (o) => ({ ...o, ...fitStyle(o.fit),
+      cardBg: o.fit === "Strong fit" ? "#fff" : "#fff",
+      cardShadow: o.fit === "Strong fit"
+        ? "0 1px 2px rgba(21,23,28,.05),0 0 0 1px rgba(91,78,240,.22)"
+        : "0 1px 2px rgba(21,23,28,.04),0 0 0 1px rgba(21,23,28,.05)" });
+    const jobs = [
+      mk({ initials:"NL", title:"Senior Backend Engineer (Go)", company:"Northwind Labs", location:"Remote · US", salary:"USD 150–190K", posted:"Sep 6", hires:"United States", overlap:"2h", overlapW:"25%", fit:"Strong fit" }),
+      mk({ initials:"HH", title:"Product Designer, Growth", company:"Helix Health", location:"Remote · Worldwide", salary:"USD 120–145K", posted:"Sep 6", hires:"Worldwide", overlap:"Any", overlapW:"100%", fit:"Low fit" }),
+      mk({ initials:"OA", title:"Data Analyst II", company:"Orbital Analytics", location:"Austin, TX", salary:"—", posted:"Sep 5", hires:"Americas", overlap:"1h", overlapW:"12%", fit:"Low fit" }),
+      mk({ initials:"FC", title:"Customer Success Manager, EMEA", company:"Fern & Co", location:"Remote · EMEA", salary:"EUR 55–70K", posted:"Sep 5", hires:"EMEA", overlap:"5h", overlapW:"62%", fit:"Low fit" }),
+      mk({ initials:"KS", title:"Staff Security Engineer", company:"Kestrel Security", location:"Remote · Canada", salary:"USD 95+ /hr", posted:"Sep 4", hires:"Canada", overlap:"1h", overlapW:"12%", fit:"Good fit" }),
+      mk({ initials:"BP", title:"Marketing Operations Lead", company:"Bluepine", location:"Denver, CO", salary:"USD 90–110K", posted:"Sep 3", hires:"United States", overlap:"2h", overlapW:"25%", fit:"Low fit" }),
+      mk({ initials:"TS", title:"Platform Engineer, Kubernetes", company:"Tessellate", location:"Remote · Worldwide", salary:"USD 140–170K", posted:"Sep 3", hires:"Worldwide", overlap:"Any", overlapW:"100%", fit:"Strong fit" }),
+      mk({ initials:"QR", title:"Technical Writer", company:"Quarry", location:"Remote · India", salary:"INR 18–24L", posted:"Sep 2", hires:"India", overlap:"8h", overlapW:"100%", fit:"Low fit" }),
+      mk({ initials:"SV", title:"Account Executive, Mid-Market", company:"Solvent", location:"Remote · UK", salary:"GBP 60–75K + OTE", posted:"Sep 2", hires:"United Kingdom", overlap:"4h", overlapW:"50%", fit:"Low fit" }),
+      mk({ initials:"LW", title:"iOS Engineer", company:"Lantern Works", location:"Remote · APAC", salary:"SGD 110–140K", posted:"Sep 1", hires:"Asia-Pacific", overlap:"6h", overlapW:"75%", fit:"Good fit" }),
+    ];
+    const sev = { High:{ bg:"#fdeeea", fg:"#a8341a" }, Medium:{ bg:"#fdf4e3", fg:"#8a5b0a" }, Low:{ bg:"#f4f4f6", fg:"#6b6d78" } };
+    const st = {
+      submitted:{ status:"Submitted", dot:"#12876b", ring:"#e7f6f1", badgeBg:"#e7f6f1", badgeFg:"#0e6e57" },
+      queued:{ status:"Queued", dot:"#c3c3cb", ring:"#f0f0f3", badgeBg:"#f4f4f6", badgeFg:"#6b6d78" },
+      needs:{ status:"Needs input", dot:"#d98324", ring:"#fdf4e3", badgeBg:"#fdf4e3", badgeFg:"#8a5b0a" },
+      replied:{ status:"Replied", dot:"#5b4ef0", ring:"#ecebff", badgeBg:"#ecebff", badgeFg:"#4a3ee0" },
+    };
+    return {
+      isHome: screen === "home", isJob: screen === "job", isResume: screen === "resume", isMatches: screen === "matches",
+      isAuto: screen === "auto", isUpgrade: screen === "upgrade", isRemote: screen === "remote", isMobile: screen === "mobile",
+      tabHome: tab("home"), tabJob: tab("job"), tabResume: tab("resume"), tabMatches: tab("matches"), tabAuto: tab("auto"), tabUpgrade: tab("upgrade"), tabRemote: tab("remote"), tabMobile: tab("mobile"),
+      goHome: go("home"), goJob: go("job"), goResume: go("resume"), goMatches: go("matches"), goAuto: go("auto"), goUpgrade: go("upgrade"), goRemote: go("remote"), goMobile: go("mobile"),
+      pips, scansLeftText: `${3 - used}/3 free scans`, scansUsedText: `${used} of 3 free scans used`, trialExhausted: used >= 3,
+      jobs, remoteJobs: jobs.filter((j) => j.location.startsWith("Remote")), mobileJobs: jobs.slice(0, 5),
+      moreJobs: [ { title:"Engineering Manager, Platform", salary:"USD 190–230K" }, { title:"Data Engineer", salary:"USD 130–160K" }, { title:"Developer Advocate", salary:"USD 120–150K" } ],
+      fitRows: [
+        { skill:"Go", state:"match", bg:"#e7f6f1", fg:"#0e6e57" },
+        { skill:"PostgreSQL", state:"match", bg:"#e7f6f1", fg:"#0e6e57" },
+        { skill:"gRPC", state:"match", bg:"#e7f6f1", fg:"#0e6e57" },
+        { skill:"6+ years", state:"7 yrs", bg:"#e7f6f1", fg:"#0e6e57" },
+        { skill:"Kubernetes", state:"missing", bg:"#fdeeea", fg:"#a8341a" },
+      ],
+      strongMatches: [
+        { title:"Senior Backend Engineer (Go)", company:"Northwind Labs", why:"Go, PostgreSQL, gRPC · 7 yrs matches 6+", salary:"USD 150–190K", location:"Remote · US" },
+        { title:"Platform Engineer, Kubernetes", company:"Tessellate", why:"Terraform, AWS, CI/CD · gap: Kubernetes", salary:"USD 140–170K", location:"Remote · Worldwide" },
+        { title:"Staff Engineer, Payments", company:"Ledgerline", why:"Go, Redis, microservices · fintech history", salary:"USD 170–210K", location:"Remote · Worldwide" },
+        { title:"Backend Engineer III", company:"Halyard", why:"PostgreSQL partitioning called out explicitly", salary:"USD 135–160K", location:"Remote · Americas" },
+      ],
+      goodMatches: [
+        { title:"Senior Software Engineer, Data Platform", company:"Orbital Analytics", why:"Backend depth · gap: Kafka, Spark", salary:"USD 145–175K", location:"Austin, TX · Hybrid" },
+        { title:"Engineering Manager, Infrastructure", company:"Kestrel Security", why:"Mentoring bullets found · no formal reports", salary:"USD 180–220K", location:"Remote · Canada" },
+        { title:"Site Reliability Engineer", company:"Fern & Co", why:"Observability gap · strong on AWS", salary:"EUR 80–95K", location:"Remote · EMEA" },
+      ],
+      lowMatches: [
+        { title:"Frontend Engineer, React", company:"Bluepine", why:"Backend resume · React not found", salary:"USD 120–140K", location:"Denver, CO" },
+        { title:"Data Scientist", company:"Helix Health", why:"Python, ML not found", salary:"USD 130–155K", location:"Remote · US" },
+      ],
+      scoreParts: [
+        { label:"Parse", value:"96", width:"96%", color:"#12876b" },
+        { label:"Keywords", value:"64", width:"64%", color:"#d98324" },
+        { label:"Format", value:"78", width:"78%", color:"#5b4ef0" },
+        { label:"Impact", value:"58", width:"58%", color:"#d98324" },
+      ],
+      issues: [
+        { sev:"High", issue:"Kubernetes not mentioned (71% of target postings)", fix:"add to Skills and one Northwind bullet", impact:"+6", ...sev.High },
+        { sev:"High", issue:"No measurable outcomes in 6 of 11 bullets", fix:"add a number: latency, throughput, cost, team size", impact:"+5", ...sev.High },
+        { sev:"Medium", issue:"Two-column header", fix:"some parsers read columns out of order; use one column", impact:"+3", ...sev.Medium },
+        { sev:"Medium", issue:"Skills written as a paragraph", fix:"comma-separated list so each term is indexed", impact:"+2", ...sev.Medium },
+        { sev:"Low", issue:"'Present' used in two roles", fix:"fine for humans; add start months for consistency", impact:"+1", ...sev.Low },
+      ],
+      apps: [
+        { date:"Sep 8", time:"09:14", title:"Staff Engineer, Payments", company:"Ledgerline", via:"Ashby", event:"Confirmation email received", action:"View", ...st.submitted },
+        { date:"Sep 8", time:"09:02", title:"Backend Engineer III", company:"Halyard", via:"Greenhouse", event:"Held: “Are you authorized to work in Brazil?”", action:"Answer", ...st.needs },
+        { date:"Sep 7", time:"16:40", title:"Senior Backend Engineer (Go)", company:"Northwind Labs", via:"Greenhouse", event:"Recruiter replied: schedule a call this week", action:"Open", ...st.replied },
+        { date:"Sep 7", time:"18:00", title:"Platform Engineer, Kubernetes", company:"Tessellate", via:"Lever", event:"Submitted with tailored cover letter", action:"View", ...st.submitted },
+        { date:"Sep 7", time:"—", title:"Site Reliability Engineer", company:"Fern & Co", via:"Workday", event:"Scheduled for the 18:00 batch", action:"Remove", ...st.queued },
+        { date:"Sep 6", time:"18:00", title:"Senior Software Engineer, Data Platform", company:"Orbital Analytics", via:"Greenhouse", event:"Submitted", action:"View", ...st.submitted },
+        { date:"Sep 6", time:"—", title:"Engineering Manager, Infrastructure", company:"Kestrel Security", via:"Ashby", event:"Scheduled for the 18:00 batch", action:"Remove", ...st.queued },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
