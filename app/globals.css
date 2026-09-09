@@ -25,6 +25,15 @@
   --radius-pill:  999px;
   --shadow:       0 1px 3px rgba(21,23,28,.06), 0 0 0 1px rgba(21,23,28,.05);
   --shadow-ring:  0 4px 16px rgba(21,23,28,.09), 0 0 0 1px rgba(91,78,240,.22);
+  /* Source of truth for the split-pane breakpoint (Fix round 1, task-7-8
+     review). lib/previewBreakpoint.js reads this at runtime via
+     getComputedStyle to build a matchMedia query — used by both
+     app/JobsSplitView.jsx and components/JobPreview.jsx — so the JS
+     threshold can never drift from this value. The @media rule below still
+     has to carry its own literal px value — media queries can't use var() —
+     so that literal must be kept equal to this custom property by hand; it
+     points back here with its own comment. */
+  --preview-breakpoint: 900px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -321,9 +330,15 @@ img { max-width: 100%; }
    past every card to reach it, and selecting a card wouldn't scroll you
    there). This is the ONE rule governing that behaviour — do not add a
    second breakpoint for `.jobs-layout`/`.job-preview` elsewhere.
-   JobsSplitView.jsx mirrors this same 900px breakpoint in JS (via
-   matchMedia) so JobCard stops intercepting clicks for the (now invisible)
-   preview and instead navigates normally — see the comment there. */
+   JobsSplitView.jsx mirrors this same breakpoint in JS (via matchMedia) so
+   JobCard stops intercepting clicks for the (now invisible) preview and
+   instead navigates normally — see the comment there.
+   The 900px literal immediately below is NOT the source of truth (Fix
+   round 1, task-7-8 review) — --preview-breakpoint on :root above is.
+   Media queries can't reference custom properties (no var() support), so
+   this literal has to be kept equal to --preview-breakpoint by hand; the JS
+   side reads --preview-breakpoint at runtime instead of hardcoding it, so
+   only this one literal needs updating when the breakpoint changes. */
 @media (max-width: 900px) {
   .jobs-layout { grid-template-columns: minmax(0, 1fr); }
   .job-preview { display: none; }

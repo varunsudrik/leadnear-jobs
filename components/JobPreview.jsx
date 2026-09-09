@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatAtsLabel } from "@/lib/ats";
 import { fmtSalary, fmtDate } from "@/lib/format";
 import { decodeEntities, sanitiseHtml } from "@/lib/sanitize";
+import { getPreviewBreakpointQuery } from "@/lib/previewBreakpoint";
 
 // Split-pane preview (Task 5, spec lines 105-133). Only the "ready" state is
 // in the design — loading/empty/error are ours (edge cases 17-19).
@@ -23,6 +24,24 @@ export default function JobPreview({ slug }) {
   const paneRef = useRef(null);
 
   useEffect(() => {
+    // Fix round 1 (task-7-8 review, Finding 1): this component can still
+    // mount momentarily on a narrow viewport — JobsSplitView.jsx defaults
+    // showPreview to true so the very first client render matches the
+    // server-rendered markup, then corrects it via a layout effect. But
+    // React still fires this passive effect's "create" once this fiber has
+    // committed at all, even though a synchronous, layout-effect-triggered
+    // re-render unmounts it again moments later — verified empirically
+    // (against both `next dev` and a production build) that gating only in
+    // the parent does NOT stop this effect from running. So this effect
+    // checks the live viewport itself, independent of any prop/state handed
+    // down from the parent: if we're currently at or below the breakpoint
+    // where the split pane is hidden (app/globals.css's
+    // --preview-breakpoint, read via the same helper JobsSplitView.jsx
+    // uses), there's nobody who can see this pane, so skip the fetch
+    // entirely rather than firing a request against a hidden pane.
+    if (typeof window !== "undefined" && window.matchMedia(getPreviewBreakpointQuery()).matches) {
+      return;
+    }
     if (!slug) { setState({ status: "empty" }); return; }
     let live = true;
     setState({ status: "loading" });

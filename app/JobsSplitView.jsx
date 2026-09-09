@@ -1,8 +1,9 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useState } from "react";
 import JobCard from "@/components/JobCard";
 import JobPreview from "@/components/JobPreview";
 import Pagination from "@/components/Pagination";
+import { getPreviewBreakpointQuery } from "@/lib/previewBreakpoint";
 
 // Extracted from app/page.jsx (Task 5, spec lines 87-133) so the selection
 // state driving the preview pane — which JobCard already supports via its
@@ -19,16 +20,44 @@ import Pagination from "@/components/Pagination";
 // unconditionally would silently swallow the tap (no navigation, and no
 // visible change since the pane is hidden). Gating onSelect on the same
 // breakpoint restores plain navigation to the job's own page below 900px,
-// matching the design intent. Keep this value in sync with the CSS
-// breakpoint below.
-const PREVIEW_BREAKPOINT = "(max-width: 900px)";
+// matching the design intent.
+//
+// The threshold itself is not a second literal here (Fix round 1, task-7-8
+// review): getPreviewBreakpointQuery (lib/previewBreakpoint.js) reads it at
+// runtime from the `--preview-breakpoint` custom property declared on :root
+// in app/globals.css — the same value the CSS @media rule's own literal must
+// be kept equal to (that rule carries a comment pointing back here). This
+// keeps the CSS and JS breakpoints backed by one declared source, and
+// components/JobPreview.jsx reads the same helper for its own guard (see the
+// comment on its effect for why it needs one too).
+
+// Isomorphic layout effect: on the server this resolves to useEffect — it
+// never runs during SSR either way, but this avoids React's "useLayoutEffect
+// does nothing on the server" console warning — and on the client it's the
+// real useLayoutEffect, which lets showPreview settle (and JobCard's
+// selected/onSelect props update, and <JobPreview> unmount) synchronously
+// before paint, instead of after a flash of desktop-default markup.
+//
+// This alone does NOT stop JobPreview's fetch effect from firing on a
+// narrow viewport, though: React still queues a mounted fiber's passive
+// "create" effect once it has committed, even if a later, synchronous
+// layout-effect-triggered re-render unmounts that fiber again moments
+// later — the create effect still runs (verified empirically against both
+// `next dev` and a production build: the fetch fires even with this layout
+// effect in place). That's why the actual fix for the wasted fetch lives in
+// JobPreview's own effect (components/JobPreview.jsx), which checks the
+// live viewport itself before fetching, independent of this component's
+// effect timing. What this layout effect *does* still fix, and is kept for:
+// the dead-click bug (Task 8) — JobCard's selected/onSelect must be gated
+// before a real click is possible — and keeping <JobPreview> out of the DOM
+// promptly on mobile instead of lingering CSS-hidden.
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export default function JobsSplitView({ jobs, total }) {
   const [selectedSlug, setSelectedSlug] = useState(jobs[0]?.job_slug ?? null);
   // Defaults to the desktop behaviour so the very first client render
   // matches the server-rendered markup (no window/matchMedia during SSR);
-  // the effect below corrects it immediately after mount, before any click
-  // is possible.
+  // the layout effect below corrects it synchronously, before paint.
   const [showPreview, setShowPreview] = useState(true);
 
   // app/page.jsx no longer remounts this component on every searchParams
@@ -44,8 +73,8 @@ export default function JobsSplitView({ jobs, total }) {
     }
   }, [jobs, selectedSlug]);
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(PREVIEW_BREAKPOINT);
+  useIsoLayoutEffect(() => {
+    const mediaQuery = window.matchMedia(getPreviewBreakpointQuery());
     const updatePreviewVisibility = () => setShowPreview(!mediaQuery.matches);
 
     updatePreviewVisibility();
