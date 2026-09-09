@@ -350,8 +350,7 @@ export default async function JobDetailPage({ params }) {
                 <div className="jd-description">
                   <p>Full job description is available on {job.company}&apos;s careers page.</p>
                   {job.apply_url && (
-                    <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
-                      style={{ color: "var(--accent2)" }}>
+                    <a href={job.apply_url} target="_blank" rel="noopener noreferrer">
                       View full details ↗
                     </a>
                   )}
