@@ -15,8 +15,11 @@ export default function Pagination({ total, pageSize = 20 }) {
 
   if (!total) return null;
 
-  const page = Math.max(1, parseInt(sp.get("page") || "1", 10) || 1);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  // Clamp the parsed page to [1, totalPages]. A stale bookmark or hand-edited
+  // URL might carry a page beyond the end; clamping keeps the range coherent
+  // instead of letting it invert (e.g. first=101, last=100 when page > totalPages).
+  const page = Math.max(1, Math.min(parseInt(sp.get("page") || "1", 10) || 1, totalPages));
   const first = (page - 1) * pageSize + 1;
   const last = Math.min(page * pageSize, total);
 

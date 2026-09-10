@@ -965,8 +965,11 @@ export default function Pagination({ total, pageSize = 20 }) {
 
   if (!total) return null;
 
-  const page = Math.max(1, parseInt(sp.get("page") || "1", 10) || 1);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  // Clamp the parsed page to [1, totalPages]. A stale bookmark or hand-edited
+  // URL might carry a page beyond the end, and the range must stay coherent
+  // instead of letting it invert (e.g. first=101, last=100 when page > totalPages).
+  const page = Math.max(1, Math.min(parseInt(sp.get("page") || "1", 10) || 1, totalPages));
   const first = (page - 1) * pageSize + 1;
   const last = Math.min(page * pageSize, total);
 
@@ -1042,8 +1045,8 @@ With the dev server running, check every page that renders this component:
 
 ```bash
 curl -s -o /dev/null -w 'jobs   %{http_code}\n' http://localhost:4100/jobs
-curl -s -o /dev/null -w 'search %{http_code}\n' 'http://localhost:4100/search?q=engineer'
-curl -s -o /dev/null -w 'remote %{http_code}\n' http://localhost:4100/remote
+curl -s -o /dev/null -w 'search %{http_code}\n' 'http://localhost:4100/jobs/search?q=engineer'
+curl -s -o /dev/null -w 'remote %{http_code}\n' http://localhost:4100/jobs/remote
 ```
 
 All `200`. Then in the browser confirm on each: the range reads `1–20 of N` in mono on the left, two round 28px arrows on the right, the left arrow is grey and unclickable on page 1, and the right arrow turns dark on hover. Page forward and confirm the range advances to `21–40 of N` and the left arrow becomes live.
