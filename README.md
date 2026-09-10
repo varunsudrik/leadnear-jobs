@@ -129,6 +129,7 @@ values for the Python importer, which uses psycopg. Keep them in sync.
 | `BREVO_SMTP_HOST` / `_USER` / `_PASS` | Contact and opt-out forms return 503 with a clear message |
 | `NEXT_PUBLIC_AUTH_ORIGIN` | Unused; reserved for linking sign-in elsewhere |
 | `NEXT_PUBLIC_BLOG_URL` | Footer falls back to `https://blog.leadnear.com` |
+| `NEXT_PUBLIC_DEMO_FIT` | Demo fit layer stays **on** (fit badges, fit banner, best-fit sort, scan pips). `false` turns all of it off — but **set it before `npm run build`**: `NEXT_PUBLIC_` values are inlined into the client bundle at build time |
 | `PUBLISH_*`, `WARM_NEWEST_LIMIT` | Publisher tuning; defaults apply |
 
 ---
@@ -148,6 +149,8 @@ values for the Python importer, which uses psycopg. Keep them in sync.
 | `npm run publish:jobs` | Publish pending job pages |
 | `npm run refresh:counts` | Refresh `site_metrics` only (needs a running app) |
 | `npm run job-slug:test` | Slug generation tests |
+| `npm run demo-fit:test` | Demo fit layer: determinism, tier mix, switch-off |
+| `npm run home-spec:test` | Asserts the C Home spec literals reached `app/globals.css` |
 
 Prisma commands go through `scripts/prisma.mjs`, which loads `.env.local` —
 the Prisma CLI reads only `.env`. A bare `npx prisma …` will not find
