@@ -76,6 +76,24 @@ decl(".pager-btn", "width: 28px");
 decl(".pager-btn", "height: 28px");
 decl(".pager-btn", "box-shadow: 0 0 0 1px rgba(21,23,28,.07)");
 
+// ─── Preview pane (spec lines 105-133) ───
+decl(".job-preview .jp-actions", "gap: 7px");
+decl(".job-preview .jp-save", "padding: 9px 14px");
+decl(".job-preview .jp-save", "font-size: 13px");
+decl(".job-preview .jp-fit", "margin: 0 24px 20px");
+decl(".job-preview .jp-fit", "border-radius: 14px");
+decl(".job-preview .jp-fit", "padding: 14px 16px");
+decl(".job-preview .jp-fit", "grid-template-columns: auto minmax(0,1fr) auto");
+decl(".job-preview .jp-fit", "--fit-grad-top: #f3f1ff");
+decl(".job-preview .jp-fit", "--fit-fg: #3a2fa8");
+decl(".job-preview .jp-fit-pill", "padding: 5px 11px");
+decl(".job-preview .jp-fit-action", "box-shadow: 0 1px 2px rgba(59,47,168,.14)");
+decl(".job-preview .jp-description h3", "text-transform: uppercase");
+decl(".job-preview .jp-description h3", "margin: 22px 0 8px");
+decl(".job-preview .jp-description ol", "padding-left: 18px");
+decl(".job-preview .jp-description li", "margin-bottom: 5px");
+decl(".job-preview .jp-description p", "margin-bottom: 12px");
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count", ".pagination", ".page-btn"]) {
   assert.ok(!flat.includes(dead), `dead rule still present: ${dead}`);

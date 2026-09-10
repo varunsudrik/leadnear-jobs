@@ -5,6 +5,10 @@ import { formatAtsLabel } from "@/lib/ats";
 import { fmtSalary, fmtDate } from "@/lib/format";
 import { decodeEntities, sanitiseHtml } from "@/lib/sanitize";
 import { getPreviewBreakpointQuery } from "@/lib/previewBreakpoint";
+import { bannerFor, fitFor } from "@/lib/demo-fit";
+
+const SAVE_NOT_LIVE = "Saved jobs aren't live yet";
+const QUEUE_NOT_LIVE = "Auto-apply isn't live yet";
 
 // Split-pane preview (Task 5, spec lines 105-133). Only the "ready" state is
 // in the design — loading/empty/error are ours (edge cases 17-19).
@@ -13,12 +17,13 @@ import { getPreviewBreakpointQuery } from "@/lib/previewBreakpoint";
 //  - jobs.description is one unstructured TEXT blob with no reliable
 //    delimiter, so it renders whole under one heading rather than split into
 //    "What you will do" / "What we look for".
-//  - The violet ATS-fit banner (score + matched/missing skills + auto-apply)
-//    needs a resume-scoring subsystem that does not exist yet, so it is
-//    omitted entirely rather than stubbed with fabricated numbers.
-//  - The header's "Save" button needs a saved-jobs subsystem that also does
-//    not exist (no SavedJob model/API anywhere in this repo) — omitted for
-//    the same reason as the fit banner, rather than shipping a dead button.
+//  - The violet ATS-fit banner (Task 6) sources its score and copy from
+//    lib/demo-fit.js's static fixtures, the same demo layer JobCard's badge
+//    uses — there is still no real resume-scoring subsystem behind it.
+//  - The header's "Save" and the banner's "+ Auto-apply queue" buttons (Task
+//    6) render but are inert (aria-disabled, titled, cursor: default): both
+//    need subsystems that do not exist (no SavedJob model/API, no
+//    auto-apply queue anywhere in this repo).
 export default function JobPreview({ slug }) {
   const [state, setState] = useState({ status: "empty" });
   const paneRef = useRef(null);
@@ -75,6 +80,11 @@ export default function JobPreview({ slug }) {
   const locationLabel = locations.length ? locations.join(", ") : job.remote ? "Remote" : "Location flexible";
   const salary = fmtSalary(job) ?? "—";
 
+  // Same slug, same function as JobCard — so a card badged "Low fit" can
+  // never open a "Strong fit" banner. Returns null with the demo layer off,
+  // and the banner disappears entirely rather than showing a blank score.
+  const banner = bannerFor(fitFor(job.job_slug));
+
   const rawDesc = job.description || "";
   const decodedDesc = decodeEntities(rawDesc);
   const isHtml = /<[a-z][\s\S]*>/i.test(decodedDesc);
@@ -85,7 +95,7 @@ export default function JobPreview({ slug }) {
       <div className="jp-body">
         <div className="jp-head-row">
           <div className="jp-head-main">
-            <h1 className="jp-title">{job.title}</h1>
+            <h2 className="jp-title">{job.title}</h2>
             <div className="jp-sub">
               <Link href={`/company/${job.company_slug}`} className="jp-company-link">{job.company}</Link>
               {job.department ? <> · {job.department}</> : null}
@@ -102,16 +112,35 @@ export default function JobPreview({ slug }) {
               {job.source ? <span className="jp-pill source">{formatAtsLabel(job.source)}</span> : null}
             </div>
           </div>
-          {job.apply_url ? (
-            <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="jp-apply">
-              Apply ↗
-            </a>
-          ) : null}
+          <div className="jp-actions">
+            {/* Saved jobs need a subsystem that does not exist — no model, no
+                API, nowhere to put the record. The control is in the design,
+                so it renders, inert and labelled as such. */}
+            <button type="button" className="jp-save" aria-disabled="true" title={SAVE_NOT_LIVE}>
+              Save
+            </button>
+            {job.apply_url ? (
+              <a href={job.apply_url} target="_blank" rel="noopener noreferrer" className="jp-apply">
+                Apply ↗
+              </a>
+            ) : null}
+          </div>
         </div>
       </div>
 
+      {banner ? (
+        <div className="jp-fit">
+          <span className="jp-fit-pill">{banner.label}</span>
+          <p className="jp-fit-copy">
+            {banner.copy} ATS score for this posting <b className="mono">{banner.score}</b>.
+          </p>
+          <button type="button" className="jp-fit-action" aria-disabled="true" title={QUEUE_NOT_LIVE}>
+            + Auto-apply queue
+          </button>
+        </div>
+      ) : null}
+
       <section className="jp-section" aria-label="Job description">
-        <h2 className="jp-section-title">About this role</h2>
         {cleanDesc.trim() ? (
           isHtml ? (
             <div className="jp-description" dangerouslySetInnerHTML={{ __html: cleanDesc }} />
