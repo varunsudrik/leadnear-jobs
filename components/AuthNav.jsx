@@ -19,7 +19,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { initials } from "@/lib/format";
-import { DEMO_FIT, DEMO_SCANS_USED } from "@/lib/demo-fit";
+import { DEMO_FIT, DEMO_QUOTA, DEMO_SCANS_USED } from "@/lib/demo-fit";
 
 export default function AuthNav({ mobile = false }) {
   const { data: session, status } = useSession();
@@ -39,11 +39,11 @@ export default function AuthNav({ mobile = false }) {
   const pips = showPips ? (
     <span className="scan-pips">
       <span className="pips" aria-hidden="true">
-        {[0, 1, 2].map((i) => (
+        {Array.from({ length: DEMO_QUOTA }, (_, i) => (
           <span key={i} className={i < scansUsed ? "pip used" : "pip"} />
         ))}
       </span>
-      <span className="mono">{3 - scansUsed}</span>/3 free scans
+      <span className="mono">{DEMO_QUOTA - scansUsed}</span>/{DEMO_QUOTA} free scans
     </span>
   ) : null;
 

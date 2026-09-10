@@ -51,12 +51,21 @@ places knowingly differ, and an executor should not "fix" them:
 2. **The `Clear` filter button.** Not in the design, which only ever shows an
    unfiltered bar. It renders in ours when filters are active, and stays: once
    four filters are set there is otherwise no single way back to the full list.
-3. **Fit badges appear wherever `JobCard` does** — `/search`, `/remote` and
-   every category, company and location listing — not only on home. One
-   component, one visual language; gating them per-page would mean the same
-   job renders differently depending on the route. The fit *sort* is the
-   opposite case and **is** gated to home (Task 4), because a sort control
-   that reorders nothing is broken, whereas a badge is merely informational.
+3. **Fit badges appear wherever `JobCard` does** — `/search`, `/remote`,
+   every category, company and location listing, **and the related-jobs list
+   on every job detail page** (`app/[slug]/page.jsx` renders `<JobCard>`
+   too) — not only on home. One component, one visual language; gating them
+   per-page would mean the same job renders differently depending on the
+   route. The fit *sort* is the opposite case and **is** gated to home
+   (Task 4), because a sort control that reorders nothing is broken, whereas
+   a badge is merely informational.
+
+   The **scan pips** have wider reach still. `components/AuthNav.jsx` is
+   rendered by `components/SiteNavbar.jsx`, which `app/layout.jsx` mounts on
+   every route in the app — so at ≥768px every page shows "1/3 free scans"
+   to every visitor, signed in or not, not just home. That is the demo
+   layer's largest surface, and `NEXT_PUBLIC_DEMO_FIT=false` is what returns
+   it to signed-in-only.
 4. **The description is one blob under no heading.** The design splits it into
    "What you will do" and "What we look for". `jobs.description` is
    unstructured TEXT with no reliable delimiter, so there is nothing to split
