@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import {
-  DEMO_FIT, DEMO_SCANS_USED, TIER_BY_SLOT, FIT_LABEL, FIT_RANK, fitFor, bannerFor,
+  DEMO_FIT, DEMO_SCANS_USED, TIER_BY_SLOT, FIT_LABEL, FIT_RANK, fitFor, bannerFor, fitRank,
 } from "../lib/demo-fit.js";
 
 // On by default: nothing has to be configured for the demo layer to render.
@@ -56,6 +56,21 @@ assert.deepEqual(
   ["low", "strong", "good"].sort((a, b) => FIT_RANK[a] - FIT_RANK[b]),
   ["strong", "good", "low"]
 );
+
+// Best-fit ordering: strong sorts ahead of good, which sorts ahead of low.
+// Asserted on the rank mapping itself, not on the output of a sort that used
+// that same comparator — sorting by fitRank and then checking the result is
+// sorted by fitRank can never fail and tests nothing.
+const slugs = Array.from({ length: 60 }, (_, i) => `job-${i}`);
+const anyOf = (tier) => slugs.find((s) => fitFor(s) === tier);
+const [strongSlug, goodSlug, lowSlug] = ["strong", "good", "low"].map(anyOf);
+assert.ok(strongSlug && goodSlug && lowSlug, "sample should contain all three tiers");
+assert.ok(fitRank(strongSlug) < fitRank(goodSlug), "strong must outrank good");
+assert.ok(fitRank(goodSlug) < fitRank(lowSlug), "good must outrank low");
+
+// Unscored rows sort last rather than jumping to the top of the list.
+assert.equal(fitRank(""), Number.MAX_SAFE_INTEGER);
+assert.ok(fitRank("") > fitRank("job-0"));
 
 // Switch off: re-import a separate module instance with the env var set, so
 // the constant is evaluated again. The query string is what makes Node treat

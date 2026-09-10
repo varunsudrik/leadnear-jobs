@@ -2,6 +2,7 @@
 import { useCallback, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import LiveJobCount from "@/app/LiveJobCount";
+import { DEMO_FIT } from "@/lib/demo-fit";
 
 const EMP_TYPES  = ["Full-time","Part-time","Contract","Internship","Freelance"];
 const SALARY_OPTS = [
@@ -52,7 +53,7 @@ function formatUpdated(updatedAt) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-export default function Filters({ initialCount = 0, pollOnly = false }) {
+export default function Filters({ initialCount = 0, pollOnly = false, allowFitSort = false }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
@@ -68,8 +69,12 @@ export default function Filters({ initialCount = 0, pollOnly = false }) {
 
   const remote = get("remote"), type = get("type"), salary_min = get("salary_min");
   const category = get("category"), days = get("days");
+  // "fit" is a legal sort value only where something applies the ordering
+  // (app/page.jsx) and only while the demo layer is on. Everywhere else the
+  // option stays disabled and an injected ?sort=fit clamps back to newest.
+  const fitSortEnabled = allowFitSort && DEMO_FIT;
   const rawSort = get("sort");
-  const sort = SORTS.includes(rawSort) ? rawSort : "newest";
+  const sort = (fitSortEnabled ? [...SORTS, "fit"] : SORTS).includes(rawSort) ? rawSort : "newest";
   const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location") || rawSort;
   // /api/live-count answers an unfiltered, sitewide question, so its number
   // can't be trusted whenever this result set is scoped: `pollOnly` forces
@@ -123,9 +128,13 @@ export default function Filters({ initialCount = 0, pollOnly = false }) {
         onChange={(e) => set("sort", e.target.value === "newest" ? "" : e.target.value)}>
         <option value="newest">Sort: newest</option>
         <option value="salary">Sort: salary</option>
-        {/* Requires the matching subsystem; shipping it enabled would silently
-            fall back to another order and look like a bug. */}
-        <option value="fit" disabled title="Available once you scan a resume">Sort: best fit</option>
+        <option
+          value="fit"
+          disabled={!fitSortEnabled}
+          title={fitSortEnabled ? undefined : "Available once you scan a resume"}
+        >
+          Sort: best fit
+        </option>
       </select>
     </div>
   );
