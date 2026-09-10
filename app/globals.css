@@ -1235,7 +1235,6 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   width: 24px;
   height: 24px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 3px rgba(15, 23, 42, .12));
 }
 .site-header .logo-word {
   color: var(--text);
@@ -1272,7 +1271,13 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   outline: none;
   color: var(--text);
 }
-.header-search-divider { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+.header-search-divider {
+  width: 1px; height: 18px;
+  /* #e7e7ec, not --border (#eaeaef): the design uses a slightly lighter
+     hairline inside the search pill than it does for surface edges. */
+  background: #e7e7ec;
+  flex-shrink: 0;
+}
 .header-search button {
   border: 0;
   background: var(--text);
@@ -1289,9 +1294,19 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 .header-search button:hover { background: var(--accent); }
 .site-header .nav-links {
   display: none;
-  flex: 0 0 auto;
+  /* 0 1 auto with min-width:0, per spec line 46: the nav yields space to the
+     search field rather than pushing it below its min-width when the viewport
+     tightens.
+
+     The spec's nav also carries overflow:hidden. Do NOT copy that one: the
+     design's nav is five flat links, ours contains .nav-discover, whose
+     .discover-menu is position:absolute (globals.css) and would be clipped
+     out of existence by an overflow:hidden ancestor. The dropdown is a real
+     route surface; the clipping buys nothing. */
+  flex: 0 1 auto;
+  min-width: 0;
   align-items: center;
-  gap: .25rem;
+  gap: 2px;
   margin-left: auto;
 }
 .site-header .nav-links > a,

@@ -94,6 +94,38 @@ decl(".job-preview .jp-description ol", "padding-left: 18px");
 decl(".job-preview .jp-description li", "margin-bottom: 5px");
 decl(".job-preview .jp-description p", "margin-bottom: 12px");
 
+// ─── Header (spec lines 37-59) ───
+// Note: .site-header .inner appears both as a main rule (line 1214 with 1440px)
+// and in a media query for tablet (line 1089 with 920px). The rule() helper
+// finds the first occurrence, which is the media-query version. The main rule
+// does have the correct 1440px width; the media-query version intentionally
+// constrains to 920px for that specific viewport. Assertions below verify the
+// properties that don't have conflicting media-query versions.
+decl(".site-header", "background: rgba(244, 244, 246, .86)");
+decl(".site-header .logo-word", "font-size: 15.5px");
+decl(".site-header .logo-word", "letter-spacing: -.015em");
+decl(".header-search", "height: 38px");
+decl(".header-search", "padding: 0 6px 0 14px");
+decl(".header-search button", "height: 28px");
+decl(".header-search button", "padding: 0 14px");
+
+// The divider is #e7e7ec in the design — a hair lighter than --border
+// (#eaeaef), which is what it currently uses.
+decl(".header-search-divider", "background: #e7e7ec");
+
+// Nav gap is 2px in the design, not .25rem (4px).
+decl(".site-header .nav-links", "gap: 2px");
+decl(".site-header .nav-links", "flex: 0 1 auto");
+decl(".site-header .nav-discover > summary", "padding: 7px 10px");
+decl(".site-header .nav-discover > summary", "border-radius: 8px");
+
+// The logo's drop-shadow is a leftover from the pre-Direction-C header; the
+// design's logo is flat.
+assert.ok(
+  !rule(".site-header .logo img").includes("drop-shadow"),
+  "the design's logo carries no drop-shadow"
+);
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count", ".pagination", ".page-btn"]) {
   assert.ok(!flat.includes(dead), `dead rule still present: ${dead}`);
