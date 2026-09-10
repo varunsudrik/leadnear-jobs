@@ -55,6 +55,8 @@ export default function JobPreview({ slug }) {
     if (typeof window !== "undefined" && window.matchMedia(getPreviewBreakpointQuery()).matches) {
       return;
     }
+    setSaveNote("");
+    setQueueNote("");
     if (!slug) { setState({ status: "empty" }); return; }
     let live = true;
     setState({ status: "loading" });

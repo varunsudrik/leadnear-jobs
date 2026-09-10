@@ -28,7 +28,7 @@ const flat = css.replace(/\s+/g, " ");
 // level of nesting, so a media block containing @keyframes or a nested
 // @supports would silently strip the wrong span and leave stray declarations
 // behind — the same class of bug this whole helper exists to close. Verified
-// byte-identical to that regex on today's stylesheet (all 17 media blocks
+// byte-identical to that regex on today's stylesheet (all 16 media blocks
 // removed, all 4 top-level @keyframes kept); this version simply cannot drift.
 function stripMediaBlocks(source) {
   let out = "";

@@ -96,7 +96,7 @@ export default function SiteNavbar() {
           role="search"
           onSubmit={dropEmptyFields}
         >
-          <button type="submit" className="header-search-go" aria-label="Search">
+          <button type="submit" className="header-search-go" aria-label="Search" aria-hidden="true" tabindex="-1">
             <SearchIcon />
           </button>
           <input type="text" name="q" placeholder="Title, skill or company" aria-label="Job title, skill, or company" enterKeyHint="search" />
