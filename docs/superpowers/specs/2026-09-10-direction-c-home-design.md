@@ -205,13 +205,23 @@ already present in `app/globals.css:290`:
 | `good` | `#f4f4f6` | `#6b6d78` | default |
 | `low` | `transparent` | `#9a9aa4` | default |
 
-`bannerFor` returns tier-keyed static copy, in the mock's wording and register:
+`bannerFor` returns tier-keyed static copy, in the mock's register:
 
 | Tier | Pill | Score | Copy |
 |---|---|---|---|
-| `strong` | Strong fit | 81 | Matches Go, PostgreSQL, gRPC and 6+ years. Missing Kubernetes. |
-| `good` | Good fit | 64 | Matches the core stack. Two listed requirements are not evidenced. |
+| `strong` | Strong fit | 81 | Strong overlap with this posting's stated requirements. |
+| `good` | Good fit | 64 | Partial overlap with this posting's stated requirements. |
 | `low` | Low fit | 38 | Little overlap with this posting's requirements. |
+
+The `strong` and `good` lines deliberately depart from the mock's literal
+wording ("Matches Go, PostgreSQL, gRPC and 6+ years. Missing Kubernetes." and
+"Matches the core stack. Two listed requirements are not evidenced."): that
+copy was authored against ten fixtures, nine of them engineering roles,
+whereas the real corpus spans Sales, Marketing, People & HR, Customer Success,
+Design and Operations — so naming a stack would put a fabricated claim about
+the *posting* on roughly one previewed job in five. Scores, tier labels and
+the pill are the mock's, unchanged; `low` was already domain-neutral and is
+verbatim.
 
 `Sort: best fit` becomes selectable and orders the current page by tier
 (strong, good, low), replacing the `disabled` option in `components/Filters.jsx`.
