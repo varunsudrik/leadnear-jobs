@@ -410,8 +410,20 @@ img { max-width: 100%; }
   /* Left unscoped on purpose: JobCard is the same component on /search,
      /remote and every listing page, and the design has one phone card, not a
      home-only one. Unlike the filter strip above, nothing here depends on the
-     surrounding container's padding. */
-  .job-card {
+     surrounding container's padding.
+
+     .selected and .strong are named explicitly because a media query adds no
+     specificity: ".job-card.selected, .job-card.strong" is (0,2,0) and this
+     rule would otherwise be (0,1,0), so a strong-fit card kept its violet
+     ring at 390px. The design's own phone card (spec line 425) carries the
+     fit BADGE but a single uniform shadow with no fit variant. .selected has
+     a second reason: below 900px app/JobsSplitView.jsx sets showPreview
+     false, so nothing ever applies it — the ring would be an orphaned
+     affordance from a selection model that does not exist at this width, and
+     reads as a card stuck in a selected state. */
+  .job-card,
+  .job-card.selected,
+  .job-card.strong {
     border-radius: 16px; padding: 14px;
     box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05);
   }
@@ -441,7 +453,10 @@ img { max-width: 100%; }
   display: grid; grid-template-columns: minmax(300px,2fr) minmax(0,3fr);
   gap: 16px; align-items: start;
 }
-.job-list-col { min-width: 0; }
+/* Flex column, not a plain block, to match the design's left column: cards
+   and pager are siblings at gap 8px (spec lines 88-103), so the pager sits
+   8px + its own 6px padding below the last card. As a block it was 6px. */
+.job-list-col { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .job-preview {
   background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow);
   position: sticky; top: 64px; max-height: calc(100vh - 84px); overflow: auto;
@@ -603,10 +618,17 @@ img { max-width: 100%; }
 }
 
 /* ─── Pagination (Direction C — spec line 103) ─────────────────── */
+/* margin-top restores the separation the superseded .pagination block carried
+   (2rem). Home does not need it — .job-list-col is a flex column whose 8px gap
+   is the design's own figure — and the override below keeps home at exactly
+   that 8px. app/search/page.jsx and components/JobListLayout.jsx have no such
+   column: there .pager is a plain sibling of .job-list, so without this it sat
+   6px under the last card where the old pager sat 32px. */
 .pager {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 6px 0; font-size: 12px; color: var(--text3);
+  padding: 6px 6px 0; font-size: 12px; color: var(--text3); margin-top: 2rem;
 }
+.job-list-col > .pager { margin-top: 0; }
 .pager-range { font-family: var(--font-mono), monospace; }
 .pager-arrows { display: flex; gap: 6px; }
 .pager-btn {
