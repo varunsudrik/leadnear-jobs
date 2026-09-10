@@ -1323,6 +1323,18 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   box-shadow: 0 1px 2px rgba(21,23,28,.06), 0 0 0 1px rgba(21,23,28,.05);
 }
 .header-search svg { flex-shrink: 0; color: var(--text4); }
+/* The magnifier is a submit button (components/SiteNavbar.jsx), so it has to
+   opt out of the pill's dark ".header-search button" treatment below and look
+   exactly like the bare icon the design draws. Two classes deep so it beats
+   that rule (0,2,0 vs 0,1,1); the :hover override needs a third to beat
+   ".header-search button:hover". */
+.header-search .header-search-go {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; border: 0; background: none; padding: 0; height: auto;
+  color: var(--text4); font: inherit; cursor: pointer;
+}
+.header-search .header-search-go:hover { background: none; color: var(--text2); }
+.header-search .header-search-go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-pill); }
 .header-search input {
   flex: 1;
   min-width: 0;
@@ -1558,11 +1570,36 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   .site-header .nav-menu-toggle { display: none; }
 }
 /* Below 768px the desktop nav-actions (scan-pips/avatar/login) are hidden in
-   favour of the hamburger + mobile-navigation panel above, so the inline
-   search has no room left next to logo + toggle — hide it there too rather
-   than let it overflow. */
+   favour of the hamburger + mobile-navigation panel above. The header search
+   used to be hidden here too, on the grounds that it had no room left beside
+   logo + toggle — but this form is the only free-text search a phone visitor
+   has (app/page.jsx carries no SearchBox and the hamburger panel is links
+   only), so hiding it left /jobs filterable but not searchable.
+
+   The design already answers this: its phone header (spec line 419) puts the
+   search pill on its OWN full-width row under the logo — 42px tall, title
+   field only, no location field, no divider, no visible Search button. So
+   the header wraps here and the search takes the second row.
+
+   The submit button is display:none rather than removed: implicit submission
+   (the soft keyboard's Go/Enter) activates a form's default button whatever
+   its visibility — only `disabled` would suppress it — so keeping it is what
+   makes a buttonless pill submittable. Verified at 390px.
+
+   Nothing here escapes the query: at >=768px the header keeps its single-row
+   38px pill, which is what the 1440px measurement gate probes. */
 @media (max-width: 767px) {
-  .header-search { display: none; }
+  .site-header .inner { flex-wrap: wrap; row-gap: 10px; }
+  .header-search {
+    order: 1;
+    flex: 1 0 100%;
+    max-width: none;
+    height: 42px;
+    padding: 0 14px;
+  }
+  .header-search-divider,
+  .header-search .header-search-location,
+  .header-search .header-search-submit { display: none; }
 }
 @media (max-width: 600px) {
   .site-header .inner { padding: 12px 16px; }

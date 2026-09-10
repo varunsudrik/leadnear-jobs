@@ -200,6 +200,29 @@ for (const needle of [
   assert.ok(phone.includes(needle), `phone breakpoint should carry "${needle}"`);
 }
 
+// ─── Phone header search (spec line 419) ───
+// The header form is the only free-text search on a phone, so the rules that
+// make it reachable there are pinned the same way the phone hero is. Bounded
+// at the next @media so a needle cannot match unrelated CSS further down.
+assert.ok(flat.includes("@media (max-width: 767px)"), "missing the phone header breakpoint");
+const headerStart = flat.indexOf("@media (max-width: 767px)");
+const afterHeader = flat.indexOf("@media", headerStart + 10);
+const phoneHeader = flat.slice(headerStart, afterHeader === -1 ? undefined : afterHeader);
+assert.ok(
+  !/\.header-search\s*\{[^}]*display:\s*none/.test(phoneHeader),
+  "the header search must not be hidden on phones — it is the only free-text search there"
+);
+for (const needle of [
+  "flex-wrap: wrap",  // the header takes a second row
+  "height: 42px",     // the design's phone pill
+  "padding: 0 14px",  // the design's phone pill
+  "flex: 1 0 100%",   // full-width row of its own
+  ".header-search .header-search-location",  // location field hidden, title kept
+  ".header-search .header-search-submit",    // the text button goes, the magnifier stays
+]) {
+  assert.ok(phoneHeader.includes(needle), `phone header breakpoint should carry "${needle}"`);
+}
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 // `flat` is already comment-stripped (see the top of this file), so writing
 // "removed the old .pagination block" in a comment no longer fails the suite —
