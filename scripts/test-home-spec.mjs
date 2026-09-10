@@ -66,8 +66,18 @@ decl(".fit-badge.strong", "background: var(--accent-tint)");
 decl(".fit-badge.good", "background: var(--bg2)");
 decl(".fit-badge.low", "background: transparent");
 
+// ─── Pagination (spec line 103) ───
+decl(".pager", "justify-content: space-between");
+decl(".pager", "padding: 6px 6px 0");
+decl(".pager", "font-size: 12px");
+decl(".pager-range", "font-family: var(--font-mono), monospace");
+decl(".pager-arrows", "gap: 6px");
+decl(".pager-btn", "width: 28px");
+decl(".pager-btn", "height: 28px");
+decl(".pager-btn", "box-shadow: 0 0 0 1px rgba(21,23,28,.07)");
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
-for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count"]) {
+for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count", ".pagination", ".page-btn"]) {
   assert.ok(!flat.includes(dead), `dead rule still present: ${dead}`);
 }
 

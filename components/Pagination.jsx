@@ -2,49 +2,48 @@
 import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
 
+// Direction C's pager (spec line 103): the range on the left in mono, two
+// round arrows on the right. The numbered page list the old pager rendered
+// does not appear anywhere in the design.
+//
+// Unlike the old one, this renders whenever there are results at all rather
+// than only past page 2 — the range reading "1-20 of 128,431" is the point of
+// the row, and on a single-page result set it still tells you the count.
 export default function Pagination({ total, pageSize = 20 }) {
-  const sp       = useSearchParams();
+  const sp = useSearchParams();
   const pathname = usePathname();
-  const page     = parseInt(sp.get("page") || "1");
-  const totalPages = Math.ceil(total / pageSize);
-  if (totalPages <= 1) return null;
+
+  if (!total) return null;
+
+  const page = Math.max(1, parseInt(sp.get("page") || "1", 10) || 1);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const first = (page - 1) * pageSize + 1;
+  const last = Math.min(page * pageSize, total);
 
   const href = (n) => {
     const next = new URLSearchParams(sp.toString());
     next.delete("token");
-    next.set("page", n);
+    next.set("page", String(n));
     return `${pathname}?${next.toString()}`;
   };
 
-  const delta = 2;
-  const range = [];
-  for (let i = Math.max(1, page - delta); i <= Math.min(totalPages, page + delta); i++) range.push(i);
+  // At an edge the arrow becomes a real disabled <button>, not a styled-dead
+  // <Link>: it must not be focusable and must not navigate.
+  const arrow = (targetPage, enabled, label, glyph) =>
+    enabled ? (
+      <Link href={href(targetPage)} className="pager-btn" aria-label={label}>{glyph}</Link>
+    ) : (
+      <button type="button" className="pager-btn" disabled aria-label={label}>{glyph}</button>
+    );
 
   return (
-    <nav className="pagination" aria-label="Pagination">
-      {page > 1 && <Link href={href(page - 1)} className="page-btn">← Prev</Link>}
-
-      {range[0] > 1 && (
-        <>
-          <Link href={href(1)} className="page-btn">1</Link>
-          {range[0] > 2 && <span style={{ color: "var(--text3)", padding: "0 .25rem" }}>…</span>}
-        </>
-      )}
-
-      {range.map((n) => (
-        <Link key={n} href={href(n)} className={`page-btn${n === page ? " active" : ""}`}>{n}</Link>
-      ))}
-
-      {range[range.length - 1] < totalPages && (
-        <>
-          {range[range.length - 1] < totalPages - 1 && (
-            <span style={{ color: "var(--text3)", padding: "0 .25rem" }}>…</span>
-          )}
-          <Link href={href(totalPages)} className="page-btn">{totalPages}</Link>
-        </>
-      )}
-
-      {page < totalPages && <Link href={href(page + 1)} className="page-btn">Next →</Link>}
+    <nav className="pager" aria-label="Pagination">
+      {/* En-dash (U+2013) between the bounds, per the design. */}
+      <span className="pager-range">{first}–{last} of {total.toLocaleString()}</span>
+      <div className="pager-arrows">
+        {arrow(page - 1, page > 1, "Previous page", "‹")}
+        {arrow(page + 1, page < totalPages, "Next page", "›")}
+      </div>
     </nav>
   );
 }
