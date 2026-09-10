@@ -24,26 +24,34 @@ import { DEMO_FIT, DEMO_SCANS_USED } from "@/lib/demo-fit";
 export default function AuthNav({ mobile = false }) {
   const { data: session, status } = useSession();
 
-  // The design shows the pips for every visitor (spec line 57), not only for
-  // signed-in users, and the count is the mock's own default of 2 used. Both
-  // the control and its number come from the demo layer: with
-  // NEXT_PUBLIC_DEMO_FIT=false this renders nothing and the header returns to
-  // showing auth state alone. Desktop only — the mock's phone header has no
-  // pips (spec line 417).
-  const pips = DEMO_FIT && !mobile ? (
+  // The design shows the pips for every visitor (spec line 57) while the demo
+  // layer is on, with the mock's own default of 2 used. With
+  // NEXT_PUBLIC_DEMO_FIT=false the page degrades to today's honest behaviour:
+  // pips return to signed-in-only, and the count returns to the real (zero)
+  // scans used rather than the mock's 2 — "3/3 free scans" is true, "1/3"
+  // would not be. `status` (not `session?.user`) decides "signed in" here so
+  // that loading, which cannot yet say either way, does not show pips when
+  // the demo layer is off — the placeholder below already covers that
+  // layout shift. Desktop only — the mock's phone header has no pips
+  // (spec line 417).
+  const showPips = !mobile && (DEMO_FIT || status === "authenticated");
+  const scansUsed = DEMO_FIT ? DEMO_SCANS_USED : 0;
+  const pips = showPips ? (
     <span className="scan-pips">
       <span className="pips" aria-hidden="true">
         {[0, 1, 2].map((i) => (
-          <span key={i} className={i < DEMO_SCANS_USED ? "pip used" : "pip"} />
+          <span key={i} className={i < scansUsed ? "pip used" : "pip"} />
         ))}
       </span>
-      <span className="mono">{3 - DEMO_SCANS_USED}</span>/3 free scans
+      <span className="mono">{3 - scansUsed}</span>/3 free scans
     </span>
   ) : null;
 
   // Placeholder keeps the navbar from shifting while the session resolves;
-  // its dimensions are set in globals.css. The pips do not depend on the
-  // session, so they render straight away.
+  // its dimensions are set in globals.css. While the demo layer is on, the
+  // pips don't depend on the session and render straight away; with it off
+  // they wait for `status` to resolve, so nothing renders here (see `pips`
+  // above).
   if (status === "loading") {
     return <>{pips}<div className="auth-nav-placeholder" aria-hidden="true" /></>;
   }

@@ -215,7 +215,7 @@ already present in `app/globals.css:290`:
 
 `Sort: best fit` becomes selectable and orders the current page by tier
 (strong, good, low), replacing the `disabled` option in `components/Filters.jsx`.
-It sorts the fetched page client-side only — it is a demo ordering, not a query.
+The reorder happens post-fetch, in `app/page.jsx`'s Server Component — it is a demo ordering of the current page only, not a query.
 
 Scan pips move out of the signed-in branch in `components/AuthNav.jsx` and
 render for everyone, reading `DEMO_SCANS_USED` — two filled pips and
