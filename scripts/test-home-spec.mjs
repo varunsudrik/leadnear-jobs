@@ -1,18 +1,66 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+const raw = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+
+// Comments are prose, not CSS. app/globals.css names class selectors in its
+// comments ("superseded the old .pagination block", ...), so every text
+// search below runs against comment-stripped source — otherwise documenting a
+// removed rule would fail this suite. Replaced with a space, not "", so
+// stripping a comment can never weld two tokens together.
+const css = raw.replace(/\/\*[\s\S]*?\*\//g, " ");
 
 // Collapse whitespace so assertions are not hostage to line wrapping.
 const flat = css.replace(/\s+/g, " ");
+
+// Base CSS: the same stylesheet with every @media block removed.
+//
+// rule() used to resolve against `flat`, i.e. whichever occurrence of a
+// selector came FIRST in file order. That is not always the base rule:
+// ".site-header .inner {" first appears inside the 601-1080px portrait media
+// query (max-width: 920px), so three prescribed assertions about the base
+// rule's 1440px / 12px 24px / 14px were deleted rather than asserted against
+// the wrong body. Stripping media blocks first makes "the base rule" the
+// thing rule() actually returns, and those three are restored below.
+//
+// A brace-counting scan rather than the review's suggested
+// /@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/g: that regex handles exactly one
+// level of nesting, so a media block containing @keyframes or a nested
+// @supports would silently strip the wrong span and leave stray declarations
+// behind — the same class of bug this whole helper exists to close. Verified
+// byte-identical to that regex on today's stylesheet (all 17 media blocks
+// removed, all 4 top-level @keyframes kept); this version simply cannot drift.
+function stripMediaBlocks(source) {
+  let out = "";
+  let i = 0;
+  while (i < source.length) {
+    const at = source.indexOf("@media", i);
+    if (at === -1) { out += source.slice(i); break; }
+    out += source.slice(i, at);
+    const open = source.indexOf("{", at);
+    if (open === -1) { out += source.slice(at); break; }
+    let depth = 1;
+    let j = open + 1;
+    while (j < source.length && depth > 0) {
+      if (source[j] === "{") depth += 1;
+      else if (source[j] === "}") depth -= 1;
+      j += 1;
+    }
+    out += " ";
+    i = j;
+  }
+  return out;
+}
+const base = stripMediaBlocks(flat);
+assert.ok(!base.includes("@media"), "media blocks should be fully stripped from the base CSS");
 
 // Assertions are scoped to a single rule body, never to the whole file. A
 // bare flat.includes("max-width: 1440px") would pass on .site-header's own
 // 1440px and prove nothing about the home shell.
 function rule(selector) {
-  const start = flat.indexOf(`${selector} {`);
-  assert.ok(start >= 0, `missing rule: ${selector}`);
-  return flat.slice(start, flat.indexOf("}", start));
+  const start = base.indexOf(`${selector} {`);
+  assert.ok(start >= 0, `missing base rule: ${selector}`);
+  return base.slice(start, base.indexOf("}", start));
 }
 function decl(selector, declaration) {
   assert.ok(
@@ -95,12 +143,14 @@ decl(".job-preview .jp-description li", "margin-bottom: 5px");
 decl(".job-preview .jp-description p", "margin-bottom: 12px");
 
 // ─── Header (spec lines 37-59) ───
-// Note: .site-header .inner appears both as a main rule (line 1214 with 1440px)
-// and in a media query for tablet (line 1089 with 920px). The rule() helper
-// finds the first occurrence, which is the media-query version. The main rule
-// does have the correct 1440px width; the media-query version intentionally
-// constrains to 920px for that specific viewport. Assertions below verify the
-// properties that don't have conflicting media-query versions.
+// .site-header .inner is declared twice: the base rule (1440px) and the
+// 601-1080px portrait media query (920px, deliberate for that viewport). The
+// media query comes FIRST in file order, which is why rule() now resolves
+// against media-stripped CSS — see stripMediaBlocks above. These three are
+// the values Task 7 exists to pin, and they read the base rule.
+decl(".site-header .inner", "max-width: 1440px");
+decl(".site-header .inner", "padding: 12px 24px");
+decl(".site-header .inner", "gap: 14px");
 decl(".site-header", "background: rgba(244, 244, 246, .86)");
 decl(".site-header .logo-word", "font-size: 15.5px");
 decl(".site-header .logo-word", "letter-spacing: -.015em");
@@ -151,8 +201,15 @@ for (const needle of [
 }
 
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
+// `flat` is already comment-stripped (see the top of this file), so writing
+// "removed the old .pagination block" in a comment no longer fails the suite —
+// only a real selector does. The negative lookahead keeps ".pagination" from
+// matching a longer name like ".pagination-range", while still catching every
+// live form of the dead rule itself: ".pagination {", ".pagination a {",
+// ".pagination.is-x {", and ".job-list .pagination {".
 for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count", ".pagination", ".page-btn"]) {
-  assert.ok(!flat.includes(dead), `dead rule still present: ${dead}`);
+  const selector = new RegExp(`${dead.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`);
+  assert.ok(!selector.test(flat), `dead rule still present: ${dead}`);
 }
 
 console.log("home spec ok");
