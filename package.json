@@ -23,6 +23,7 @@
     "job-slug:test": "node scripts/test-job-slug.mjs",
     "job-slug:backfill": "node scripts/backfill-job-slugs.mjs",
     "design-tokens:test": "node scripts/test-design-tokens.mjs",
+    "demo-fit:test": "node scripts/test-demo-fit.mjs",
     "format:test": "node scripts/test-format.mjs",
     "ai:test": "node scripts/test-openrouter.mjs"
   },
