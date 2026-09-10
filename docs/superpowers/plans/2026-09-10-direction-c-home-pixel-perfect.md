@@ -116,6 +116,7 @@ for (const slug of ["senior-backend-engineer-go-northwind-labs", "ios-engineer-l
   assert.equal(fitFor(slug), fitFor(slug));
   assert.ok(["strong", "good", "low"].includes(fitFor(slug)));
 }
+
 // All three tiers must be reachable, otherwise the page only ever shows one
 // badge colour and the demo looks broken rather than varied.
 const sampled = new Set(Array.from({ length: 200 }, (_, i) => fitFor(`job-${i}`)));
@@ -698,10 +699,20 @@ assert.equal(fitRank(""), Number.MAX_SAFE_INTEGER);
 assert.ok(fitRank("") > fitRank("job-0"));
 ```
 
-- [ ] **Step 2: Run it to verify it fails**
+- [ ] **Step 2: Run it**
 
 Run: `npm run demo-fit:test`
-Expected: FAIL — `fitRank is not a function` if Task 1's `fitRank` export was missed; otherwise this passes immediately, which is fine and means Task 1 already covered it. Move to Step 3 either way.
+Expected: PASS — `demo-fit ok`.
+
+**This step has no red phase, and that is not an oversight.** `fitRank` was
+written in Task 1, so these assertions pin down its contract rather than drive
+it. The actual deliverables of this task — the `allowFitSort` prop and the page
+ordering — are React and URL behaviour, and this repo has no component test
+runner (no Jest, no Vitest, no jsdom; the convention is plain `node` scripts
+over pure modules). Adding one for a single prop is not in scope. They are
+verified against a running server in Step 7 instead, which is why that step
+lists exact expected states rather than "check it looks right". If this run
+fails, Task 1 is incomplete — go back and finish it before continuing.
 
 - [ ] **Step 3: Enable the sort option in the filter bar**
 
