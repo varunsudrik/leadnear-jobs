@@ -1,11 +1,7 @@
 "use client";
 import Link from "next/link";
 import { fmtSalary, fmtDate, initials } from "@/lib/format";
-
-// Fit requires a scored resume (a subsystem that doesn't exist yet). When it
-// does, job.fit will be one of these keys — never invent a "low fit" for a
-// job that simply hasn't been scored (see the null-render below).
-const FIT_LABEL = { strong: "Strong fit", good: "Good fit", low: "Low fit" };
+import { FIT_LABEL, fitFor } from "@/lib/demo-fit";
 
 export default function JobCard({ job, selected = false, onSelect = null }) {
   const href = `/${job.job_slug}`;
@@ -14,6 +10,13 @@ export default function JobCard({ job, selected = false, onSelect = null }) {
   const location = locations.length
     ? locations.map((item) => item.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())).join(", ")
     : job.remote ? "Remote" : "Location flexible";
+
+  // job.fit is what a real scoring subsystem will set. Until one exists it is
+  // always undefined, and the demo layer supplies a deterministic stand-in
+  // (lib/demo-fit.js). With NEXT_PUBLIC_DEMO_FIT=false, fitFor returns null
+  // and no badge renders at all — never a fabricated "Low fit", which would
+  // read as a judgement of the job.
+  const fit = job.fit ?? fitFor(job.job_slug);
 
   // Standalone (no onSelect passed): a normal navigable link, same as before.
   // Split-pane (Task 5 passes onSelect): intercept the click and hand
@@ -30,7 +33,7 @@ export default function JobCard({ job, selected = false, onSelect = null }) {
       href={href}
       onClick={handleClick}
       aria-label={`${job.title} at ${job.company}`}
-      className={`job-card${selected ? " selected" : ""}${job.fit === "strong" ? " strong" : ""}`}
+      className={`job-card${selected ? " selected" : ""}${fit === "strong" ? " strong" : ""}`}
     >
       <div className="jc-row">
         <div className="jc-main">
@@ -46,9 +49,7 @@ export default function JobCard({ job, selected = false, onSelect = null }) {
       </div>
       <div className="jc-foot">
         <span className="jc-salary">{salary ?? "—"}</span>
-        {/* No resume scored yet -> no fit is known. Render nothing rather than a
-            misleading "Low fit", which would read as a judgement of the job. */}
-        {job.fit ? <span className={`fit-badge ${job.fit}`}>{FIT_LABEL[job.fit]}</span> : null}
+        {fit ? <span className={`fit-badge ${fit}`}>{FIT_LABEL[fit]}</span> : null}
       </div>
     </Link>
   );

@@ -24,6 +24,10 @@
   --radius-sm:    10px;
   --radius-pill:  999px;
   --shadow:       0 1px 3px rgba(21,23,28,.06), 0 0 0 1px rgba(21,23,28,.05);
+  /* The job card's own shadow is lighter than --shadow, which dresses the
+     larger 18px-radius surfaces (the preview pane). Spec line 89: cards use
+     0 1px 2px at .04 alpha; the pane uses 0 1px 3px at .06. */
+  --shadow-card:  0 1px 2px rgba(21,23,28,.04), 0 0 0 1px rgba(21,23,28,.05);
   --shadow-ring:  0 4px 16px rgba(21,23,28,.09), 0 0 0 1px rgba(91,78,240,.22);
   /* Source of truth for the split-pane breakpoint (Fix round 1, task-7-8
      review). lib/previewBreakpoint.js reads this at runtime via
@@ -255,7 +259,7 @@ img { max-width: 100%; }
    and has been removed — see the final-fix-report for the extraction. */
 .job-card {
   display: block; background: var(--bg); border-radius: 14px; padding: 13px 16px;
-  cursor: pointer; box-shadow: var(--shadow);
+  cursor: pointer; box-shadow: var(--shadow-card);
   transition: box-shadow .15s, transform .15s;
 }
 .job-card:hover { box-shadow: var(--shadow-ring); transform: translateY(-1px); }
@@ -352,7 +356,7 @@ img { max-width: 100%; }
 .home-hero .hh-narrow { display: none; }
 
 /* ─── Job list ───────────────────────────────── */
-.job-list { display: flex; flex-direction: column; gap: .6rem; }
+.job-list { display: flex; flex-direction: column; gap: 8px; }
 
 /* ─── Split-pane listing + preview (Direction C — spec lines 87–133) ──
    .job-preview's `top`/`max-height` are derived from the *real* rendered

@@ -51,6 +51,21 @@ decl(".home-hero .hh-cta-primary", "box-shadow: 0 6px 20px rgba(0,0,0,.28)");
 decl(".home-hero .hh-cta-ghost", "padding: 12px 18px");
 decl(".home-hero .hh-cta-ghost", "background: rgba(255,255,255,.08)");
 
+// ─── Job list + card (spec lines 88-102) ───
+decl(".job-list", "gap: 8px");
+decl(".job-card", "border-radius: 14px");
+decl(".job-card", "padding: 13px 16px");
+decl(".job-card", "box-shadow: var(--shadow-card)");
+decl(":root", "--shadow-card: 0 1px 2px rgba(21,23,28,.04), 0 0 0 1px rgba(21,23,28,.05)");
+decl(".job-card .jc-avatar", "width: 32px");
+decl(".job-card .jc-name", "font-size: 14.5px");
+decl(".job-card .jc-foot", "padding-left: 43px");
+decl(".fit-badge", "font-size: 11.5px");
+decl(".fit-badge", "padding: 3px 9px");
+decl(".fit-badge.strong", "background: var(--accent-tint)");
+decl(".fit-badge.good", "background: var(--bg2)");
+decl(".fit-badge.low", "background: transparent");
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count"]) {
   assert.ok(!flat.includes(dead), `dead rule still present: ${dead}`);
