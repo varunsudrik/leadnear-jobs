@@ -19,7 +19,7 @@
 - **Every numeric is IBM Plex Mono** — counts, salary, scores, dates, pagination ranges. Apply via `var(--font-mono)` or the existing `.mono` class. This is structural to the design, not decoration.
 - **Do not add a second breakpoint for `.jobs-layout` / `.job-preview`.** `--preview-breakpoint` on `:root` is the single source; `app/globals.css` carries a comment saying so, and `lib/previewBreakpoint.js` reads it at runtime. The new `640px` rules in Task 8 target the hero, filter row and cards only — different elements, no conflict.
 - **Test convention:** plain `node scripts/test-*.mjs` using `node:assert/strict`, registered in `package.json` scripts. There is no Jest or Vitest and this plan adds none. If node warns `MODULE_TYPELESS_PACKAGE_JSON`, ignore it — `lib/*.js` is ESM in a package without `"type": "module"`, and adding that field would change how every other `.js` file is interpreted.
-- **Inert CTAs** get `aria-disabled="true"`, a `title` explaining what is not live, `cursor: default`, and **no** `disabled` attribute — `disabled` suppresses the tooltip and removes focusability, and the mock's appearance is the requirement.
+- **Placeholder CTAs** — the two hero buttons, `Save`, and `+ Auto-apply queue` — get `aria-disabled="true"`, a `title` explaining what is not live, `cursor: default`, and **no** `disabled` attribute. `disabled` suppresses the tooltip and drops the control out of the tab order, and these must look and measure exactly like the mock's live buttons. This rule governs those four controls only: a genuinely unavailable control, such as the pager's arrow at the first or last page (Task 5), takes a real `disabled` attribute, because there it *should* be unfocusable and unnavigable.
 
 ## File Structure
 
@@ -1199,7 +1199,9 @@ In `app/globals.css`, add the Save/actions/banner rules directly after `.job-pre
   padding: 5px 11px; border-radius: var(--radius-pill); white-space: nowrap;
 }
 .job-preview .jp-fit-copy { color: var(--fit-fg); min-width: 0; font-size: 13px; }
-.job-preview .jp-fit-copy b { font-family: var(--font-mono), monospace; font-weight: 500; }
+/* .mono (globals.css) already supplies the family; <b> would otherwise carry
+   the browser's 700, and the design sets this number at 500. */
+.job-preview .jp-fit-copy b { font-weight: 500; }
 .job-preview .jp-fit-action {
   border: 0; background: var(--bg); color: var(--accent-hover);
   border-radius: var(--radius-pill); padding: 8px 13px; font-family: inherit;
