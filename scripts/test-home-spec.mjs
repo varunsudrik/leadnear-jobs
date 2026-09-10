@@ -126,6 +126,30 @@ assert.ok(
   "the design's logo carries no drop-shadow"
 );
 
+// ─── Responsive (spec line 420 for the phone hero) ───
+// Media-query bodies are not addressable by the rule() helper, so these
+// assertions check the flattened file for the query and its contents.
+assert.ok(flat.includes("@media (max-width: 640px)"), "missing the phone breakpoint");
+const phoneStart = flat.indexOf("@media (max-width: 640px)");
+const nextQuery = flat.indexOf("@media", phoneStart + 10);
+// Bounded at the next @media so a needle cannot match unrelated CSS further
+// down the file and pass this vacuously.
+const phone = flat.slice(phoneStart, nextQuery === -1 ? undefined : nextQuery);
+for (const needle of [
+  "border-radius: 18px",     // hero on phone
+  "padding: 18px",           // hero on phone
+  "width: 220px",            // glow on phone
+  "top: -70px",              // glow on phone
+  "font-size: 18px",         // headline on phone
+  "letter-spacing: -.02em",  // headline on phone
+  "min-height: 46px",        // full-width CTA
+  "flex-wrap: nowrap",       // filter chip strip
+  "overflow-x: auto",        // filter chip strip
+  ".home-shell .filter-bar", // the strip must be scoped, not global
+]) {
+  assert.ok(phone.includes(needle), `phone breakpoint should carry "${needle}"`);
+}
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 for (const dead of [".directory-hero", ".directory-content", ".results-header", ".results-count", ".pagination", ".page-btn"]) {
   assert.ok(!flat.includes(dead), `dead rule still present: ${dead}`);

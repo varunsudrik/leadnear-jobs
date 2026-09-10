@@ -355,6 +355,68 @@ img { max-width: 100%; }
 /* Phone copy is hidden by default; Task 8 swaps the two at 640px. */
 .home-hero .hh-narrow { display: none; }
 
+/* 641-900px is an inference, not a spec value: the design has no tablet
+   screen. The hero keeps its desktop type scale and only stops being
+   two-column, so the CTAs sit under the copy instead of squeezing it. */
+@media (max-width: 900px) {
+  .home-hero { grid-template-columns: minmax(0,1fr); gap: 18px; }
+  .home-hero .hh-cta { flex-wrap: wrap; }
+}
+
+/* Phone values are read from the design's own mobile screen (spec line 420),
+   which is not a narrower desktop hero: it drops the second CTA and shortens
+   both strings. The copy swap is CSS-only — both variants are already in the
+   markup (components/HomeHero.jsx) so there is no hydration branch. */
+@media (max-width: 640px) {
+  .home-shell { padding: 8px 18px 40px; }
+
+  .home-hero { border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .home-hero .hh-glow { right: -60px; top: -70px; width: 220px; height: 220px; }
+  .home-hero .hh-badge { gap: 6px; padding: 4px 10px; font-size: 11px; margin-bottom: 10px; }
+  .home-hero .hh-dot { width: 5px; height: 5px; }
+  .home-hero .hh-title { font-size: 18px; line-height: 1.25; letter-spacing: -.02em; margin-bottom: 6px; }
+  .home-hero .hh-sub { font-size: 12.5px; margin-bottom: 14px; }
+  .home-hero .hh-wide { display: none; }
+  .home-hero .hh-narrow { display: inline; }
+  .home-hero .hh-cta { display: block; }
+  .home-hero .hh-cta-primary { width: 100%; padding: 13px; min-height: 46px; }
+  /* The design's phone hero carries one CTA, not two. */
+  .home-hero .hh-cta-ghost { display: none; }
+
+  /* Filters become a horizontal strip that bleeds to both edges rather than
+     wrapping onto three rows. The negative margin cancels .home-shell's 18px
+     so the strip scrolls edge to edge, the way the design's does.
+
+     Scoped under .home-shell deliberately. Filters also renders inside
+     .container on /search and every JobListLayout page, and .container's
+     padding is 1.25rem (20px) — an unscoped -18px bleed would overhang those
+     layouts by 2px a side and give the whole page a horizontal scrollbar. */
+  .home-shell .filter-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -18px;
+    padding-inline: 18px;
+    scrollbar-width: none;
+  }
+  .home-shell .filter-bar::-webkit-scrollbar { display: none; }
+  .home-shell .filter-count,
+  .home-shell .filter-toggle,
+  .home-shell .filter-select,
+  .home-shell .filter-clear,
+  .home-shell .sort-select { white-space: nowrap; flex-shrink: 0; }
+  /* The spacer would eat the whole scroll width in a nowrap strip. */
+  .home-shell .filter-spacer { display: none; }
+
+  /* Left unscoped on purpose: JobCard is the same component on /search,
+     /remote and every listing page, and the design has one phone card, not a
+     home-only one. Unlike the filter strip above, nothing here depends on the
+     surrounding container's padding. */
+  .job-card {
+    border-radius: 16px; padding: 14px;
+    box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05);
+  }
+}
+
 /* ─── Job list ───────────────────────────────── */
 .job-list { display: flex; flex-direction: column; gap: 8px; }
 
