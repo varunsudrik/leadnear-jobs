@@ -312,13 +312,17 @@ padding:14px` with the list at `padding:0 18px 24px; gap:8px`.
    the three badge pairs, pagination `28px`, banner gradient stops.
 3. `npm run design-tokens:test` and `npm run format:test` still pass.
 4. `rm -rf .next && npm run build` clean.
-5. **The pixel check, which is the acceptance gate.** Render
-   `docs/superpowers/specs/direction-c.html`'s `C Home` section standalone at
-   1440px wide, screenshot it, screenshot `http://localhost:4100/jobs` at the
-   same width, and walk the diff region by region: hero, filter row, first
-   three cards, pagination row, preview header, fit banner, description,
-   preview footer. Repeat at 900px and 390px. Reading the CSS is not the check;
-   the comparison is.
+5. **The pixel check, which is the acceptance gate.** Not a screenshot diff
+   against the mock: `direction-c.html` is a `.dc.html` whose `<x-dc>`
+   elements, `sc-for` loops and `{{ }}` bindings only resolve under the canvas
+   runtime in `support.js`, which the constraints forbid porting — opened in a
+   plain browser it renders nothing to compare against. Instead the gate reads
+   the **live computed styles** of every element on the running page and
+   compares them to the spec's declared values, at 1440px, 900px and 390px.
+   That is stricter than a visual diff, not weaker: it catches a 1px padding
+   error that eyeballing two screenshots would miss. Screenshots are still
+   captured at all three widths, for human review rather than as the gate.
+   Reading the CSS source is not the check; measuring the rendered page is.
 
 ## Explicitly out of scope
 
