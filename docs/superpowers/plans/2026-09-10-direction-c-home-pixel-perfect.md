@@ -39,6 +39,30 @@
 
 `app/SearchBox.jsx` is **not** deleted — `app/search/page.jsx` still imports it.
 
+## Deliberate divergences from the mock
+
+Pixel-perfect is the goal for everything the design specifies. These four
+places knowingly differ, and an executor should not "fix" them:
+
+1. **Header link set.** The nav keeps the app's real routes rather than the
+   mock's `Remote · Companies · Salaries · Matches · Auto-apply`, two of which
+   point nowhere. Typography and spacing still match (Task 7). Settled in the
+   design doc, decision 4.
+2. **The `Clear` filter button.** Not in the design, which only ever shows an
+   unfiltered bar. It renders in ours when filters are active, and stays: once
+   four filters are set there is otherwise no single way back to the full list.
+3. **Fit badges appear wherever `JobCard` does** — `/search`, `/remote` and
+   every category, company and location listing — not only on home. One
+   component, one visual language; gating them per-page would mean the same
+   job renders differently depending on the route. The fit *sort* is the
+   opposite case and **is** gated to home (Task 4), because a sort control
+   that reorders nothing is broken, whereas a badge is merely informational.
+4. **The description is one blob under no heading.** The design splits it into
+   "What you will do" and "What we look for". `jobs.description` is
+   unstructured TEXT with no reliable delimiter, so there is nothing to split
+   on. Task 6 styles whatever headings the source already contains to match
+   the design's micro-heading instead of inventing a structure.
+
 ---
 
 ## Task 1: The demo-fit module
@@ -92,12 +116,6 @@ for (const slug of ["senior-backend-engineer-go-northwind-labs", "ios-engineer-l
   assert.equal(fitFor(slug), fitFor(slug));
   assert.ok(["strong", "good", "low"].includes(fitFor(slug)));
 }
-assert.notEqual(
-  fitFor("senior-backend-engineer-go-northwind-labs"),
-  fitFor("senior-backend-engineer-go-northwind-labs-x"),
-  "different slugs should not all collapse to one tier"
-);
-
 // All three tiers must be reachable, otherwise the page only ever shows one
 // badge colour and the demo looks broken rather than varied.
 const sampled = new Set(Array.from({ length: 200 }, (_, i) => fitFor(`job-${i}`)));
@@ -655,21 +673,25 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `DEMO_FIT`, `DEMO_SCANS_USED`, `fitRank` from `lib/demo-fit.js` (Task 1).
-- Produces: `sort=fit` becomes a live URL state that `app/page.jsx` honours.
+- Produces: `<Filters initialCount={number} pollOnly={bool} allowFitSort={bool} />` — one new prop, defaulting `false`. `sort=fit` becomes a live URL state, but only on the page that opts in.
+
+**Why the prop.** `Filters` has three callers: `app/page.jsx`, `app/search/page.jsx` and `components/JobListLayout.jsx` (which backs `/remote` and every category, company and location listing). Only `app/page.jsx` applies the fit ordering. Enabling the option at module scope would put a live control on six other page types where choosing it silently does nothing — a dead control is worse than a disabled one. The prop keeps it enabled exactly where it works.
 
 - [ ] **Step 1: Append the failing sort assertions**
 
 Add to `scripts/test-demo-fit.mjs`, immediately before the "Switch off" block at the end (it must stay last — it mutates `process.env`). Import `fitRank` by adding it to the existing import list at the top of the file.
 
 ```js
-// Best-fit ordering: every strong-fit slug sorts ahead of every good-fit
-// slug, which sorts ahead of every low-fit slug.
+// Best-fit ordering: strong sorts ahead of good, which sorts ahead of low.
+// Asserted on the rank mapping itself, not on the output of a sort that used
+// that same comparator — sorting by fitRank and then checking the result is
+// sorted by fitRank can never fail and tests nothing.
 const slugs = Array.from({ length: 60 }, (_, i) => `job-${i}`);
-const ordered = [...slugs].sort((a, b) => fitRank(a) - fitRank(b));
-const ranks = ordered.map((s) => fitRank(s));
-assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b), "fitRank must produce a total order");
-assert.equal(fitFor(ordered[0]), "strong");
-assert.equal(fitFor(ordered[ordered.length - 1]), "low");
+const anyOf = (tier) => slugs.find((s) => fitFor(s) === tier);
+const [strongSlug, goodSlug, lowSlug] = ["strong", "good", "low"].map(anyOf);
+assert.ok(strongSlug && goodSlug && lowSlug, "sample should contain all three tiers");
+assert.ok(fitRank(strongSlug) < fitRank(goodSlug), "strong must outrank good");
+assert.ok(fitRank(goodSlug) < fitRank(lowSlug), "good must outrank low");
 
 // Unscored rows sort last rather than jumping to the top of the list.
 assert.equal(fitRank(""), Number.MAX_SAFE_INTEGER);
@@ -689,16 +711,31 @@ In `components/Filters.jsx`, import the switch and widen the allowed sorts:
 import { DEMO_FIT } from "@/lib/demo-fit";
 ```
 
+Leave the module-level `SORTS` as `["newest", "salary"]` — those are the two the server can actually order by. Add the prop and widen the clamp only when the caller opts in:
+
 ```jsx
-// "fit" is only a legal sort value while the demo layer is on; with it off
-// the option goes back to disabled and clampSort drops the value from the URL.
-const SORTS = DEMO_FIT ? ["newest", "salary", "fit"] : ["newest", "salary"];
+export default function Filters({ initialCount = 0, pollOnly = false, allowFitSort = false }) {
+```
+
+Replace the two lines that clamp the sort:
+
+```jsx
+  // "fit" is a legal sort value only where something applies the ordering
+  // (app/page.jsx) and only while the demo layer is on. Everywhere else the
+  // option stays disabled and an injected ?sort=fit clamps back to newest.
+  const fitSortEnabled = allowFitSort && DEMO_FIT;
+  const rawSort = get("sort");
+  const sort = (fitSortEnabled ? [...SORTS, "fit"] : SORTS).includes(rawSort) ? rawSort : "newest";
 ```
 
 Replace the `Sort: best fit` option:
 
 ```jsx
-        <option value="fit" disabled={!DEMO_FIT} title={DEMO_FIT ? undefined : "Available once you scan a resume"}>
+        <option
+          value="fit"
+          disabled={!fitSortEnabled}
+          title={fitSortEnabled ? undefined : "Available once you scan a resume"}
+        >
           Sort: best fit
         </option>
 ```
@@ -711,6 +748,12 @@ In `app/page.jsx`, import the helpers:
 
 ```jsx
 import { DEMO_FIT, fitRank } from "@/lib/demo-fit";
+```
+
+Opt this page in — and only this page — where `Filters` is rendered:
+
+```jsx
+        <Filters initialCount={Number(results.total)} allowFitSort />
 ```
 
 After the `searchJobs` call, before the `return`:
@@ -1294,12 +1337,17 @@ In `app/globals.css`:
 ```css
 .site-header .nav-links {
   display: none;
-  /* 0 1 auto with min-width:0 and overflow:hidden, per spec line 46: the nav
-     yields space to the search field rather than pushing it below its
-     min-width when the viewport tightens. */
+  /* 0 1 auto with min-width:0, per spec line 46: the nav yields space to the
+     search field rather than pushing it below its min-width when the viewport
+     tightens.
+
+     The spec's nav also carries overflow:hidden. Do NOT copy that one: the
+     design's nav is five flat links, ours contains .nav-discover, whose
+     .discover-menu is position:absolute (globals.css) and would be clipped
+     out of existence by an overflow:hidden ancestor. The dropdown is a real
+     route surface; the clipping buys nothing. */
   flex: 0 1 auto;
   min-width: 0;
-  overflow: hidden;
   align-items: center;
   gap: 2px;
   margin-left: auto;
@@ -1367,6 +1415,7 @@ for (const needle of [
   "min-height: 46px",        // full-width CTA
   "flex-wrap: nowrap",       // filter chip strip
   "overflow-x: auto",        // filter chip strip
+  ".home-shell .filter-bar", // the strip must be scoped, not global
 ]) {
   assert.ok(phone.includes(needle), `phone breakpoint should carry "${needle}"`);
 }
@@ -1418,19 +1467,32 @@ Directly after it:
 
   /* Filters become a horizontal strip that bleeds to both edges rather than
      wrapping onto three rows. The negative margin cancels .home-shell's 18px
-     so the strip scrolls edge to edge, the way the design's does. */
-  .filter-bar {
+     so the strip scrolls edge to edge, the way the design's does.
+
+     Scoped under .home-shell deliberately. Filters also renders inside
+     .container on /search and every JobListLayout page, and .container's
+     padding is 1.25rem (20px) — an unscoped -18px bleed would overhang those
+     layouts by 2px a side and give the whole page a horizontal scrollbar. */
+  .home-shell .filter-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
     margin-inline: -18px;
     padding-inline: 18px;
     scrollbar-width: none;
   }
-  .filter-bar::-webkit-scrollbar { display: none; }
-  .filter-count, .filter-toggle, .filter-select, .filter-clear, .sort-select { white-space: nowrap; flex-shrink: 0; }
+  .home-shell .filter-bar::-webkit-scrollbar { display: none; }
+  .home-shell .filter-count,
+  .home-shell .filter-toggle,
+  .home-shell .filter-select,
+  .home-shell .filter-clear,
+  .home-shell .sort-select { white-space: nowrap; flex-shrink: 0; }
   /* The spacer would eat the whole scroll width in a nowrap strip. */
-  .filter-spacer { display: none; }
+  .home-shell .filter-spacer { display: none; }
 
+  /* Left unscoped on purpose: JobCard is the same component on /search,
+     /remote and every listing page, and the design has one phone card, not a
+     home-only one. Unlike the filter strip above, nothing here depends on the
+     surrounding container's padding. */
   .job-card {
     border-radius: 16px; padding: 14px;
     box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05);
@@ -1573,7 +1635,7 @@ rm -rf .next && npm run build
 Expected: build completes with no errors. Then confirm the demo switch works in a real build:
 
 ```bash
-NEXT_PUBLIC_DEMO_FIT=false rm -rf .next && NEXT_PUBLIC_DEMO_FIT=false npm run build
+rm -rf .next && NEXT_PUBLIC_DEMO_FIT=false npm run build
 ```
 
 Start it and confirm the page still renders correctly with no badges, no fit banner, `Sort: best fit` disabled, and no scan pips — the layout must not collapse or leave holes where they were. Then rebuild without the variable.
