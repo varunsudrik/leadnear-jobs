@@ -292,6 +292,65 @@ img { max-width: 100%; }
 .fit-badge.good   { background: var(--bg2); color: var(--text3); }
 .fit-badge.low    { background: transparent; color: var(--text4); }
 
+/* ─── Home shell + hero (Direction C — spec lines 61–75) ───────────
+   The section is 1440px, not the 1160px .container used elsewhere: C Home
+   is a two-column working surface, and .container's measure would crush the
+   preview pane. */
+.home-shell { max-width: 1440px; margin: 0 auto; padding: 8px 24px 56px; }
+
+.home-hero {
+  /* Six colours that appear only in this hero. Scoped here rather than
+     promoted to :root — nothing else in the app uses them — and grouped
+     rather than inlined, so a later re-skin has one place to look. */
+  --hero-glow:     rgba(122,105,255,.5);
+  --hero-badge-fg: #c9c2ff;
+  --hero-dot:      #a99cff;
+  --hero-sub:      #a7a8b3;
+
+  position: relative; overflow: hidden; border-radius: 20px;
+  background: var(--text); color: #fff; padding: 26px 30px; margin-bottom: 18px;
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 28px; align-items: center;
+}
+/* Sits behind the content; .hh-copy and .hh-cta take position:relative so
+   they paint above it, and the container clips it with overflow:hidden. */
+.home-hero .hh-glow {
+  position: absolute; right: -80px; top: -120px; width: 360px; height: 360px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(circle, var(--hero-glow), transparent 65%);
+}
+.home-hero .hh-copy { position: relative; min-width: 0; }
+.home-hero .hh-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.1); border-radius: var(--radius-pill);
+  padding: 5px 11px; font-size: 11.5px; font-weight: 600;
+  letter-spacing: .03em; color: var(--hero-badge-fg); margin-bottom: 14px;
+}
+.home-hero .hh-dot {
+  width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--hero-dot);
+}
+.home-hero .hh-title {
+  font-size: 26px; font-weight: 600; letter-spacing: -.025em; line-height: 1.2;
+  margin-bottom: 8px; max-width: 640px; text-wrap: pretty; color: #fff;
+}
+.home-hero .hh-sub { color: var(--hero-sub); max-width: 560px; font-size: 14px; }
+.home-hero .hh-cta { position: relative; display: flex; gap: 9px; align-items: center; }
+.home-hero .hh-cta button {
+  border: 0; border-radius: var(--radius-pill); font-family: inherit;
+  font-weight: 600; font-size: 13.5px; white-space: nowrap;
+  /* Not cursor:pointer — these do nothing yet, and a pointer cursor on a
+     dead control is a lie the mock's static rendering cannot tell. */
+  cursor: default;
+}
+.home-hero .hh-cta-primary {
+  background: #fff; color: var(--text); padding: 12px 20px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.28);
+}
+.home-hero .hh-cta-primary:hover { background: var(--accent-tint); }
+.home-hero .hh-cta-ghost { background: rgba(255,255,255,.08); color: #fff; padding: 12px 18px; }
+.home-hero .hh-cta-ghost:hover { background: rgba(255,255,255,.16); }
+/* Phone copy is hidden by default; Task 8 swaps the two at 640px. */
+.home-hero .hh-narrow { display: none; }
+
 /* ─── Job list ───────────────────────────────── */
 .job-list { display: flex; flex-direction: column; gap: .6rem; }
 
@@ -609,8 +668,6 @@ img { max-width: 100%; }
 .sidebar-card h3 { font-size: .9rem; font-weight: 800; margin-bottom: .85rem; color: var(--text); }
 
 /* ─── Results header ─────────────────────────── */
-.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .85rem; }
-.results-count { font-size: 1.6rem; font-weight: 800; color: var(--text); }
 .live-job-count { font-variant-numeric: tabular-nums; }
 .listing-page-title,
 .listing-count-heading { font-size: 1.6rem; font-weight: 800; }
@@ -953,9 +1010,6 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
    shadowed (.site-header's box-shadow, .site-header .inner's min-height:76px
    had no later override) and were leaking into the rendered header. Removed
    rather than left as a landmine for the next re-skin. */
-.directory-hero { padding: 4.5rem 0 3.75rem; text-align: center; border-bottom: 1px solid #dbeafe; background: radial-gradient(circle at top left,rgba(96,165,250,.2),transparent 34%),linear-gradient(135deg,var(--bg),var(--accent-tint) 55%,#eef2ff); }
-.directory-hero h1 { margin: .55rem 0 .7rem; color: var(--text); font-size: clamp(2.3rem,5vw,4rem); line-height: 1.05; letter-spacing: -.04em; }
-.directory-hero p { margin-bottom: 2rem; color: var(--text2); font-size: 1.05rem; }
 .eyebrow { color: var(--accent); font-size: .74rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
 .search-wrap-two { display: grid; grid-template-columns: 1fr .72fr auto; max-width: 980px !important; border-radius: 16px; padding: .5rem; background: var(--bg); border: 1px solid #dbeafe; box-shadow: 0 18px 50px rgba(30,64,175,.12); }
 .search-field { display: flex; align-items: center; gap: .55rem; padding: 0 .85rem; border-right: 1px solid var(--border); }
@@ -976,7 +1030,6 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 .search-bar { color: var(--text); min-width: 0; padding: .8rem 0; }
 .search-bar::placeholder { color: var(--text4); }
 .search-bar-btn { border-radius: 11px; background: linear-gradient(135deg,var(--accent),#4f46e5); padding: .8rem 1.2rem; }
-.directory-content { padding-top: 2rem; padding-bottom: 4rem; }
 .filter-select option { color: var(--text); background: var(--bg); }
 @media (min-width: 601px) and (max-width: 1080px) and (orientation: portrait) {
   .container { max-width: 920px; padding-inline: 2rem; }
