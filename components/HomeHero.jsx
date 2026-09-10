@@ -6,11 +6,10 @@
 // CSS `display` rather than JavaScript — no hydration branch, no layout shift,
 // and the strings stay in one file.
 //
-// Both CTAs are inert: resume scanning is not built. They carry aria-disabled
-// and a title rather than the `disabled` attribute, because `disabled`
-// suppresses the tooltip and removes focusability, and the mock's appearance
-// is the requirement.
-const NOT_LIVE = "Resume scoring isn't live yet";
+// The CTA row lives in components/HomeHeroCta.jsx because it is the only part
+// of this hero that needs state (the inert buttons explain themselves on
+// activation). Everything else here stays server-rendered.
+import HomeHeroCta from "@/components/HomeHeroCta";
 
 export default function HomeHero() {
   return (
@@ -30,14 +29,7 @@ export default function HomeHero() {
           <span className="hh-narrow">3 free scans · no card</span>
         </p>
       </div>
-      <div className="hh-cta">
-        <button type="button" className="hh-cta-primary" aria-disabled="true" title={NOT_LIVE}>
-          Upload resume
-        </button>
-        <button type="button" className="hh-cta-ghost" aria-disabled="true" title={NOT_LIVE}>
-          How scoring works
-        </button>
-      </div>
+      <HomeHeroCta />
     </section>
   );
 }

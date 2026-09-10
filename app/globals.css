@@ -337,14 +337,33 @@ img { max-width: 100%; }
   margin-bottom: 8px; max-width: 640px; text-wrap: pretty; color: #fff;
 }
 .home-hero .hh-sub { color: var(--hero-sub); max-width: 560px; font-size: 14px; }
-.home-hero .hh-cta { position: relative; display: flex; gap: 9px; align-items: center; }
+/* flex-wrap + row-gap:0 exist for .hh-cta-note below: it takes a whole flex
+   line of its own so the buttons keep the design's single row, and with no row
+   gap an empty note costs exactly zero height. column-gap stays the design's
+   9px (the `gap: 9px` above sets both; row-gap then overrides one). */
+.home-hero .hh-cta { position: relative; display: flex; gap: 9px; row-gap: 0; align-items: center; flex-wrap: wrap; }
 .home-hero .hh-cta button {
   border: 0; border-radius: var(--radius-pill); font-family: inherit;
   font-weight: 600; font-size: 13.5px; white-space: nowrap;
-  /* Not cursor:pointer — these do nothing yet, and a pointer cursor on a
-     dead control is a lie the mock's static rendering cannot tell. */
-  cursor: default;
+  /* cursor: pointer, and the :hover states below, are honest again: these
+     controls do respond now — they say what is not live yet (see
+     components/HomeHeroCta.jsx). They were cursor: default while they were
+     silent, on the grounds that a pointer cursor on a dead control is a lie;
+     a :hover state on one told the same lie more loudly. */
+  cursor: pointer;
 }
+/* Idle it is empty and out of flow, so the CTA row measures exactly as it did
+   before this note existed. Out of flow specifically because an in-flow
+   zero-width flex item still contributes a column gap to the container's
+   intrinsic width — measured: it widened .hh-cta from 300px to 309px and shunted
+   both buttons 9px left. position:absolute costs nothing and, unlike
+   display:none, keeps the element in the accessibility tree, which is what
+   makes the live region announce reliably when its text arrives. */
+.home-hero .hh-cta-note {
+  flex: 0 1 100%; min-width: 0; margin: 8px 0 0;
+  font-size: 12.5px; color: var(--hero-badge-fg);
+}
+.home-hero .hh-cta-note:empty { position: absolute; margin: 0; }
 .home-hero .hh-cta-primary {
   background: #fff; color: var(--text); padding: 12px 20px;
   box-shadow: 0 6px 20px rgba(0,0,0,.28);
@@ -523,13 +542,21 @@ img { max-width: 100%; }
 }
 .job-preview .jp-apply:hover { background: var(--accent); }
 
-.job-preview .jp-actions { display: flex; gap: 7px; flex-shrink: 0; }
+.job-preview .jp-actions { display: flex; gap: 7px; row-gap: 0; flex-wrap: wrap; flex-shrink: 0; }
 .job-preview .jp-save {
   border: 0; background: var(--bg2); border-radius: var(--radius-pill);
   padding: 9px 14px; font-family: inherit; font-weight: 600; font-size: 13px;
-  color: var(--text2); cursor: default;
+  color: var(--text2); cursor: pointer;
 }
 .job-preview .jp-save:hover { background: var(--border); }
+/* The inert controls' explanation (components/JobPreview.jsx). Same shape as
+   .hh-cta-note: always present so the live region is in the accessibility
+   tree, and empty it has no line box and no margin, so nothing about the idle
+   layout moves. .jp-actions wraps and carries no row gap for the same reason
+   .hh-cta does. */
+.job-preview .jp-note { flex: 0 1 100%; min-width: 0; margin: 8px 0 0; font-size: 12.5px; color: var(--text3); }
+.job-preview .jp-note:empty { position: absolute; margin: 0; }
+.job-preview .jp-fit-note { grid-column: 1 / -1; color: var(--fit-fg); }
 
 /* Fit banner (spec lines 116-120). Two colours live only here: the deep
    violet the copy is set in, and the gradient's top stop. Scoped to this
@@ -541,6 +568,9 @@ img { max-width: 100%; }
   background: linear-gradient(180deg, var(--fit-grad-top), var(--accent-tint));
   padding: 14px 16px; display: grid;
   grid-template-columns: auto minmax(0,1fr) auto; gap: 14px; align-items: center;
+  /* .jp-fit-note takes an implicit second row; with no row gap an empty one
+     costs nothing. column-gap stays the design's 14px. */
+  row-gap: 0;
 }
 .job-preview .jp-fit-pill {
   font-size: 11.5px; font-weight: 600; background: var(--accent); color: #fff;
@@ -553,7 +583,7 @@ img { max-width: 100%; }
 .job-preview .jp-fit-action {
   border: 0; background: var(--bg); color: var(--accent-hover);
   border-radius: var(--radius-pill); padding: 8px 13px; font-family: inherit;
-  font-weight: 600; font-size: 12.5px; white-space: nowrap; cursor: default;
+  font-weight: 600; font-size: 12.5px; white-space: nowrap; cursor: pointer;
   box-shadow: 0 1px 2px rgba(59,47,168,.14);
 }
 .job-preview .jp-fit-action:hover { background: #f6f5ff; }

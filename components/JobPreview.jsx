@@ -21,11 +21,19 @@ const QUEUE_NOT_LIVE = "Auto-apply isn't live yet";
 //    lib/demo-fit.js's static fixtures, the same demo layer JobCard's badge
 //    uses — there is still no real resume-scoring subsystem behind it.
 //  - The header's "Save" and the banner's "+ Auto-apply queue" buttons (Task
-//    6) render but are inert (aria-disabled, titled, cursor: default): both
-//    need subsystems that do not exist (no SavedJob model/API, no
-//    auto-apply queue anywhere in this repo).
+//    6) render but are inert: both need subsystems that do not exist (no
+//    SavedJob model/API, no auto-apply queue anywhere in this repo). They
+//    used to carry aria-disabled and a `title` and no handler — an
+//    explanation a touch device can never see, since `title` has no tooltip
+//    there. They now say the same thing in an aria-live region beside them
+//    when activated, so aria-disabled is gone (a control that answers you is
+//    not disabled) and cursor: pointer is honest. `title` stays for pointer
+//    users; `disabled` is still not used, because it would suppress the
+//    tooltip and drop them out of the tab order.
 export default function JobPreview({ slug }) {
   const [state, setState] = useState({ status: "empty" });
+  const [saveNote, setSaveNote] = useState("");
+  const [queueNote, setQueueNote] = useState("");
   const paneRef = useRef(null);
 
   useEffect(() => {
@@ -115,8 +123,8 @@ export default function JobPreview({ slug }) {
           <div className="jp-actions">
             {/* Saved jobs need a subsystem that does not exist — no model, no
                 API, nowhere to put the record. The control is in the design,
-                so it renders, inert and labelled as such. */}
-            <button type="button" className="jp-save" aria-disabled="true" title={SAVE_NOT_LIVE}>
+                so it renders, inert, and says so when you press it. */}
+            <button type="button" className="jp-save" title={SAVE_NOT_LIVE} onClick={() => setSaveNote(SAVE_NOT_LIVE)}>
               Save
             </button>
             {job.apply_url ? (
@@ -124,6 +132,10 @@ export default function JobPreview({ slug }) {
                 Apply ↗
               </a>
             ) : null}
+            {/* Always rendered, never display:none, so the live region is in
+                the accessibility tree before its text arrives. Empty it has no
+                line box and no margin — idle layout is unchanged. */}
+            <p className="jp-note" role="status" aria-live="polite">{saveNote}</p>
           </div>
         </div>
       </div>
@@ -134,9 +146,10 @@ export default function JobPreview({ slug }) {
           <p className="jp-fit-copy">
             {banner.copy} ATS score for this posting <b className="mono">{banner.score}</b>.
           </p>
-          <button type="button" className="jp-fit-action" aria-disabled="true" title={QUEUE_NOT_LIVE}>
+          <button type="button" className="jp-fit-action" title={QUEUE_NOT_LIVE} onClick={() => setQueueNote(QUEUE_NOT_LIVE)}>
             + Auto-apply queue
           </button>
+          <p className="jp-note jp-fit-note" role="status" aria-live="polite">{queueNote}</p>
         </div>
       ) : null}
 
