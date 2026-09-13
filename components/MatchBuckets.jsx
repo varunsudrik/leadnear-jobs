@@ -46,7 +46,7 @@ function MatchRow({ row, tier, actions }) {
       {actions ? (
         <div className="mb-foot">
           <span className="mb-salary">{salary ?? "—"}</span>
-          <div className="mb-actions">
+          <div className="mb-actions inert-note-row">
             <InertButton className="mb-queue" note={QUEUE_NOT_LIVE}>+ Queue</InertButton>
             <Link href={`/${row.job_slug}`} className="mb-apply">Apply</Link>
           </div>
@@ -86,7 +86,7 @@ export default function MatchBuckets({ buckets }) {
               key={key}
               aria-label={`${label} matches`}
             >
-              <div className="mb-head">
+              <div className="mb-head inert-note-row">
                 <span className={`mb-head-label ${key}`}>
                   <span className={`mb-dot ${key}`} aria-hidden="true" />
                   {label}

@@ -567,7 +567,16 @@ img { max-width: 100%; }
 .job-preview .jp-footer a:hover { color: var(--accent-hover); }
 
 /* ─── Resume scan (Direction C — spec lines 195–252) ─────────────── */
-.rs-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+/* flex-start, not center: `Upload revised` is an InertButton, so pressing it
+   adds a second line inside .rs-actions. Centred, the <h1> and its metadata
+   re-centred against the taller row and slid 13px down after the tap.
+   Aligned to the top they do not move at all, and at rest the only
+   difference is that .rs-head-main's 3.75px of slack all falls below it
+   instead of being split (measured: title y 73.88 -> 72.00, row height
+   unchanged at 36.75, every action control unchanged). Baseline was the
+   other candidate and is worse here: it grows the row by 3.1px and pushes
+   .rs-body down. */
+.rs-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .rs-head-main { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .rs-title { font-size: 22px; font-weight: 600; letter-spacing: -.025em; color: var(--text); }
 .rs-meta { font-size: 12.5px; color: var(--text3); }
@@ -626,9 +635,46 @@ img { max-width: 100%; }
    accessibility tree. When empty, it has no line box and no margin, so the
    idle layout does not move. position:absolute costs nothing and, unlike
    display:none, keeps the element in the accessibility tree, which is what
-   makes the live region announce reliably when its text arrives. */
-.inert-note { margin: 8px 0 0; font-size: 12px; color: var(--text3); }
+   makes the live region announce reliably when its text arrives.
+   .inert-note-row below opts each host row into the wrapping this needs.
+
+   Non-empty, the note is an ordinary flex item of whatever row hosts the
+   button — .mb-head, .mb-actions and .rs-actions, none of which was designed
+   for a third child. Measured before this rule: pressing `Queue all N` moved
+   that button 201px left, `+ Queue` 133px left, and `Upload revised` dragged
+   the pips 226px left. So the note takes a line of its own, the way
+   .hh-cta-note does.
+
+   flex-basis:0 with min-width:100%, NOT flex-basis:100%. Two of the three
+   hosts are shrink-to-fit (.mb-actions is a flex item of .mb-foot,
+   .rs-actions of .rs-head), and a percentage flex-basis cannot resolve while
+   the container is being intrinsically sized — it falls back to the note's own
+   text width, which widens the row and moves the very siblings this is meant
+   to hold still. A percentage min-width is ignored for that same intrinsic
+   pass, so the note contributes nothing to the row's width, and then forces
+   the whole line once the row's width is settled. */
+.inert-note {
+  order: 1; flex: 0 0 0; min-width: 100%;
+  /* order:1 puts the note after every sibling regardless of DOM position:
+     InertButton emits it immediately after its own button, so in .mb-actions
+     and .rs-actions it would otherwise break the line in the middle and drop
+     `Apply` / `View matches` onto a third row.
+     The negative inline-end margin gives back the column gap. An in-flow flex
+     item contributes one gap to its row's intrinsic width even when the item
+     is zero-wide — the same trap .hh-cta-note documents — and that stray gap
+     widened .mb-actions by exactly 6px, moving `Apply`. Each host declares its
+     own gap in --inert-gap; rows without one need nothing. */
+  margin: 8px calc(-1 * var(--inert-gap, 0px)) 0 0;
+  font-size: 12px; color: var(--text3);
+}
 .inert-note:empty { position: absolute; margin: 0; }
+/* Every flex row that hosts an InertButton. row-gap:0 keeps the note's own
+   8px margin as the only separation, exactly as .hh-cta does; wrapping costs
+   nothing while the note is empty, because an out-of-flow child is not a flex
+   item and so never opens a second line. */
+.inert-note-row { flex-wrap: wrap; row-gap: 0; }
+.mb-actions.inert-note-row { --inert-gap: 6px; }
+.rs-actions.inert-note-row { --inert-gap: 9px; }
 
 /* ─── Matches (Direction C — spec lines 253–304) ─────────────────── */
 .mb-page-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -671,7 +717,13 @@ img { max-width: 100%; }
 .mb-why.good { background: var(--bg2); color: var(--text2); }
 /* Low's why is plain text, not a chip — the design gives it no background. */
 .mb-why.low { background: transparent; padding: 0; margin-top: 8px; color: #8b8d99; }
-.mb-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+/* baseline, not center: `+ Queue` is an InertButton, so pressing it adds a
+   second line inside .mb-actions and doubles this row's height. Centred,
+   the salary re-centred against the taller row and slid 16px down after a
+   tap on the button beside it. Aligned to the buttons' text baseline it
+   stays on the first line where it started — and at rest the two are the
+   same position to within 0.25px (measured: 296.56 vs 296.31). */
+.mb-foot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; }
 .mb-salary { font-family: var(--font-mono), monospace; font-size: 12px; color: var(--text2); }
 .mb-actions { display: flex; gap: 6px; align-items: center; }
 .mb-queue { border: 0; background: var(--bg2); border-radius: var(--radius-pill); padding: 7px 11px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text2); font-family: inherit; }

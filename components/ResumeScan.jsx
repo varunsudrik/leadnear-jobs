@@ -18,7 +18,7 @@ export default function ResumeScan({ data, scansUsed, quota }) {
             <span className="mono">{scan.durationSeconds}s</span>
           </span>
         </div>
-        <div className="rs-actions">
+        <div className="rs-actions inert-note-row">
           <ScanPips used={scansUsed} quota={quota} />
           {/* The design gates this on the trial being spent. At 2 of 3 it never
               renders; the branch stays so the Upgrade plan has its hook. */}
