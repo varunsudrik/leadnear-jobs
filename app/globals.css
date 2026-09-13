@@ -729,7 +729,11 @@ img { max-width: 100%; }
 .mb-queue { border: 0; background: var(--bg2); border-radius: var(--radius-pill); padding: 7px 11px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text2); font-family: inherit; }
 .mb-queue:hover { background: var(--border); }
 .mb-queue-all:hover { background: #e0deff; }
-.mb-apply { border: 0; background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 7px 13px; font-size: 12px; font-weight: 600; display: inline-block; }
+/* inline-flex, not inline-block: this is an <a>, and the phone rule below
+   gives it the design's 42px minimum. An inline-block would honour the height
+   but leave the label sitting against the top padding; the design's own
+   element is a <button>, which centres. */
+.mb-apply { border: 0; background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 7px 13px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
 .mb-apply:hover { background: var(--accent); color: #fff; }
 .mb-card.good .mb-apply { background: var(--bg2); color: var(--text); }
 .mb-card.good .mb-apply:hover { background: var(--text); color: #fff; }
@@ -832,8 +836,11 @@ img { max-width: 100%; }
   .mb-head { display: none; }
   .mb-list { gap: 10px; }
   .mb-card { border-radius: 16px; padding: 15px; }
-  .mb-queue { padding: 10px 13px; }
-  .mb-apply { padding: 10px 15px; }
+  /* min-height is the design's own (spec ~444-462 draws both at 42px). It was
+     dropped when the design was transcribed into the written spec, so neither
+     the implementation nor the gate carried it; both do now. */
+  .mb-queue { padding: 10px 13px; min-height: 42px; }
+  .mb-apply { padding: 10px 15px; min-height: 42px; }
 }
 
 /* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */

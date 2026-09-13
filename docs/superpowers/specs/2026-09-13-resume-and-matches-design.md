@@ -198,7 +198,13 @@ full-width dark button, `padding:14px`, `min-height:46px`.
 `#15171c` and the others white with a `rgba(21,23,28,.07)` ring — with one
 bucket's rows below. Rows go to `radius:16px`, `padding:15px`, `gap:10px`; the
 `why` chip keeps its violet treatment; the buttons grow to `padding:10px 13px`
-(`+ Queue`) and `10px 15px` (`Apply`). Tab state is client-side.
+(`+ Queue`) and `10px 15px` (`Apply`), both with `min-height:42px`. Tab state is
+client-side.
+
+The `min-height:42px` was missing from this line until the cross-cutting
+review: the design's phone frame carries it on both buttons, and it was dropped
+in transcription, so the implementation and the gate agreed with this document
+rather than with the design. Padding alone leaves them at 35px.
 
 ## Entry points
 
