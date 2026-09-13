@@ -232,12 +232,14 @@ decl(".mb-list", "gap: 8px");
 decl(".mb-card", "border-radius: 16px");
 decl(".mb-card", "padding: 14px 16px");
 decl(".mb-card.strong", "box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(91,78,240,.16)");
+decl(".mb-card.strong:hover", "box-shadow: 0 4px 16px rgba(21,23,28,.09), 0 0 0 1px rgba(91,78,240,.3)");
 decl(".mb-card.low", "background: #fafafb");
 decl(".mb-why", "padding: 8px 10px");
 decl(".mb-why", "border-radius: 10px");
 decl(".mb-why.strong", "background: #f3f1ff");
 decl(".mb-queue-all", "background: var(--accent-tint)");
 decl(".mb-apply", "background: var(--text)");
+decl(".mb-card.good .mb-apply", "background: var(--bg2)");
 decl(".mb-more", "background: transparent");
 decl(".mb-note", "padding: 14px 16px");
 

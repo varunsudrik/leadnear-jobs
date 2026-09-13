@@ -688,6 +688,8 @@ img { max-width: 100%; }
 .mb-page-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .mb-filters { display: flex; gap: 7px; }
 .mb-filters .filter-toggle[aria-current="true"] { background: var(--text); color: #fff; box-shadow: none; }
+.mb-filters .filter-toggle:hover { box-shadow: 0 0 0 1px rgba(21,23,28,.2); }
+.mb-filters .filter-toggle[aria-current="true"]:hover { box-shadow: none; }
 .mb-filters .filter-toggle:disabled { opacity: .5; cursor: not-allowed; }
 
 .mb-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; align-items: start; }
@@ -704,10 +706,13 @@ img { max-width: 100%; }
 .mb-queue-all { border: 0; background: var(--accent-tint); color: var(--accent-hover); border-radius: var(--radius-pill); padding: 6px 11px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
 .mb-list { display: flex; flex-direction: column; gap: 8px; }
-.mb-card { background: var(--bg); border-radius: 16px; padding: 14px 16px; }
+.mb-card { background: var(--bg); border-radius: 16px; padding: 14px 16px; transition: box-shadow .15s; }
 .mb-card.strong { box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(91,78,240,.16); }
+.mb-card.strong:hover { box-shadow: 0 4px 16px rgba(21,23,28,.09), 0 0 0 1px rgba(91,78,240,.3); }
 .mb-card.good { box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05); }
+.mb-card.good:hover { box-shadow: 0 4px 16px rgba(21,23,28,.08), 0 0 0 1px rgba(21,23,28,.1); }
 .mb-card.low { background: #fafafb; box-shadow: 0 0 0 1px rgba(21,23,28,.04); }
+.mb-card.low:hover { background: var(--bg); }
 .mb-role { font-weight: 600; font-size: 14.5px; line-height: 1.3; letter-spacing: -.01em; display: block; color: var(--text); }
 .mb-card.low .mb-role { font-size: 14px; color: #4b4d58; }
 .mb-sub { color: var(--text3); margin-top: 2px; }
@@ -721,9 +726,14 @@ img { max-width: 100%; }
 .mb-salary { font-family: var(--font-mono), monospace; font-size: 12px; color: var(--text2); }
 .mb-actions { display: flex; gap: 6px; align-items: center; }
 .mb-queue { border: 0; background: var(--bg2); border-radius: var(--radius-pill); padding: 7px 11px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text2); font-family: inherit; }
+.mb-queue:hover { background: var(--border); }
+.mb-queue-all:hover { background: #e0deff; }
 .mb-apply { border: 0; background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 7px 13px; font-size: 12px; font-weight: 600; display: inline-block; }
 .mb-apply:hover { background: var(--accent); color: #fff; }
+.mb-card.good .mb-apply { background: var(--bg2); color: var(--text); }
+.mb-card.good .mb-apply:hover { background: var(--text); color: #fff; }
 .mb-more { border: 0; background: transparent; padding: 8px; font-size: 12.5px; font-weight: 600; color: var(--text3); cursor: pointer; font-family: inherit; }
+.mb-more:hover { color: var(--accent); }
 .mb-note { padding: 14px 16px; font-size: 12.5px; color: var(--text3); line-height: 1.5; background: var(--bg); border-radius: 16px; box-shadow: 0 0 0 1px rgba(21,23,28,.05); }
 
 /* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */
