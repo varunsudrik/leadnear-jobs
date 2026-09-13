@@ -143,6 +143,7 @@ Create `scripts/test-demo-resume.mjs`:
 
 ```js
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { resumeScan, SEVERITIES } from "../lib/demo-resume.js";
 import { whyFor } from "../lib/demo-fit.js";
 
@@ -198,15 +199,35 @@ for (const tier of ["strong", "good", "low"]) {
 }
 assert.equal(whyFor("nonsense"), null);
 
-// Switch off: a separate module instance with the env var set.
-process.env.NEXT_PUBLIC_DEMO_FIT = "false";
-const offResume = await import(new URL("../lib/demo-resume.js?off", import.meta.url).href);
-const offFit = await import(new URL("../lib/demo-fit.js?off", import.meta.url).href);
-assert.equal(offResume.resumeScan(), null);
-assert.equal(offFit.whyFor("strong"), null);
+// Switch off: a fresh process, not a cache-busted import. `?off` yields a new
+// instance of the module you name, but its static imports resolve without
+// the query and reuse the cached graph — so demo-fit.js would still report
+// DEMO_FIT=true and this assertion would pass for the wrong reason. Only a
+// new process re-evaluates the whole graph, which is also how the switch
+// really behaves: NEXT_PUBLIC_ variables are fixed at process and build time.
+const resumeUrl = new URL("../lib/demo-resume.js", import.meta.url).href;
+const fitUrl = new URL("../lib/demo-fit.js", import.meta.url).href;
+const out = execFileSync(
+  process.execPath,
+  ["--input-type=module", "-e",
+   `const { resumeScan } = await import(${JSON.stringify(resumeUrl)});
+    const { whyFor } = await import(${JSON.stringify(fitUrl)});
+    console.log(JSON.stringify({ scan: resumeScan(), why: whyFor("strong") }));`],
+  { env: { ...process.env, NEXT_PUBLIC_DEMO_FIT: "false" }, encoding: "utf8" }
+);
+const off = JSON.parse(out);
+assert.equal(off.scan, null);
+assert.equal(off.why, null);
 
 console.log("demo-resume ok");
 ```
+
+Note: the off-path spawns a real subprocess rather than a cache-busted
+`?off` import, because a static `import { DEMO_FIT } from "./demo-fit.js"`
+resolves via ordinary relative-URL merge, which drops the query string —
+so a cache-busted `demo-resume.js` would still import the already-cached
+`demo-fit.js` with `DEMO_FIT` frozen at `true`, and the assertion below
+would fail. Only a fresh process re-evaluates the whole module graph.
 
 - [ ] **Step 2: Register and run it to verify it fails**
 
