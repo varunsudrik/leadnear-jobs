@@ -373,7 +373,17 @@ img { max-width: 100%; }
    display:none, keeps the element in the accessibility tree, which is what
    makes the live region announce reliably when its text arrives. */
 .home-hero .hh-cta-note {
-  flex: 0 1 100%; min-width: 0; margin: 8px 0 0;
+  /* flex-basis 0 with min-width:100%, and a negative inline-end margin equal
+     to .hh-cta's 9px column gap — the same two-part treatment .inert-note
+     carries, for the same two reasons. .hh-cta is shrink-to-fit inside the
+     hero grid, so `flex: 0 1 100%` could not resolve its percentage while the
+     row was being intrinsically sized and fell back to the note's own text
+     width: measured, pressing `Upload resume` with the demo layer off widened
+     the row from 300px to 469px and slid both buttons 169px left. The note
+     did take its own line throughout; it was the row underneath it that
+     moved. The stray 9px is the gap an in-flow zero-width flex item still
+     contributes, already documented on the :empty rule below. */
+  flex: 0 0 0; min-width: 100%; margin: 8px -9px 0 0;
   font-size: 12.5px; color: var(--hero-badge-fg);
 }
 .home-hero .hh-cta-note:empty { position: absolute; margin: 0; }
