@@ -343,6 +343,19 @@ img { max-width: 100%; }
    9px (the `gap: 9px` above sets both; row-gap then overrides one). */
 .home-hero .hh-cta { position: relative; display: flex; gap: 9px; row-gap: 0; align-items: center; flex-wrap: wrap; }
 .home-hero .hh-cta button, .home-hero .hh-cta a {
+  /* Block-level and self-centring, both load-bearing. A <button> is neither by
+     accident (the UA stylesheet blockifies it and centres its text) but an <a>
+     is not, and DEMO_FIT swaps one for the other. At desktop .hh-cta is a flex
+     container, so the anchor was blockified as a flex item and nobody noticed;
+     at 640px .hh-cta becomes display:block and the anchor fell back to
+     display:inline, where the phone rule's width:100% and min-height:46px do
+     not apply at all — measured 122px wide and 43px tall inside a 318px row,
+     left-aligned. inline-flex fixes the geometry and the centring in one
+     declaration for both element types and both breakpoints; getComputedStyle
+     cannot catch a regression here (it happily reports min-height:46px on an
+     inline box), so scripts/test-home-spec.mjs pins the phone rule and the
+     gate checks getBoundingClientRect. */
+  display: inline-flex; align-items: center; justify-content: center;
   border: 0; border-radius: var(--radius-pill); font-family: inherit;
   font-weight: 600; font-size: 13.5px; white-space: nowrap;
   /* cursor: pointer, and the :hover states below, are honest again: these
@@ -689,8 +702,15 @@ img { max-width: 100%; }
   .home-hero .hh-narrow { display: inline; }
   .home-hero .hh-cta { display: block; }
   .home-hero .hh-cta-primary { width: 100%; padding: 13px; min-height: 46px; }
-  /* The design's phone hero carries one CTA, not two. */
-  .home-hero .hh-cta-ghost { display: none; }
+  /* The design's phone hero carries one CTA, not two.
+
+     Three class selectors, not two: the shared
+     `.home-hero .hh-cta button, .home-hero .hh-cta a` rule above now sets a
+     display, and at (0,2,1) it outweighs a plain `.home-hero .hh-cta-ghost`
+     — a media query adds no specificity, the same trap the phone .job-card
+     rule below documents. Written the short way, the ghost CTA reappeared on
+     the phone hero. */
+  .home-hero .hh-cta .hh-cta-ghost { display: none; }
 
   /* Filters become a horizontal strip that bleeds to both edges rather than
      wrapping onto three rows. The negative margin cancels .console-shell's 18px
