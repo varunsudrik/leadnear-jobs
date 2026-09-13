@@ -1085,10 +1085,14 @@ export default async function MatchesPage({ searchParams }) {
           <span className="rs-meta">from arjun-mehta-resume.pdf · Senior Backend Engineer · refreshed 2h ago</span>
         </div>
         <div className="mb-filters">
+          {/* Links, not buttons: the filter state belongs in the URL so it is
+              shareable and works without JavaScript. aria-pressed is a button
+              attribute and is invalid here — aria-current marks the active
+              item in a set, which is what an engaged filter is. */}
           <Link href={href({ remote: !remote, salary: salaryListed })}
-                className="filter-toggle" aria-pressed={remote}>Remote</Link>
+                className="filter-toggle" aria-current={remote ? "true" : undefined}>Remote</Link>
           <Link href={href({ remote, salary: !salaryListed })}
-                className="filter-toggle" aria-pressed={salaryListed}>Salary listed</Link>
+                className="filter-toggle" aria-current={salaryListed ? "true" : undefined}>Salary listed</Link>
           {/* Needs application state that does not exist. A real disabled
               attribute, unlike the placeholder buttons — there is nothing to
               explain on press, the control is simply unavailable. */}
@@ -1115,7 +1119,7 @@ In `app/globals.css`, after the resume block:
 .mb-page-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
 .mb-page-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .mb-filters { display: flex; gap: 7px; }
-.mb-filters .filter-toggle[aria-pressed="true"] { background: var(--text); color: #fff; box-shadow: none; }
+.mb-filters .filter-toggle[aria-current="true"] { background: var(--text); color: #fff; box-shadow: none; }
 .mb-filters .filter-toggle:disabled { opacity: .5; cursor: not-allowed; }
 
 .mb-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; align-items: start; }
@@ -1369,9 +1373,10 @@ In `components/MatchBuckets.jsx`, add tab state defaulting to Strong, and render
   const [tab, setTab] = useState("strong");
 ```
 
-Render, directly inside the returned `.mb-grid` wrapper's parent — restructure the return so both the tab strip and the grid are siblings:
+Restructure the return so the tab strip and the grid are siblings. Replace the whole `return (…)` with this — the bucket-column body is unchanged from Task 5 except for the four attributes on `<section>`:
 
 ```jsx
+  return (
     <>
       <div className="mb-tabs" role="tablist" aria-label="Match strength">
         {BUCKETS.map(({ key, label }) => (
@@ -1391,14 +1396,55 @@ Render, directly inside the returned `.mb-grid` wrapper's parent — restructure
         ))}
       </div>
       <div className="mb-grid">
-        {/* each <section> gains: */}
-        {/*   id={`mb-panel-${key}`} role="tabpanel" aria-labelledby={`mb-tab-${key}`} */}
-        {/*   className={`mb-col${tab === key ? " active" : ""}`} */}
+        {BUCKETS.map(({ key, label, actions }) => {
+          const rows = buckets[key];
+          const shown = expanded[key] ? rows.length : Math.min(INITIAL[key], rows.length);
+          const remaining = rows.length - shown;
+          return (
+            <section
+              className={`mb-col${tab === key ? " active" : ""}`}
+              key={key}
+              id={`mb-panel-${key}`}
+              role="tabpanel"
+              aria-labelledby={`mb-tab-${key}`}
+            >
+              <div className="mb-head">
+                <span className={`mb-head-label ${key}`}>
+                  <span className={`mb-dot ${key}`} aria-hidden="true" />
+                  {label}
+                  <span className="mono">{rows.length}</span>
+                </span>
+                {key === "strong" && rows.length > 0 ? (
+                  <InertButton className="mb-queue-all" note={QUEUE_NOT_LIVE}>
+                    Queue all {rows.length}
+                  </InertButton>
+                ) : null}
+                {key === "low" ? <span className="mb-collapsed">collapsed</span> : null}
+              </div>
+              <div className="mb-list">
+                {rows.slice(0, shown).map((row) => (
+                  <MatchRow key={row.db_id} row={row} tier={key} actions={actions} />
+                ))}
+                {remaining > 0 ? (
+                  <button type="button" className="mb-more" onClick={() => setExpanded((e) => ({ ...e, [key]: true }))}>
+                    Show {remaining} more
+                  </button>
+                ) : null}
+                {key === "low" ? (
+                  <div className="mb-note">
+                    Low-fit roles are excluded from auto-apply. Add a target title or close a missing keyword to move roles up.
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          );
+        })}
       </div>
     </>
+  );
 ```
 
-Apply those three attributes plus the `active` class to the existing `<section className="mb-col">`. Above 640px every panel is visible and the tab strip is hidden, so the roles are inert there; below 640px CSS shows only the active panel.
+The `aria-label` the `<section>` previously carried is dropped: `aria-labelledby` now points at the tab, which names the panel. Above 640px every panel is visible and the tab strip is `display:none`, so the tab roles are inert there; below 640px only the active panel shows.
 
 - [ ] **Step 4: Add the phone CSS**
 
