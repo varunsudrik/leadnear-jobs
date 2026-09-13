@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getMatchCohort } from "@/lib/jobs";
 import { bucketJobs } from "@/lib/match-buckets";
 import { DEMO_FIT } from "@/lib/demo-fit";
+import { matchesSubtitle } from "@/lib/demo-resume";
 import MatchBuckets from "@/components/MatchBuckets";
 import DemoOffPanel from "@/components/DemoOffPanel";
 
@@ -53,7 +54,10 @@ export default async function MatchesPage({ searchParams }) {
       <div className="mb-page-head">
         <div className="mb-page-title">
           <h1 className="rs-title"><span className="mono">{buckets.counts.total}</span> matches</h1>
-          <span className="rs-meta">from arjun-mehta-resume.pdf · Senior Backend Engineer · refreshed 2h ago</span>
+          {/* Assembled in lib/demo-resume.js, not here: the filename and the
+              title are that module's fixtures, and inlining them made this a
+              silent second copy of both. */}
+          <span className="rs-meta">{matchesSubtitle()}</span>
         </div>
         <div className="mb-filters">
           {/* Links, not buttons: the filter state belongs in the URL so it is

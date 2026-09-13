@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { resumeScan, SEVERITIES } from "../lib/demo-resume.js";
+import { resumeScan, matchesSubtitle, SEVERITIES } from "../lib/demo-resume.js";
 import { whyFor } from "../lib/demo-fit.js";
 
 const s = resumeScan();
@@ -43,6 +43,20 @@ for (const m of s.missing) {
 // The "Scored against" select.
 assert.equal(s.scoredAgainst.length, 3);
 
+// The Matches screen's subtitle. It used to be three string literals inlined
+// in app/matches/page.jsx, one of which duplicated SCAN.filename while another
+// shadowed scoredAgainst[0] — so editing a fixture here left the two screens
+// disagreeing about which resume had been scanned. These assertions are
+// derived from the payload above rather than written out, so a re-inlined
+// literal fails them.
+const subtitle = matchesSubtitle();
+assert.equal(typeof subtitle, "string");
+assert.ok(subtitle.includes(s.scan.filename), "the subtitle names the scanned file");
+// scoredAgainst[0] is "<title> · N postings"; the subtitle carries the title.
+const targetTitle = s.scoredAgainst[0].split(" · ")[0];
+assert.ok(subtitle.includes(targetTitle), "the subtitle names the title that was scored against");
+assert.ok(!/\d{3}/.test(subtitle), "the subtitle carries no posting count — /matches counts its own rows");
+
 // Match copy is domain-neutral: this corpus spans Sales, HR and Design, so a
 // "why" naming specific technologies would be nonsense on most rows.
 for (const tier of ["strong", "good", "low"]) {
@@ -66,13 +80,14 @@ const fitUrl = new URL("../lib/demo-fit.js", import.meta.url).href;
 const out = execFileSync(
   process.execPath,
   ["--input-type=module", "-e",
-   `const { resumeScan } = await import(${JSON.stringify(resumeUrl)});
+   `const { resumeScan, matchesSubtitle } = await import(${JSON.stringify(resumeUrl)});
     const { whyFor } = await import(${JSON.stringify(fitUrl)});
-    console.log(JSON.stringify({ scan: resumeScan(), why: whyFor("strong") }));`],
+    console.log(JSON.stringify({ scan: resumeScan(), why: whyFor("strong"), subtitle: matchesSubtitle() }));`],
   { env: { ...process.env, NEXT_PUBLIC_DEMO_FIT: "false" }, encoding: "utf8" }
 );
 const off = JSON.parse(out);
 assert.equal(off.scan, null);
 assert.equal(off.why, null);
+assert.equal(off.subtitle, null);
 
 console.log("demo-resume ok");
