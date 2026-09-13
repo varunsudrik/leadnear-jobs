@@ -57,9 +57,23 @@ assert.ok(!base.includes("@media"), "media blocks should be fully stripped from 
 // Assertions are scoped to a single rule body, never to the whole file. A
 // bare flat.includes("max-width: 1440px") would pass on .site-header's own
 // 1440px and prove nothing about the home shell.
+//
+// The lookup is anchored on a rule boundary — start of source, or the "}", ";"
+// or "," that ends whatever came before. An unanchored indexOf(".mb-apply {")
+// also matches inside ".mb-card.good .mb-apply {", and ".mb-role"/".mb-sub"
+// have the same exposure against their ".mb-card.low" overrides. Today those
+// resolve correctly only because the base rule happens to be authored first,
+// and this change moved a large block of CSS, so file order is not something
+// to lean on. "," stays a boundary so a selector named second in a list
+// (".a, .b {") is still findable; a descendant or compound prefix is separated
+// by a space or a dot, neither of which is one.
 function rule(selector) {
-  const start = base.indexOf(`${selector} {`);
-  assert.ok(start >= 0, `missing base rule: ${selector}`);
+  const anchored = new RegExp(
+    `(?:^|[};,])\\s*${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{`
+  );
+  const match = anchored.exec(base);
+  assert.ok(match, `missing base rule: ${selector}`);
+  const start = match.index + match[0].length;
   return base.slice(start, base.indexOf("}", start));
 }
 function decl(selector, declaration) {
@@ -205,31 +219,68 @@ for (const needle of [
   "top: -70px",              // glow on phone
   "font-size: 18px",         // headline on phone
   "letter-spacing: -.02em",  // headline on phone
-  "min-height: 46px",        // full-width CTA
   "flex-wrap: nowrap",       // filter chip strip
   "overflow-x: auto",        // filter chip strip
   ".console-shell .filter-bar", // the strip must be scoped, not global
-  ".mb-tabs",                // matches becomes tabs, not columns
-  "grid-template-columns: 1fr 1fr",  // resume's dimension bars, 2-up
-  "min-height: 46px",        // full-width View matches button
 ]) {
   assert.ok(phone.includes(needle), `phone breakpoint should carry "${needle}"`);
 }
 
-// The phone Matches screen is tabs over one bucket, not three columns.
+// Everything below asserts against a named rule's OWN body inside the phone
+// slice, not a bare substring of it. A bare substring proves only that the
+// text appears SOMEWHERE in the block, which for a shared value proves
+// nothing: "grid-template-columns: minmax(0,1fr)" is also produced by
+// .rs-body and .rs-keywords, so the .mb-grid check below passed even when
+// .mb-grid's own phone rule was reverted to the desktop's
+// repeat(3,minmax(0,1fr)) — proven by doing exactly that revert (see
+// task-7-report.md). "min-height: 46px" was asserted twice for two different
+// controls, and ".mb-tabs" asserted only that the string occurred at all, so
+// `.mb-tabs { display: none }` inside this block — phones with one bucket and
+// no way to reach the other two — would have passed.
 //
-// This must assert against .mb-grid's OWN rule body within the phone slice,
-// not a bare substring of the whole slice: "grid-template-columns:
-// minmax(0,1fr)" is also produced by .rs-body and .rs-keywords in the same
-// block, so a bare phone.includes(...) passes even if .mb-grid's phone rule
-// is reverted to the desktop's repeat(3,minmax(0,1fr)) — proven by doing
-// exactly that revert and confirming this assertion is what catches it (see
-// task-7-report.md).
-const mbGridPhoneStart = phone.indexOf(".mb-grid {");
-assert.ok(mbGridPhoneStart >= 0, ".mb-grid should have its own rule inside the phone breakpoint");
-const mbGridPhone = phone.slice(mbGridPhoneStart, phone.indexOf("}", mbGridPhoneStart));
-assert.ok(mbGridPhone.includes("grid-template-columns: minmax(0,1fr)"),
-  "the three-column match grid must collapse at phone width");
+// Anchored the same way rule() is, and for the same reason.
+function phoneRule(selector) {
+  const anchored = new RegExp(
+    `(?:^|[{};,])\\s*${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\{`
+  );
+  const match = anchored.exec(phone);
+  assert.ok(match, `${selector} should have its own rule inside the phone breakpoint`);
+  const start = match.index + match[0].length;
+  return phone.slice(start, phone.indexOf("}", start));
+}
+function phoneDecl(selector, declaration) {
+  assert.ok(
+    phoneRule(selector).includes(declaration),
+    `the phone breakpoint's ${selector} should declare "${declaration}"`
+  );
+}
+
+// The three-column match grid collapses, and the tab strip that replaces it
+// must actually be VISIBLE — the whole phone Matches screen is one bucket
+// plus a switcher.
+phoneDecl(".mb-grid", "grid-template-columns: minmax(0,1fr)");
+phoneDecl(".mb-tabs", "display: flex");
+
+// The hero's single CTA and the resume screen's `View matches` are both
+// full-width 46px pills. Neither is a <button>: HomeHeroCta renders a <Link>
+// while the demo layer is on, and an inline element ignores both of these
+// declarations outright — getComputedStyle still reports them, which is how a
+// 122px-wide, 43px-tall CTA passed this gate. Hence the display assertion.
+phoneDecl(".home-hero .hh-cta-primary", "width: 100%");
+phoneDecl(".home-hero .hh-cta-primary", "min-height: 46px");
+decl(".home-hero .hh-cta button, .home-hero .hh-cta a", "display: inline-flex");
+decl(".home-hero .hh-cta button, .home-hero .hh-cta a", "justify-content: center");
+phoneDecl(".rs-view-matches", "min-height: 46px");
+phoneDecl(".rs-view-matches", "width: 100%");
+
+// The resume screen's four dimension bars go 2-up.
+phoneDecl(".rs-parts", "grid-template-columns: 1fr 1fr");
+
+// The design draws both card buttons at a 42px minimum (spec ~444-462). The
+// written spec dropped it when it was transcribed, so the implementation and
+// this gate both matched the spec rather than the design.
+phoneDecl(".mb-queue", "min-height: 42px");
+phoneDecl(".mb-apply", "min-height: 42px");
 
 // ─── Phone header search (spec line 419) ───
 // The header form is the only free-text search on a phone, so the rules that
