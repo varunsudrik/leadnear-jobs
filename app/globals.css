@@ -382,72 +382,6 @@ img { max-width: 100%; }
   .home-hero .hh-cta { flex-wrap: wrap; }
 }
 
-/* Phone values are read from the design's own mobile screen (spec line 420),
-   which is not a narrower desktop hero: it drops the second CTA and shortens
-   both strings. The copy swap is CSS-only — both variants are already in the
-   markup (components/HomeHero.jsx) so there is no hydration branch. */
-@media (max-width: 640px) {
-  .console-shell { padding: 8px 18px 40px; }
-
-  .home-hero { border-radius: 18px; padding: 18px; margin-bottom: 14px; }
-  .home-hero .hh-glow { right: -60px; top: -70px; width: 220px; height: 220px; }
-  .home-hero .hh-badge { gap: 6px; padding: 4px 10px; font-size: 11px; margin-bottom: 10px; }
-  .home-hero .hh-dot { width: 5px; height: 5px; }
-  .home-hero .hh-title { font-size: 18px; line-height: 1.25; letter-spacing: -.02em; margin-bottom: 6px; }
-  .home-hero .hh-sub { font-size: 12.5px; margin-bottom: 14px; }
-  .home-hero .hh-wide { display: none; }
-  .home-hero .hh-narrow { display: inline; }
-  .home-hero .hh-cta { display: block; }
-  .home-hero .hh-cta-primary { width: 100%; padding: 13px; min-height: 46px; }
-  /* The design's phone hero carries one CTA, not two. */
-  .home-hero .hh-cta-ghost { display: none; }
-
-  /* Filters become a horizontal strip that bleeds to both edges rather than
-     wrapping onto three rows. The negative margin cancels .console-shell's 18px
-     so the strip scrolls edge to edge, the way the design's does.
-
-     Scoped under .console-shell deliberately. Filters also renders inside
-     .container on /search and every JobListLayout page, and .container's
-     padding is 1.25rem (20px) — an unscoped -18px bleed would overhang those
-     layouts by 2px a side and give the whole page a horizontal scrollbar. */
-  .console-shell .filter-bar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin-inline: -18px;
-    padding-inline: 18px;
-    scrollbar-width: none;
-  }
-  .console-shell .filter-bar::-webkit-scrollbar { display: none; }
-  .console-shell .filter-count,
-  .console-shell .filter-toggle,
-  .console-shell .filter-select,
-  .console-shell .filter-clear,
-  .console-shell .sort-select { white-space: nowrap; flex-shrink: 0; }
-  /* The spacer would eat the whole scroll width in a nowrap strip. */
-  .console-shell .filter-spacer { display: none; }
-
-  /* Left unscoped on purpose: JobCard is the same component on /search,
-     /remote and every listing page, and the design has one phone card, not a
-     home-only one. Unlike the filter strip above, nothing here depends on the
-     surrounding container's padding.
-
-     .selected and .strong are named explicitly because a media query adds no
-     specificity: ".job-card.selected, .job-card.strong" is (0,2,0) and this
-     rule would otherwise be (0,1,0), so a strong-fit card kept its violet
-     ring at 390px. The design's own phone card (spec line 425) carries the
-     fit BADGE but a single uniform shadow with no fit variant. .selected has
-     a second reason: below 900px app/JobsSplitView.jsx sets showPreview
-     false, so nothing ever applies it — the ring would be an orphaned
-     affordance from a selection model that does not exist at this width, and
-     reads as a card stuck in a selected state. */
-  .job-card,
-  .job-card.selected,
-  .job-card.strong {
-    border-radius: 16px; padding: 14px;
-    box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05);
-  }
-}
-
 /* ─── Job list ───────────────────────────────── */
 .job-list { display: flex; flex-direction: column; gap: 8px; }
 
@@ -692,6 +626,8 @@ img { max-width: 100%; }
 .mb-filters .filter-toggle[aria-current="true"]:hover { box-shadow: none; }
 .mb-filters .filter-toggle:disabled { opacity: .5; cursor: not-allowed; }
 
+/* Phone-only; the 640px block below turns it back on. */
+.mb-tabs { display: none; }
 .mb-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; align-items: start; }
 .mb-col { min-width: 0; }
 .mb-head { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 12px; }
@@ -735,6 +671,98 @@ img { max-width: 100%; }
 .mb-more { border: 0; background: transparent; padding: 8px; font-size: 12.5px; font-weight: 600; color: var(--text3); cursor: pointer; font-family: inherit; }
 .mb-more:hover { color: var(--accent); }
 .mb-note { padding: 14px 16px; font-size: 12.5px; color: var(--text3); line-height: 1.5; background: var(--bg); border-radius: 16px; box-shadow: 0 0 0 1px rgba(21,23,28,.05); }
+
+/* Phone values are read from the design's own mobile screen (spec line 420),
+   which is not a narrower desktop hero: it drops the second CTA and shortens
+   both strings. The copy swap is CSS-only — both variants are already in the
+   markup (components/HomeHero.jsx) so there is no hydration branch. */
+@media (max-width: 640px) {
+  .console-shell { padding: 8px 18px 40px; }
+
+  .home-hero { border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .home-hero .hh-glow { right: -60px; top: -70px; width: 220px; height: 220px; }
+  .home-hero .hh-badge { gap: 6px; padding: 4px 10px; font-size: 11px; margin-bottom: 10px; }
+  .home-hero .hh-dot { width: 5px; height: 5px; }
+  .home-hero .hh-title { font-size: 18px; line-height: 1.25; letter-spacing: -.02em; margin-bottom: 6px; }
+  .home-hero .hh-sub { font-size: 12.5px; margin-bottom: 14px; }
+  .home-hero .hh-wide { display: none; }
+  .home-hero .hh-narrow { display: inline; }
+  .home-hero .hh-cta { display: block; }
+  .home-hero .hh-cta-primary { width: 100%; padding: 13px; min-height: 46px; }
+  /* The design's phone hero carries one CTA, not two. */
+  .home-hero .hh-cta-ghost { display: none; }
+
+  /* Filters become a horizontal strip that bleeds to both edges rather than
+     wrapping onto three rows. The negative margin cancels .console-shell's 18px
+     so the strip scrolls edge to edge, the way the design's does.
+
+     Scoped under .console-shell deliberately. Filters also renders inside
+     .container on /search and every JobListLayout page, and .container's
+     padding is 1.25rem (20px) — an unscoped -18px bleed would overhang those
+     layouts by 2px a side and give the whole page a horizontal scrollbar. */
+  .console-shell .filter-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -18px;
+    padding-inline: 18px;
+    scrollbar-width: none;
+  }
+  .console-shell .filter-bar::-webkit-scrollbar { display: none; }
+  .console-shell .filter-count,
+  .console-shell .filter-toggle,
+  .console-shell .filter-select,
+  .console-shell .filter-clear,
+  .console-shell .sort-select { white-space: nowrap; flex-shrink: 0; }
+  /* The spacer would eat the whole scroll width in a nowrap strip. */
+  .console-shell .filter-spacer { display: none; }
+
+  /* Left unscoped on purpose: JobCard is the same component on /search,
+     /remote and every listing page, and the design has one phone card, not a
+     home-only one. Unlike the filter strip above, nothing here depends on the
+     surrounding container's padding.
+
+     .selected and .strong are named explicitly because a media query adds no
+     specificity: ".job-card.selected, .job-card.strong" is (0,2,0) and this
+     rule would otherwise be (0,1,0), so a strong-fit card kept its violet
+     ring at 390px. The design's own phone card (spec line 425) carries the
+     fit BADGE but a single uniform shadow with no fit variant. .selected has
+     a second reason: below 900px app/JobsSplitView.jsx sets showPreview
+     false, so nothing ever applies it — the ring would be an orphaned
+     affordance from a selection model that does not exist at this width, and
+     reads as a card stuck in a selected state. */
+  .job-card,
+  .job-card.selected,
+  .job-card.strong {
+    border-radius: 16px; padding: 14px;
+    box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05);
+  }
+
+  /* ── Resume scan, phone (spec ~430-443) ── */
+  .rs-body { grid-template-columns: minmax(0,1fr); }
+  .rs-score { grid-template-columns: minmax(0,1fr); justify-items: center; text-align: center; gap: 14px; padding: 20px; }
+  .rs-parts { grid-template-columns: 1fr 1fr; gap: 12px 18px; text-align: left; }
+  .rs-keywords { grid-template-columns: minmax(0,1fr); }
+  .rs-fix { grid-template-columns: 18px 70px minmax(0,1fr); gap: 11px; padding: 13px 16px; }
+  /* The impact figure wraps under the text rather than squeezing a 4th column. */
+  .rs-impact { grid-column: 2 / -1; text-align: left; }
+  .rs-fix input { width: 16px; height: 16px; }
+  .rs-actions { width: 100%; flex-wrap: wrap; }
+  .rs-view-matches { width: 100%; text-align: center; padding: 14px; min-height: 46px; }
+
+  /* ── Matches, phone (spec ~444-462): three tabs over one bucket ── */
+  .mb-tabs { display: flex; gap: 7px; margin-bottom: 14px; }
+  .mb-tab { flex: 1; text-align: center; border: 0; background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.07); border-radius: var(--radius-pill); padding: 8px; font-size: 12.5px; font-weight: 600; color: var(--text2); cursor: pointer; font-family: inherit; }
+  .mb-tab.active { background: var(--text); color: #fff; box-shadow: none; }
+  .mb-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .mb-col { display: none; }
+  .mb-col.active { display: block; }
+  /* The bucket heading is redundant once the tab names it. */
+  .mb-head { display: none; }
+  .mb-list { gap: 10px; }
+  .mb-card { border-radius: 16px; padding: 15px; }
+  .mb-queue { padding: 10px 13px; }
+  .mb-apply { padding: 10px 15px; }
+}
 
 /* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */
 .filter-bar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }

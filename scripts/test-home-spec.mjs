@@ -196,9 +196,16 @@ for (const needle of [
   "flex-wrap: nowrap",       // filter chip strip
   "overflow-x: auto",        // filter chip strip
   ".console-shell .filter-bar", // the strip must be scoped, not global
+  ".mb-tabs",                // matches becomes tabs, not columns
+  "grid-template-columns: 1fr 1fr",  // resume's dimension bars, 2-up
+  "min-height: 46px",        // full-width View matches button
 ]) {
   assert.ok(phone.includes(needle), `phone breakpoint should carry "${needle}"`);
 }
+
+// The phone Matches screen is tabs over one bucket, not three columns.
+assert.ok(phone.includes("grid-template-columns: minmax(0,1fr)") || phone.includes(".mb-grid { display: block"),
+  "the three-column match grid must collapse at phone width");
 
 // ─── Phone header search (spec line 419) ───
 // The header form is the only free-text search on a phone, so the rules that

@@ -58,48 +58,72 @@ function MatchRow({ row, tier, actions }) {
 
 export default function MatchBuckets({ buckets }) {
   const [expanded, setExpanded] = useState({});
+  const [tab, setTab] = useState("strong");
 
   return (
-    <div className="mb-grid">
-      {BUCKETS.map(({ key, label, actions }) => {
-        const rows = buckets[key];
-        const shown = expanded[key] ? rows.length : Math.min(INITIAL[key], rows.length);
-        const remaining = rows.length - shown;
-        return (
-          <section className="mb-col" key={key} aria-label={`${label} matches`}>
-            <div className="mb-head">
-              <span className={`mb-head-label ${key}`}>
-                <span className={`mb-dot ${key}`} aria-hidden="true" />
-                {label}
-                <span className="mono">{rows.length}</span>
-              </span>
-              {/* Queue-all is a Strong-bucket affordance in the design, and the
-                  count is this bucket's real size, not the mock's 18. */}
-              {key === "strong" && rows.length > 0 ? (
-                <InertButton className="mb-queue-all" note={QUEUE_NOT_LIVE}>
-                  Queue all {rows.length}
-                </InertButton>
-              ) : null}
-              {key === "low" ? <span className="mb-collapsed">collapsed</span> : null}
-            </div>
-            <div className="mb-list">
-              {rows.slice(0, shown).map((row) => (
-                <MatchRow key={row.db_id} row={row} tier={key} actions={actions} />
-              ))}
-              {remaining > 0 ? (
-                <button type="button" className="mb-more" onClick={() => setExpanded((e) => ({ ...e, [key]: true }))}>
-                  Show {remaining} more
-                </button>
-              ) : null}
-              {key === "low" ? (
-                <div className="mb-note">
-                  Low-fit roles are excluded from auto-apply. Add a target title or close a missing keyword to move roles up.
-                </div>
-              ) : null}
-            </div>
-          </section>
-        );
-      })}
-    </div>
+    <>
+      <div className="mb-tabs" role="tablist" aria-label="Match strength">
+        {BUCKETS.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            id={`mb-tab-${key}`}
+            aria-selected={tab === key}
+            aria-controls={`mb-panel-${key}`}
+            tabIndex={tab === key ? 0 : -1}
+            className={`mb-tab${tab === key ? " active" : ""}`}
+            onClick={() => setTab(key)}
+          >
+            {label} <span className="mono">{buckets[key].length}</span>
+          </button>
+        ))}
+      </div>
+      <div className="mb-grid">
+        {BUCKETS.map(({ key, label, actions }) => {
+          const rows = buckets[key];
+          const shown = expanded[key] ? rows.length : Math.min(INITIAL[key], rows.length);
+          const remaining = rows.length - shown;
+          return (
+            <section
+              className={`mb-col${tab === key ? " active" : ""}`}
+              key={key}
+              id={`mb-panel-${key}`}
+              role="tabpanel"
+              aria-labelledby={`mb-tab-${key}`}
+            >
+              <div className="mb-head">
+                <span className={`mb-head-label ${key}`}>
+                  <span className={`mb-dot ${key}`} aria-hidden="true" />
+                  {label}
+                  <span className="mono">{rows.length}</span>
+                </span>
+                {key === "strong" && rows.length > 0 ? (
+                  <InertButton className="mb-queue-all" note={QUEUE_NOT_LIVE}>
+                    Queue all {rows.length}
+                  </InertButton>
+                ) : null}
+                {key === "low" ? <span className="mb-collapsed">collapsed</span> : null}
+              </div>
+              <div className="mb-list">
+                {rows.slice(0, shown).map((row) => (
+                  <MatchRow key={row.db_id} row={row} tier={key} actions={actions} />
+                ))}
+                {remaining > 0 ? (
+                  <button type="button" className="mb-more" onClick={() => setExpanded((e) => ({ ...e, [key]: true }))}>
+                    Show {remaining} more
+                  </button>
+                ) : null}
+                {key === "low" ? (
+                  <div className="mb-note">
+                    Low-fit roles are excluded from auto-apply. Add a target title or close a missing keyword to move roles up.
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </>
   );
 }
