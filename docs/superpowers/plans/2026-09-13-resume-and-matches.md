@@ -529,27 +529,29 @@ npm run demo-fit:test
 
 Expected: `match-buckets ok`, `demo-resume ok`, `demo-fit ok`
 
-- [ ] **Step 6: Verify the query against the live database**
+- [ ] **Step 6: Verify the join at the SQL level**
 
-The database has 5,000 active jobs. Confirm the query returns rows with locations attached:
+`lib/jobs.js` cannot be loaded by plain Node: it imports `"./db"` without an extension and imports `next/cache`, both of which only resolve under Next's bundler. So verify the join directly through `lib/db.js`, which has no Next imports, rather than by calling `getMatchCohort` from a one-liner:
 
 ```bash
 node -e "
-import('./lib/load-env.mjs').then(async () => {
-  const { getMatchCohort } = await import('./lib/jobs.js');
-  const rows = await getMatchCohort({ limit: 5 });
-  console.log('rows:', rows.length);
-  console.log('carries apply_url_md5:', rows.every(r => !!r.apply_url_md5));
-  console.log('any row with locations:', rows.some(r => Array.isArray(r.locations) && r.locations.length));
-  console.log('sample:', rows[0]?.title, '|', rows[0]?.company, '|', rows[0]?.locations);
+import('./lib/load-env.mjs').then(async (m) => {
+  m.loadEnvFile('.env.local');
+  const { query } = await import('./lib/db.js');
+  const rows = await query(\"SELECT j.apply_url_md5 FROM jobs j WHERE j.status = 'success' ORDER BY j.posted_at DESC LIMIT 200\");
+  console.log('rows:', rows.length, '| all carry apply_url_md5:', rows.every(r => !!r.apply_url_md5));
+  const md5s = rows.map(r => r.apply_url_md5);
+  const ph = md5s.map(() => '?').join(',');
+  const locs = await query(\\`SELECT job_md5 FROM job_locations WHERE job_md5 IN (\\${ph}) AND location_slug != ''\\`, md5s);
+  console.log('of those 200, jobs with a non-empty location:', new Set(locs.map(l => l.job_md5)).size);
   process.exit(0);
 });
 "
 ```
 
-Expected: 5 rows, `carries apply_url_md5: true`, `any row with locations: true`, and a real title/company.
+Expected: `all carry apply_url_md5: true`, and a non-zero count for jobs with a location.
 
-`attachLocations` returns the array **unchanged** when it finds no md5s, so a missing `apply_url_md5` column produces no error and no locations — which is why this step checks the column itself rather than only the result.
+**Note what that second number tells you.** Roughly one job in five carries a non-empty location slug — `attachLocations` filters `location_slug != ''` and most rows do not qualify. That is normal for this dataset and is why Task 5 renders a fallback rather than an empty gap. The end-to-end check that `getMatchCohort` itself attaches locations happens in Task 5, against the running app, where `lib/jobs.js` loads under Next.
 
 - [ ] **Step 7: Commit**
 
@@ -967,21 +969,29 @@ const BUCKETS = [
 // text — the same shape components/JobCard.jsx receives and title-cases.
 // components/JobPreview.jsx does NOT do this because getJob() gives it
 // location_raw, which is already readable. Do not copy that component here.
-function toLocationLabel(locations) {
-  if (!Array.isArray(locations) || locations.length === 0) return "";
-  return locations
-    .slice(0, 2)
-    .map((item) => item.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
-    .join(", ");
+//
+// The fallback is not decorative: measured against this dataset, only about
+// one job in five has a non-empty location slug, so without it four rows in
+// five would show a bare company name — while the same job on the home page
+// reads "Company · Remote". This mirrors JobCard's fallback exactly.
+function toLocationLabel(job) {
+  const locations = Array.isArray(job.locations) ? job.locations : [];
+  if (locations.length) {
+    return locations
+      .slice(0, 2)
+      .map((item) => item.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
+      .join(", ");
+  }
+  return job.remote ? "Remote" : "Location flexible";
 }
 
 function MatchRow({ row, tier, actions }) {
   const salary = fmtSalary(row);
-  const location = toLocationLabel(row.locations);
+  const location = toLocationLabel(row);
   return (
     <div className={`mb-card ${tier}`}>
       <Link href={`/${row.job_slug}`} className="mb-role">{row.title}</Link>
-      <div className="mb-sub">{row.company}{location ? ` · ${location}` : ""}</div>
+      <div className="mb-sub">{row.company} · {location}</div>
       <div className={`mb-why ${tier}`}>{row.why}</div>
       {actions ? (
         <div className="mb-foot">
