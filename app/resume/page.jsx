@@ -1,6 +1,7 @@
 import { resumeScan } from "@/lib/demo-resume";
 import { DEMO_SCANS_USED, DEMO_QUOTA } from "@/lib/demo-fit";
 import ResumeScan from "@/components/ResumeScan";
+import DemoOffPanel from "@/components/DemoOffPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,6 @@ export const metadata = {
 
 export default function ResumePage() {
   const data = resumeScan();
-  // Task 8 replaces this with the honest switched-off panel.
-  if (!data) return null;
+  if (!data) return <DemoOffPanel what="Resume scanning" />;
   return <ResumeScan data={data} scansUsed={DEMO_SCANS_USED} quota={DEMO_QUOTA} />;
 }

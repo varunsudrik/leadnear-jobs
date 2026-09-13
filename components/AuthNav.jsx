@@ -37,10 +37,17 @@ export default function AuthNav({ mobile = false }) {
   // (spec line 417).
   const showPips = !mobile && (DEMO_FIT || status === "authenticated");
   const scansUsed = DEMO_FIT ? DEMO_SCANS_USED : 0;
+  // With the layer off there is no resume-scan screen to send anyone to —
+  // /resume renders DemoOffPanel — so a signed-in user's pips (still shown;
+  // see showPips above) render bare rather than as a link to that panel.
   const pips = showPips ? (
-    <Link href="/resume" className="scan-pips-link" aria-label={`${DEMO_QUOTA - scansUsed} of ${DEMO_QUOTA} free scans — open resume scan`}>
+    DEMO_FIT ? (
+      <Link href="/resume" className="scan-pips-link" aria-label={`${DEMO_QUOTA - scansUsed} of ${DEMO_QUOTA} free scans — open resume scan`}>
+        <ScanPips used={scansUsed} quota={DEMO_QUOTA} />
+      </Link>
+    ) : (
       <ScanPips used={scansUsed} quota={DEMO_QUOTA} />
-    </Link>
+    )
   ) : null;
 
   // Placeholder keeps the navbar from shifting while the session resolves;

@@ -3,6 +3,7 @@ import { getMatchCohort } from "@/lib/jobs";
 import { bucketJobs } from "@/lib/match-buckets";
 import { DEMO_FIT } from "@/lib/demo-fit";
 import MatchBuckets from "@/components/MatchBuckets";
+import DemoOffPanel from "@/components/DemoOffPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export const metadata = {
 const HIDE_APPLIED_WHY = "Available once applications are tracked";
 
 export default async function MatchesPage({ searchParams }) {
+  if (!DEMO_FIT) return <DemoOffPanel what="Match ranking" />;
+
   const sp = (await searchParams) || {};
   const remote = sp.remote === "1";
   const salaryListed = sp.salary === "1";
@@ -28,7 +31,6 @@ export default async function MatchesPage({ searchParams }) {
     return null;
   });
 
-  if (!DEMO_FIT) return null;          // Task 8 replaces this with the honest panel.
   if (jobs === null) {
     return (
       <div className="console-shell">

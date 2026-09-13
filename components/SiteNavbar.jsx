@@ -3,14 +3,20 @@
 
 import { useState } from "react";
 import AuthNav from "@/components/AuthNav";
+import { DEMO_FIT } from "@/lib/demo-fit";
 
-const links = [
+const baseLinks = [
   ["Jobs", "/jobs"],
   ["Remote Jobs", "/jobs/remote"],
-  ["Matches", "/jobs/matches"],
   ["Categories", "/jobs/categories"],
   ["Salary Explorer", "/jobs/salaries"],
 ];
+
+// Matches only exists as demo content; with the layer off it would lead to the
+// "not enabled" panel, so the nav simply does not offer it.
+const links = DEMO_FIT
+  ? [baseLinks[0], baseLinks[1], ["Matches", "/jobs/matches"], baseLinks[2], baseLinks[3]]
+  : baseLinks;
 
 const discoverLinks = [
   ["Company", "/company"],
@@ -128,7 +134,7 @@ export default function SiteNavbar() {
         <nav id="mobile-navigation" className="mobile-navigation" aria-label="Mobile navigation">
           <div>
             {links.map(([label, href]) => <a key={label} href={href} onClick={closeNavigation}>{label}</a>)}
-            <a href="/jobs/resume" onClick={closeNavigation}>Resume scan</a>
+            {DEMO_FIT ? <a href="/jobs/resume" onClick={closeNavigation}>Resume scan</a> : null}
             <section>
               <p>Discover</p>
               {discoverLinks.map(([label, href]) => <a key={label} href={href} onClick={closeNavigation}>{label}</a>)}
