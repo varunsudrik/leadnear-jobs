@@ -675,10 +675,13 @@ img { max-width: 100%; }
 .rs-chip.found { background: var(--ok-bg); color: var(--ok-fg); }
 .rs-chip.missing { background: var(--bad-bg); color: var(--bad-fg); }
 
-/* Shared by every InertButton. Collapses to nothing until a press fills it,
-   so an idle placeholder measures exactly like the live control it mimics. */
-.inert-note { font-size: 12px; color: var(--text3); }
-.inert-note:empty { display: none; }
+/* Shared by every InertButton. Always present so the live region is in the
+   accessibility tree. When empty, it has no line box and no margin, so the
+   idle layout does not move. position:absolute costs nothing and, unlike
+   display:none, keeps the element in the accessibility tree, which is what
+   makes the live region announce reliably when its text arrives. */
+.inert-note { margin: 8px 0 0; font-size: 12px; color: var(--text3); }
+.inert-note:empty { position: absolute; margin: 0; }
 
 /* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */
 .filter-bar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }

@@ -50,7 +50,6 @@ export default function ResumeScan({ data, scansUsed, quota }) {
           <div className="rs-score">
             <div
               className="rs-donut"
-              aria-hidden="true"
               style={{ background: `conic-gradient(var(--accent) 0 ${score}%, var(--border) ${score}% 100%)` }}
             >
               <div className="rs-donut-inner">

@@ -715,7 +715,6 @@ export default function ResumeScan({ data, scansUsed, quota }) {
           <div className="rs-score">
             <div
               className="rs-donut"
-              aria-hidden="true"
               style={{ background: `conic-gradient(var(--accent) 0 ${score}%, var(--border) ${score}% 100%)` }}
             >
               <div className="rs-donut-inner">
@@ -863,10 +862,13 @@ In `app/globals.css`, add a new block after the job-preview section:
 .rs-chip.found { background: var(--ok-bg); color: var(--ok-fg); }
 .rs-chip.missing { background: var(--bad-bg); color: var(--bad-fg); }
 
-/* Shared by every InertButton. Collapses to nothing until a press fills it,
-   so an idle placeholder measures exactly like the live control it mimics. */
-.inert-note { font-size: 12px; color: var(--text3); }
-.inert-note:empty { display: none; }
+/* Shared by every InertButton. Always present so the live region is in the
+   accessibility tree. When empty, it has no line box and no margin, so the
+   idle layout does not move. position:absolute costs nothing and, unlike
+   display:none, keeps the element in the accessibility tree, which is what
+   makes the live region announce reliably when its text arrives. */
+.inert-note { margin: 8px 0 0; font-size: 12px; color: var(--text3); }
+.inert-note:empty { position: absolute; margin: 0; }
 ```
 
 - [ ] **Step 7: Run the tests to verify they pass**
