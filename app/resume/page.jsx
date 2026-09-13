@@ -15,6 +15,6 @@ export const metadata = {
 
 export default function ResumePage() {
   const data = resumeScan();
-  if (!data) return <DemoOffPanel what="Resume scanning" />;
+  if (!data) return <DemoOffPanel what="Resume scoring" />;
   return <ResumeScan data={data} scansUsed={DEMO_SCANS_USED} quota={DEMO_QUOTA} />;
 }

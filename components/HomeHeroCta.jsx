@@ -7,7 +7,7 @@ import { DEMO_FIT } from "@/lib/demo-fit";
 // purely so that file can stay a server component: this is the only part of
 // the hero that needs state.
 //
-// The hero's headline and subcopy advertise resume scanning and sit outside
+// The hero's headline and subcopy advertise resume scoring and sit outside
 // the DEMO_FIT switch (see lib/demo-fit.js) by an earlier decision, so these
 // buttons can't simply become links: with NEXT_PUBLIC_DEMO_FIT=false there is
 // no resume-scan screen to send anyone to, and the hero would still be

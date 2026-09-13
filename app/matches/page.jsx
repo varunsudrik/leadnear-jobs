@@ -5,6 +5,7 @@ import { DEMO_FIT } from "@/lib/demo-fit";
 import { matchesSubtitle } from "@/lib/demo-resume";
 import MatchBuckets from "@/components/MatchBuckets";
 import DemoOffPanel from "@/components/DemoOffPanel";
+import DemoDisclosure from "@/components/DemoDisclosure";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,7 @@ export default async function MatchesPage({ searchParams }) {
 
   return (
     <div className="console-shell">
+      <DemoDisclosure />
       <div className="mb-page-head">
         <div className="mb-page-title">
           <h1 className="rs-title"><span className="mono">{buckets.counts.total}</span> matches</h1>

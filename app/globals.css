@@ -566,6 +566,18 @@ img { max-width: 100%; }
 .job-preview .jp-footer a { font-weight: 600; color: var(--accent); }
 .job-preview .jp-footer a:hover { color: var(--accent-hover); }
 
+/* ─── Demo disclosure (components/DemoDisclosure.jsx) ───────── */
+/* One muted line above the header on /resume and /matches. Deliberately not
+   part of .rs-head or .mb-page-head: the measurement gate probes those and
+   their descendants, so the strip carries its own bottom margin and touches
+   neither. It is a tinted bar rather than a banner because it is a standing
+   fact about the screen, not an alert to dismiss. */
+.demo-disclosure {
+  margin: 0 0 14px; padding: 8px 12px; border-radius: 10px;
+  background: var(--bg2); color: var(--text3);
+  font-size: 12.5px; line-height: 1.45; max-width: 720px;
+}
+
 /* ─── Resume scan (Direction C — spec lines 195–252) ─────────────── */
 /* flex-start, not center: `Upload revised` is an InertButton, so pressing it
    adds a second line inside .rs-actions. Centred, the <h1> and its metadata

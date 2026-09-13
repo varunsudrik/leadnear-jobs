@@ -1,6 +1,12 @@
 // Rendered by /resume and /matches when NEXT_PUBLIC_DEMO_FIT=false. Both
 // screens are entirely demo content, so the switch leaves nothing to show —
 // but the routes still exist, and a blank page is not an explanation.
+//
+// Two feature names, used verbatim everywhere they appear: "Resume scoring"
+// (app/resume/page.jsx, components/HomeHeroCta.jsx and the second line below)
+// and "Match ranking" (app/matches/page.jsx and the same line). This panel
+// used to be handed "Resume scanning" and then say "Resume scoring" one line
+// later, which read as two different unfinished features.
 export default function DemoOffPanel({ what }) {
   return (
     <div className="console-shell">

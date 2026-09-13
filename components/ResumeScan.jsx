@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ScanPips from "@/components/ScanPips";
 import InertButton from "@/components/InertButton";
+import DemoDisclosure from "@/components/DemoDisclosure";
 
 const UPLOAD_NOT_LIVE = "Uploading a revised resume isn't live yet";
 
@@ -10,6 +11,7 @@ export default function ResumeScan({ data, scansUsed, quota }) {
 
   return (
     <div className="console-shell">
+      <DemoDisclosure />
       <div className="rs-head">
         <div className="rs-head-main">
           <h1 className="rs-title">Resume scan</h1>
