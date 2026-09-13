@@ -1221,7 +1221,11 @@ With the dev server running, load `http://localhost:4100/jobs/matches` at 1440px
 - Clicking a role title or `Apply` reaches a real job page that renders.
 - Toggling `Remote` adds `?remote=1` and the **rows change** to remote jobs.
 
-  The header total will **not** drop, and that is expected on this dataset: 549 jobs are remote and 597 have a listed salary, both far above the 214 cohort cap, so the cohort stays full and simply contains a different 214 jobs. The count is truthful about what is on screen — buckets still sum to it — but it is not a measure of the filtered corpus.
+  The header total will **not** drop for either filter **on its own**: 549 jobs are remote and 597 have a listed salary, both far above the 214 cohort cap, so the cohort stays full and simply contains a different 214 jobs.
+
+  **It does drop with both filters engaged.** Those two figures were measured separately, and `?remote=1&salary=1` takes their intersection, which was not. Measured through `lib/db.js` against the same 5,000-row `status='success'` corpus: remote 549, salary listed 597, **both 124**. So `?remote=1&salary=1` returns 124 rows, the `h1` reads `124 matches`, and the buckets sum to 124. That is correct behaviour — the count reports what is on screen — but the claim that the header "stays at 214 under filters" is only true of the single-filter cases.
+
+  Either way the count is truthful about what is on screen, and never a measure of the filtered corpus: under one filter it is the cohort cap, under both it is the whole intersection.
 - `Hide applied` is visibly disabled and not clickable.
 - The page has exactly one `<h1>`: `curl -s http://localhost:4100/jobs/matches | grep -o '<h1' | wc -l` → `1`
 

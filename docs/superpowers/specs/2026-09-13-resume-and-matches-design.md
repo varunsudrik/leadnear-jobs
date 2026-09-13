@@ -132,9 +132,16 @@ treatment `Sort: best fit` had before it went live.
 
 Header: `h1` "Resume scan" at `22px/600/-.025em`, beside `12.5px` `#6b6d78`
 metadata; then the pips, `Upload revised` (white pill, inert), and
-`View 214 matches →` (dark pill, links to `/jobs/matches`). The `Unlock unlimited`
+`View matches →` (dark pill, links to `/jobs/matches`). The `Unlock unlimited`
 button is gated on `trialExhausted` (`scansUsed >= 3`), which is false at 2 —
 the branch stays in the markup but never renders.
+
+**Shipped without the count.** The design labels that pill `View 214 matches →`.
+This route runs no cohort query — it renders `lib/demo-resume.js` and nothing
+else — so a literal `214` on it would be a fabricated count sitting next to a
+real one on the next screen, and it would go stale the moment the cohort cap or
+the corpus changed. The pill reads `View matches →`; `/jobs/matches` counts its
+own rows and puts the real number in its `h1`.
 
 Body: `grid-template-columns: minmax(250px,1fr) minmax(0,2.2fr); gap:16px`.
 
@@ -190,8 +197,9 @@ The design specifies phone frames for both screens; neither is a reflow.
 
 **Resume (spec ~430–443):** single column. Donut `132px`/`106px` with the score
 at `38px`. The four dimension bars become a `1fr 1fr` grid with `12px 18px` gaps.
-The fixes list keeps its checkboxes at `16px`. `View 214 matches →` becomes a
-full-width dark button, `padding:14px`, `min-height:46px`.
+The fixes list keeps its checkboxes at `16px`. `View matches →` (see above for
+why the design's `214` is dropped) becomes a full-width dark button,
+`padding:14px`, `min-height:46px`.
 
 **Matches (spec ~444–462):** the three columns collapse into **three pill tabs** —
 `Strong 18` / `Good 63` / `Low 133`, each `flex:1`, the active one dark
@@ -242,9 +250,20 @@ override) and update the one existing usage in `app/page.jsx`.
 - Matches gets an empty state when the cohort query returns nothing, and an
   error fallback mirroring `app/page.jsx`'s `.catch(() => …)`.
 - One `<h1>` per screen.
-- The donut is decorative (`aria-hidden`); the score is exposed as text.
-- Filter pills are toggle buttons with `aria-pressed`, matching
-  `components/Filters.jsx`'s `.filter-toggle`.
+- The donut carries the score as text. **Superseded:** this line said the donut
+  is decorative (`aria-hidden`). The `aria-hidden` was removed during
+  implementation — the score lives inside the donut, so hiding the donut hid the
+  one number the screen exists to report. The conic gradient is the decoration
+  and is a background, which is not exposed anyway.
+- Filter pills mark the engaged filter with `aria-current`. **Superseded:** this
+  line said they are toggle buttons with `aria-pressed`, matching
+  `components/Filters.jsx`'s `.filter-toggle`. They ship as `<Link>`s so the
+  filter state lives in the URL and works without JavaScript, and `aria-pressed`
+  is a button attribute that is invalid on a link; `aria-current` marks the
+  active item in a set, which is what an engaged filter is. The `.filter-toggle`
+  skin is still shared: `app/globals.css` paints the engaged state on
+  `.mb-filters .filter-toggle[aria-current="true"]` here and on
+  `.filter-toggle[aria-pressed="true"]` for the button form `Filters.jsx` uses.
 - Bucket panels carry a plain `aria-label` at every width; the phone strip's
   buttons are plain buttons with `aria-pressed`, not a tab/tabpanel ARIA
   pattern — desktop shows all three panels at once, so a tabs widget would be
