@@ -28,7 +28,10 @@ function toLocationLabel(job) {
   const locations = Array.isArray(job.locations) ? job.locations : [];
   if (locations.length) {
     return locations
-      .slice(0, 2)
+      // Three, the same as JobCard. It was two, so a job listed in three
+      // places read differently on /jobs and /matches — the cross-screen
+      // disagreement this screen exists to avoid.
+      .slice(0, 3)
       .map((item) => item.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
       .join(", ");
   }
@@ -48,7 +51,11 @@ function MatchRow({ row, tier, actions }) {
           <span className="mb-salary">{salary ?? "—"}</span>
           <div className="mb-actions inert-note-row">
             <InertButton className="mb-queue" note={QUEUE_NOT_LIVE}>+ Queue</InertButton>
-            <Link href={`/${row.job_slug}`} className="mb-apply">Apply</Link>
+            {/* Expanding Strong and Good puts roughly 80 of these on the
+                page, all pointing somewhere different. Without a label they
+                all announce as "Apply" — components/JobCard.jsx names its
+                own link the same way. */}
+            <Link href={`/${row.job_slug}`} className="mb-apply" aria-label={`Apply to ${row.title}`}>Apply</Link>
           </div>
         </div>
       ) : null}
