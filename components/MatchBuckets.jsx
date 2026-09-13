@@ -1,0 +1,105 @@
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import InertButton from "@/components/InertButton";
+import { fmtSalary } from "@/lib/format";
+
+const QUEUE_NOT_LIVE = "Auto-apply isn't live yet";
+
+// Initial rows per bucket, matching the mock.
+const INITIAL = { strong: 4, good: 3, low: 2 };
+
+const BUCKETS = [
+  { key: "strong", label: "Strong", actions: true },
+  { key: "good",   label: "Good",   actions: true },
+  { key: "low",    label: "Low",    actions: false },
+];
+
+// attachLocations attaches location_slug values ("new-york"), not display
+// text — the same shape components/JobCard.jsx receives and title-cases.
+// components/JobPreview.jsx does NOT do this because getJob() gives it
+// location_raw, which is already readable. Do not copy that component here.
+//
+// The fallback is not decorative: measured against this dataset, only about
+// one job in five has a non-empty location slug, so without it four rows in
+// five would show a bare company name — while the same job on the home page
+// reads "Company · Remote". This mirrors JobCard's fallback exactly.
+function toLocationLabel(job) {
+  const locations = Array.isArray(job.locations) ? job.locations : [];
+  if (locations.length) {
+    return locations
+      .slice(0, 2)
+      .map((item) => item.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
+      .join(", ");
+  }
+  return job.remote ? "Remote" : "Location flexible";
+}
+
+function MatchRow({ row, tier, actions }) {
+  const salary = fmtSalary(row);
+  const location = toLocationLabel(row);
+  return (
+    <div className={`mb-card ${tier}`}>
+      <Link href={`/${row.job_slug}`} className="mb-role">{row.title}</Link>
+      <div className="mb-sub">{row.company} · {location}</div>
+      <div className={`mb-why ${tier}`}>{row.why}</div>
+      {actions ? (
+        <div className="mb-foot">
+          <span className="mb-salary">{salary ?? "—"}</span>
+          <div className="mb-actions">
+            <InertButton className="mb-queue" note={QUEUE_NOT_LIVE}>+ Queue</InertButton>
+            <Link href={`/${row.job_slug}`} className="mb-apply">Apply</Link>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export default function MatchBuckets({ buckets }) {
+  const [expanded, setExpanded] = useState({});
+
+  return (
+    <div className="mb-grid">
+      {BUCKETS.map(({ key, label, actions }) => {
+        const rows = buckets[key];
+        const shown = expanded[key] ? rows.length : Math.min(INITIAL[key], rows.length);
+        const remaining = rows.length - shown;
+        return (
+          <section className="mb-col" key={key} aria-label={`${label} matches`}>
+            <div className="mb-head">
+              <span className={`mb-head-label ${key}`}>
+                <span className={`mb-dot ${key}`} aria-hidden="true" />
+                {label}
+                <span className="mono">{rows.length}</span>
+              </span>
+              {/* Queue-all is a Strong-bucket affordance in the design, and the
+                  count is this bucket's real size, not the mock's 18. */}
+              {key === "strong" && rows.length > 0 ? (
+                <InertButton className="mb-queue-all" note={QUEUE_NOT_LIVE}>
+                  Queue all {rows.length}
+                </InertButton>
+              ) : null}
+              {key === "low" ? <span className="mb-collapsed">collapsed</span> : null}
+            </div>
+            <div className="mb-list">
+              {rows.slice(0, shown).map((row) => (
+                <MatchRow key={row.db_id} row={row} tier={key} actions={actions} />
+              ))}
+              {remaining > 0 ? (
+                <button type="button" className="mb-more" onClick={() => setExpanded((e) => ({ ...e, [key]: true }))}>
+                  Show {remaining} more
+                </button>
+              ) : null}
+              {key === "low" ? (
+                <div className="mb-note">
+                  Low-fit roles are excluded from auto-apply. Add a target title or close a missing keyword to move roles up.
+                </div>
+              ) : null}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}

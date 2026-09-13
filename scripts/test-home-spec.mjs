@@ -223,6 +223,24 @@ for (const needle of [
   assert.ok(phoneHeader.includes(needle), `phone header breakpoint should carry "${needle}"`);
 }
 
+// ─── Matches (spec 253-304) ───
+decl(".mb-grid", "grid-template-columns: repeat(3,minmax(0,1fr))");
+decl(".mb-grid", "gap: 16px");
+decl(".mb-head", "padding: 0 4px 12px");
+decl(".mb-dot", "width: 8px");
+decl(".mb-list", "gap: 8px");
+decl(".mb-card", "border-radius: 16px");
+decl(".mb-card", "padding: 14px 16px");
+decl(".mb-card.strong", "box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(91,78,240,.16)");
+decl(".mb-card.low", "background: #fafafb");
+decl(".mb-why", "padding: 8px 10px");
+decl(".mb-why", "border-radius: 10px");
+decl(".mb-why.strong", "background: #f3f1ff");
+decl(".mb-queue-all", "background: var(--accent-tint)");
+decl(".mb-apply", "background: var(--text)");
+decl(".mb-more", "background: transparent");
+decl(".mb-note", "padding: 14px 16px");
+
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 // `flat` is already comment-stripped (see the top of this file), so writing
 // "removed the old .pagination block" in a comment no longer fails the suite —
