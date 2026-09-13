@@ -36,7 +36,7 @@ export default async function JobsPage({ searchParams }) {
     : results.jobs;
 
   return (
-    <div className="home-shell">
+    <div className="console-shell">
       <HomeHero />
       <Suspense>
         <Filters initialCount={Number(results.total)} allowFitSort />

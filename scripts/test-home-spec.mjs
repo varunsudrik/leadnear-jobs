@@ -70,8 +70,8 @@ function decl(selector, declaration) {
 }
 
 // ─── Page shell (spec line 61) ───
-decl(".home-shell", "max-width: 1440px");
-decl(".home-shell", "padding: 8px 24px 56px");
+decl(".console-shell", "max-width: 1440px");
+decl(".console-shell", "padding: 8px 24px 56px");
 
 // ─── Hero (spec lines 62-75) ───
 decl(".home-hero", "border-radius: 20px");
@@ -195,7 +195,7 @@ for (const needle of [
   "min-height: 46px",        // full-width CTA
   "flex-wrap: nowrap",       // filter chip strip
   "overflow-x: auto",        // filter chip strip
-  ".home-shell .filter-bar", // the strip must be scoped, not global
+  ".console-shell .filter-bar", // the strip must be scoped, not global
 ]) {
   assert.ok(phone.includes(needle), `phone breakpoint should carry "${needle}"`);
 }

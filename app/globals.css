@@ -300,7 +300,7 @@ img { max-width: 100%; }
    The section is 1440px, not the 1160px .container used elsewhere: C Home
    is a two-column working surface, and .container's measure would crush the
    preview pane. */
-.home-shell { max-width: 1440px; margin: 0 auto; padding: 8px 24px 56px; }
+.console-shell { max-width: 1440px; margin: 0 auto; padding: 8px 24px 56px; }
 
 .home-hero {
   /* Six colours that appear only in this hero. Scoped here rather than
@@ -387,7 +387,7 @@ img { max-width: 100%; }
    both strings. The copy swap is CSS-only — both variants are already in the
    markup (components/HomeHero.jsx) so there is no hydration branch. */
 @media (max-width: 640px) {
-  .home-shell { padding: 8px 18px 40px; }
+  .console-shell { padding: 8px 18px 40px; }
 
   .home-hero { border-radius: 18px; padding: 18px; margin-bottom: 14px; }
   .home-hero .hh-glow { right: -60px; top: -70px; width: 220px; height: 220px; }
@@ -403,28 +403,28 @@ img { max-width: 100%; }
   .home-hero .hh-cta-ghost { display: none; }
 
   /* Filters become a horizontal strip that bleeds to both edges rather than
-     wrapping onto three rows. The negative margin cancels .home-shell's 18px
+     wrapping onto three rows. The negative margin cancels .console-shell's 18px
      so the strip scrolls edge to edge, the way the design's does.
 
-     Scoped under .home-shell deliberately. Filters also renders inside
+     Scoped under .console-shell deliberately. Filters also renders inside
      .container on /search and every JobListLayout page, and .container's
      padding is 1.25rem (20px) — an unscoped -18px bleed would overhang those
      layouts by 2px a side and give the whole page a horizontal scrollbar. */
-  .home-shell .filter-bar {
+  .console-shell .filter-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
     margin-inline: -18px;
     padding-inline: 18px;
     scrollbar-width: none;
   }
-  .home-shell .filter-bar::-webkit-scrollbar { display: none; }
-  .home-shell .filter-count,
-  .home-shell .filter-toggle,
-  .home-shell .filter-select,
-  .home-shell .filter-clear,
-  .home-shell .sort-select { white-space: nowrap; flex-shrink: 0; }
+  .console-shell .filter-bar::-webkit-scrollbar { display: none; }
+  .console-shell .filter-count,
+  .console-shell .filter-toggle,
+  .console-shell .filter-select,
+  .console-shell .filter-clear,
+  .console-shell .sort-select { white-space: nowrap; flex-shrink: 0; }
   /* The spacer would eat the whole scroll width in a nowrap strip. */
-  .home-shell .filter-spacer { display: none; }
+  .console-shell .filter-spacer { display: none; }
 
   /* Left unscoped on purpose: JobCard is the same component on /search,
      /remote and every listing page, and the design has one phone card, not a
