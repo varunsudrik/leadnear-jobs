@@ -1,11 +1,21 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
+import { DEMO_FIT } from "@/lib/demo-fit";
 
 // The hero's two CTAs (spec lines 72-74). Extracted from components/HomeHero.jsx
 // purely so that file can stay a server component: this is the only part of
 // the hero that needs state.
 //
-// Both are inert — resume scanning is not built. They used to carry
+// The hero's headline and subcopy advertise resume scanning and sit outside
+// the DEMO_FIT switch (see lib/demo-fit.js) by an earlier decision, so these
+// buttons can't simply become links: with NEXT_PUBLIC_DEMO_FIT=false there is
+// no resume-scan screen to send anyone to, and the hero would still be
+// advertising one above nothing. So this chooses per render — Link to the
+// resume scan when the demo layer is on, the previous inert button plus note
+// when it is off.
+//
+// The inert path predates this file's link path: they used to carry
 // aria-disabled plus a `title` and no handler, which is fine with a mouse and
 // silent on touch: `title` has no tooltip on a phone, and at 640px the primary
 // CTA is full-width, 46px tall and the hero's only call to action, so tapping
@@ -25,6 +35,15 @@ const NOT_LIVE = "Resume scoring isn't live yet";
 
 export default function HomeHeroCta() {
   const [note, setNote] = useState("");
+
+  if (DEMO_FIT) {
+    return (
+      <div className="hh-cta">
+        <Link href="/resume" className="hh-cta-primary">Upload resume</Link>
+        <Link href="/resume" className="hh-cta-ghost">How scoring works</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="hh-cta">

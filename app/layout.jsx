@@ -29,6 +29,7 @@ export default function RootLayout({ children }) {
         <Link href="/">Search jobs</Link>
         <Link href="/remote">Remote</Link>
         <Link href="/salaries">Salaries</Link>
+        <Link href="/resume">Resume scan</Link>
         <a href={blogUrl} rel="noopener">Blog</a>
         <Link href="/contact-us?subject=Post%20a%20Job">Post a job</Link>
         <Link href="/about">About</Link>

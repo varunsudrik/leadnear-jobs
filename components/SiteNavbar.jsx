@@ -7,6 +7,7 @@ import AuthNav from "@/components/AuthNav";
 const links = [
   ["Jobs", "/jobs"],
   ["Remote Jobs", "/jobs/remote"],
+  ["Matches", "/jobs/matches"],
   ["Categories", "/jobs/categories"],
   ["Salary Explorer", "/jobs/salaries"],
 ];
@@ -127,6 +128,7 @@ export default function SiteNavbar() {
         <nav id="mobile-navigation" className="mobile-navigation" aria-label="Mobile navigation">
           <div>
             {links.map(([label, href]) => <a key={label} href={href} onClick={closeNavigation}>{label}</a>)}
+            <a href="/jobs/resume" onClick={closeNavigation}>Resume scan</a>
             <section>
               <p>Discover</p>
               {discoverLinks.map(([label, href]) => <a key={label} href={href} onClick={closeNavigation}>{label}</a>)}

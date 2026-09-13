@@ -342,7 +342,7 @@ img { max-width: 100%; }
    gap an empty note costs exactly zero height. column-gap stays the design's
    9px (the `gap: 9px` above sets both; row-gap then overrides one). */
 .home-hero .hh-cta { position: relative; display: flex; gap: 9px; row-gap: 0; align-items: center; flex-wrap: wrap; }
-.home-hero .hh-cta button {
+.home-hero .hh-cta button, .home-hero .hh-cta a {
   border: 0; border-radius: var(--radius-pill); font-family: inherit;
   font-weight: 600; font-size: 13.5px; white-space: nowrap;
   /* cursor: pointer, and the :hover states below, are honest again: these
@@ -1647,6 +1647,8 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
 .pips { display: inline-flex; gap: 3px; }
 .pip { width: 6px; height: 6px; border-radius: var(--radius-pill); background: #c3bffa; }
 .pip.used { background: var(--accent); }
+.scan-pips-link { display: inline-flex; border-radius: var(--radius-pill); }
+.scan-pips-link:hover .scan-pips { background: #e0deff; }
 .avatar {
   width: 30px;
   height: 30px;

@@ -20,6 +20,7 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { initials } from "@/lib/format";
 import { DEMO_FIT, DEMO_QUOTA, DEMO_SCANS_USED } from "@/lib/demo-fit";
+import ScanPips from "@/components/ScanPips";
 
 export default function AuthNav({ mobile = false }) {
   const { data: session, status } = useSession();
@@ -37,14 +38,9 @@ export default function AuthNav({ mobile = false }) {
   const showPips = !mobile && (DEMO_FIT || status === "authenticated");
   const scansUsed = DEMO_FIT ? DEMO_SCANS_USED : 0;
   const pips = showPips ? (
-    <span className="scan-pips">
-      <span className="pips" aria-hidden="true">
-        {Array.from({ length: DEMO_QUOTA }, (_, i) => (
-          <span key={i} className={i < scansUsed ? "pip used" : "pip"} />
-        ))}
-      </span>
-      <span className="mono">{DEMO_QUOTA - scansUsed}</span>/{DEMO_QUOTA} free scans
-    </span>
+    <Link href="/resume" className="scan-pips-link" aria-label={`${DEMO_QUOTA - scansUsed} of ${DEMO_QUOTA} free scans — open resume scan`}>
+      <ScanPips used={scansUsed} quota={DEMO_QUOTA} />
+    </Link>
   ) : null;
 
   // Placeholder keeps the navbar from shifting while the session resolves;
