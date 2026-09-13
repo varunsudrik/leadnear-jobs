@@ -1570,7 +1570,7 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ## Task 8: Honest degradation when the demo layer is off
 
 **Files:**
-- Modify: `app/resume/page.jsx`, `app/matches/page.jsx`, `components/SiteNavbar.jsx`, `components/ResumeScan.jsx`
+- Modify: `app/resume/page.jsx`, `app/matches/page.jsx`, `components/SiteNavbar.jsx`, `components/ResumeScan.jsx`, `app/layout.jsx`
 - Create: `components/DemoOffPanel.jsx`
 
 **Interfaces:**
@@ -1619,7 +1619,28 @@ In `app/matches/page.jsx`, replace `if (!DEMO_FIT) return null;` with:
 
 Move that check **above** the `getMatchCohort` call in `app/matches/page.jsx` — with the layer off there is no reason to query 214 rows only to discard them.
 
-- [ ] **Step 3: Drop the nav entries with the switch**
+- [ ] **Step 3: Gate the footer link**
+
+In `app/layout.jsx`, import `DEMO_FIT` and gate the footer link so it does not point at the panel when the switch is off:
+
+At the top, add:
+```jsx
+import { DEMO_FIT } from "@/lib/demo-fit";
+```
+
+In the footer, replace the ungated line:
+```jsx
+<Link href="/resume">Resume scan</Link>
+```
+
+with:
+```jsx
+{DEMO_FIT ? <Link href="/resume">Resume scan</Link> : null}
+```
+
+The binding spec guarantees nothing in the UI points at a hollow page. The footer links to `Resume` and `Matches` must disappear with the switch, matching the pattern in `components/SiteNavbar.jsx`.
+
+- [ ] **Step 5: Drop the nav entries with the switch**
 
 In `components/SiteNavbar.jsx`, build the link list from the switch so nothing points at the panel:
 
@@ -1644,7 +1665,7 @@ Gate the mobile panel's `Resume scan` entry the same way: `{DEMO_FIT ? <a href="
 
 The pips already disappear with the switch for anonymous visitors (`showPips` gates on `DEMO_FIT || status === "authenticated"`), and a signed-in user still sees them reading `3/3` — that behaviour is deliberate and predates this plan. Leave it. But the *link* must not lead to the panel for that user, so in `components/AuthNav.jsx` wrap in a `Link` only when `DEMO_FIT`; otherwise render `<ScanPips>` bare, as it was.
 
-- [ ] **Step 4: Verify both states**
+- [ ] **Step 6: Verify both states**
 
 ```bash
 npm run home-spec:test && npm run demo-resume:test && npm run match-buckets:test && npm run demo-fit:test
@@ -1656,23 +1677,23 @@ Then stop the dev server and build both ways:
 rm -rf .next && npm run build
 ```
 
-Start it and confirm `/jobs/resume` and `/jobs/matches` render fully, and `Matches` is in the nav.
+Start it and confirm `/jobs/resume` and `/jobs/matches` render fully, and `Matches` is in the nav. Check the footer for the `Resume scan` link.
 
 ```bash
 rm -rf .next && NEXT_PUBLIC_DEMO_FIT=false npm run build
 ```
 
-Start it and confirm: both routes render the panel rather than a blank page; `Matches` is **absent** from the desktop nav and the mobile panel; `Resume scan` is absent from the mobile panel; the home page has no fit badges, no fit banner and a disabled best-fit sort; and the hero CTAs fall back to their inert note rather than linking. Then rebuild without the variable.
+Start it and confirm: both routes render the panel rather than a blank page; `Matches` is **absent** from the desktop nav and the mobile panel; `Resume scan` is absent from the mobile panel and the footer; the home page has no fit badges, no fit banner and a disabled best-fit sort; and the hero CTAs fall back to their inert note rather than linking. Then rebuild without the variable.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add app/resume app/matches components/DemoOffPanel.jsx components/SiteNavbar.jsx components/AuthNav.jsx
+git add app/resume app/matches app/layout.jsx components/DemoOffPanel.jsx components/SiteNavbar.jsx components/AuthNav.jsx
 git commit -m "feat(demo): honest panel and nav removal when the layer is off
 
 Both new screens are entirely demo content. With the switch off they
 explain themselves instead of rendering blank, and nothing in the UI
-points at them.
+points at them. The footer link must gate too.
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 ```
