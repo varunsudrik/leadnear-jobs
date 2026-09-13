@@ -181,10 +181,23 @@ assert.ok(
 // assertions check the flattened file for the query and its contents.
 assert.ok(flat.includes("@media (max-width: 640px)"), "missing the phone breakpoint");
 const phoneStart = flat.indexOf("@media (max-width: 640px)");
-const nextQuery = flat.indexOf("@media", phoneStart + 10);
-// Bounded at the next @media so a needle cannot match unrelated CSS further
-// down the file and pass this vacuously.
-const phone = flat.slice(phoneStart, nextQuery === -1 ? undefined : nextQuery);
+// Bounded by brace-counting from the block's own opening "{" to the matching
+// closing "}" — the same technique stripMediaBlocks uses above — rather than
+// "up to the next @media". Task 7 relocated this block, which pushed the next
+// @media roughly 350 lines further down the file; a "next @media" bound would
+// sweep in the filter bar, pagination, job-detail and footer sections, and a
+// needle could then match unrelated CSS there and pass this vacuously (this
+// is exactly how the pre-existing "letter-spacing: -.02em" needle below would
+// have started matching .job-detail-title instead of only the phone hero).
+const phoneOpen = flat.indexOf("{", phoneStart);
+let phoneDepth = 1;
+let phoneEnd = phoneOpen + 1;
+while (phoneEnd < flat.length && phoneDepth > 0) {
+  if (flat[phoneEnd] === "{") phoneDepth += 1;
+  else if (flat[phoneEnd] === "}") phoneDepth -= 1;
+  phoneEnd += 1;
+}
+const phone = flat.slice(phoneStart, phoneEnd);
 for (const needle of [
   "border-radius: 18px",     // hero on phone
   "padding: 18px",           // hero on phone
@@ -204,7 +217,18 @@ for (const needle of [
 }
 
 // The phone Matches screen is tabs over one bucket, not three columns.
-assert.ok(phone.includes("grid-template-columns: minmax(0,1fr)") || phone.includes(".mb-grid { display: block"),
+//
+// This must assert against .mb-grid's OWN rule body within the phone slice,
+// not a bare substring of the whole slice: "grid-template-columns:
+// minmax(0,1fr)" is also produced by .rs-body and .rs-keywords in the same
+// block, so a bare phone.includes(...) passes even if .mb-grid's phone rule
+// is reverted to the desktop's repeat(3,minmax(0,1fr)) — proven by doing
+// exactly that revert and confirming this assertion is what catches it (see
+// task-7-report.md).
+const mbGridPhoneStart = phone.indexOf(".mb-grid {");
+assert.ok(mbGridPhoneStart >= 0, ".mb-grid should have its own rule inside the phone breakpoint");
+const mbGridPhone = phone.slice(mbGridPhoneStart, phone.indexOf("}", mbGridPhoneStart));
+assert.ok(mbGridPhone.includes("grid-template-columns: minmax(0,1fr)"),
   "the three-column match grid must collapse at phone width");
 
 // ─── Phone header search (spec line 419) ───

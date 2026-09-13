@@ -62,16 +62,12 @@ export default function MatchBuckets({ buckets }) {
 
   return (
     <>
-      <div className="mb-tabs" role="tablist" aria-label="Match strength">
+      <div className="mb-tabs">
         {BUCKETS.map(({ key, label }) => (
           <button
             key={key}
             type="button"
-            role="tab"
-            id={`mb-tab-${key}`}
-            aria-selected={tab === key}
-            aria-controls={`mb-panel-${key}`}
-            tabIndex={tab === key ? 0 : -1}
+            aria-pressed={tab === key}
             className={`mb-tab${tab === key ? " active" : ""}`}
             onClick={() => setTab(key)}
           >
@@ -88,9 +84,7 @@ export default function MatchBuckets({ buckets }) {
             <section
               className={`mb-col${tab === key ? " active" : ""}`}
               key={key}
-              id={`mb-panel-${key}`}
-              role="tabpanel"
-              aria-labelledby={`mb-tab-${key}`}
+              aria-label={`${label} matches`}
             >
               <div className="mb-head">
                 <span className={`mb-head-label ${key}`}>

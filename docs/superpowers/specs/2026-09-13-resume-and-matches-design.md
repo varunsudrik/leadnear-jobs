@@ -239,7 +239,10 @@ override) and update the one existing usage in `app/page.jsx`.
 - The donut is decorative (`aria-hidden`); the score is exposed as text.
 - Filter pills are toggle buttons with `aria-pressed`, matching
   `components/Filters.jsx`'s `.filter-toggle`.
-- Bucket tabs on phone use the tab/tabpanel roles with roving focus.
+- Bucket panels carry a plain `aria-label` at every width; the phone strip's
+  buttons are plain buttons with `aria-pressed`, not a tab/tabpanel ARIA
+  pattern — desktop shows all three panels at once, so a tabs widget would be
+  the wrong abstraction there.
 - Inert controls follow the established note pattern rather than `disabled`.
 
 ## Files

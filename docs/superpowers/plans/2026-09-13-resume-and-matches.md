@@ -1401,9 +1401,24 @@ and add, after that loop:
 
 ```js
 // The phone Matches screen is tabs over one bucket, not three columns.
-assert.ok(phone.includes("grid-template-columns: minmax(0,1fr)") || phone.includes(".mb-grid { display: block"),
+//
+// This must assert against .mb-grid's OWN rule body within the phone slice,
+// not a bare substring of the whole slice: "grid-template-columns:
+// minmax(0,1fr)" is also produced by .rs-body and .rs-keywords in the same
+// block, so a bare phone.includes(...) passes even if .mb-grid's phone rule
+// is reverted to the desktop's repeat(3,minmax(0,1fr)).
+const mbGridPhoneStart = phone.indexOf(".mb-grid {");
+assert.ok(mbGridPhoneStart >= 0, ".mb-grid should have its own rule inside the phone breakpoint");
+const mbGridPhone = phone.slice(mbGridPhoneStart, phone.indexOf("}", mbGridPhoneStart));
+assert.ok(mbGridPhone.includes("grid-template-columns: minmax(0,1fr)"),
   "the three-column match grid must collapse at phone width");
 ```
+
+`phone` itself must be bounded by brace-counting from the 640px block's own
+opening `{` to its matching closing `}` (the same technique `stripMediaBlocks`
+uses), not "up to the next `@media`" — the block this task edits sits well
+before other, unrelated `@media` blocks in the file, and a "next @media" bound
+sweeps those in and lets a needle match unrelated CSS there.
 
 - [ ] **Step 2: Run it to verify it fails**
 
@@ -1418,21 +1433,17 @@ In `components/MatchBuckets.jsx`, add tab state defaulting to Strong, and render
   const [tab, setTab] = useState("strong");
 ```
 
-Restructure the return so the tab strip and the grid are siblings. Replace the whole `return (…)` with this — the bucket-column body is unchanged from Task 5 except for the four attributes on `<section>`:
+Restructure the return so the tab strip and the grid are siblings. Replace the whole `return (…)` with this — the bucket-column body is unchanged from Task 5 except for the `active` class on `<section>`:
 
 ```jsx
   return (
     <>
-      <div className="mb-tabs" role="tablist" aria-label="Match strength">
+      <div className="mb-tabs">
         {BUCKETS.map(({ key, label }) => (
           <button
             key={key}
             type="button"
-            role="tab"
-            id={`mb-tab-${key}`}
-            aria-selected={tab === key}
-            aria-controls={`mb-panel-${key}`}
-            tabIndex={tab === key ? 0 : -1}
+            aria-pressed={tab === key}
             className={`mb-tab${tab === key ? " active" : ""}`}
             onClick={() => setTab(key)}
           >
@@ -1449,9 +1460,7 @@ Restructure the return so the tab strip and the grid are siblings. Replace the w
             <section
               className={`mb-col${tab === key ? " active" : ""}`}
               key={key}
-              id={`mb-panel-${key}`}
-              role="tabpanel"
-              aria-labelledby={`mb-tab-${key}`}
+              aria-label={`${label} matches`}
             >
               <div className="mb-head">
                 <span className={`mb-head-label ${key}`}>
@@ -1489,7 +1498,7 @@ Restructure the return so the tab strip and the grid are siblings. Replace the w
   );
 ```
 
-The `aria-label` the `<section>` previously carried is dropped: `aria-labelledby` now points at the tab, which names the panel. Above 640px every panel is visible and the tab strip is `display:none`, so the tab roles are inert there; below 640px only the active panel shows.
+The `<section>` keeps the plain `aria-label={`${label} matches`}` it always carried — valid at every width, since above 640px all three panels are visible side by side and the layout is not a tab widget at all. The phone strip's buttons are plain `<button>`s with `aria-pressed`, valid on buttons at every width; there is no `role="tablist"`/`role="tab"`/`role="tabpanel"` pairing, so nothing is left pointing at an element that only exists at one breakpoint. Above 640px the tab strip is `display:none`; below 640px only the active panel shows via the `active` class, exactly as before.
 
 - [ ] **Step 4: Add the phone CSS**
 
