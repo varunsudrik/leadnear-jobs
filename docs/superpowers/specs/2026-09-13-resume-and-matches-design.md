@@ -81,7 +81,15 @@ state script: `DEMO_SCAN` (filename, pages, scanned-at text, duration), `SCORE`
 `SCORED_AGAINST` options.
 
 `lib/demo-fit.js` *(modify)* — gains `whyFor(tier)`, returning the tier-keyed
-match explanation, alongside the existing `bannerFor`.
+match explanation alongside the existing `bannerFor`. The copy is domain-neutral
+for the same reason `bannerFor`'s is — the corpus spans Sales, HR and Design,
+not just engineering:
+
+| Tier | `why` |
+|---|---|
+| `strong` | Strong overlap with this posting's stated requirements. |
+| `good` | Covers most of what this posting asks for; some requirements aren't evidenced. |
+| `low` | Little overlap with this posting's requirements. |
 
 Both read the **existing** `DEMO_FIT` switch. No second flag.
 
@@ -90,8 +98,15 @@ Both read the **existing** `DEMO_FIT` switch. No second flag.
 Both screens are entirely demo content, so the switch empties them. Rather than
 404 — which would break links that exist in the built bundle — the routes stay
 and render a short honest panel ("Resume scoring isn't enabled"), and the nav
-item, the pips and the hero links **disappear with the switch**, so nothing in
-the UI points at a hollow page.
+item and the pips **disappear with the switch**, so nothing in the UI points at
+a hollow page.
+
+The hero is the exception. Its headline and subcopy advertise resume scanning
+and sit *outside* the switch by an earlier decision, so hiding its buttons would
+leave "Drop your resume…" above empty space. Instead the hero CTAs **revert to
+the inert note** they show today: `components/HomeHeroCta.jsx` keeps its note
+machinery and chooses per render — a `<Link>` when `DEMO_FIT` is on, a button
+revealing "Resume scoring isn't live yet" when it is off.
 
 ## Data access
 
@@ -106,7 +121,8 @@ the bucket counts under each heading are computed from it, so they are truthful
 about what is on screen rather than transcribed from the mock.
 
 **Filters are server-side.** `Remote` maps to `j.remote = 1` and `Salary listed`
-to a non-null salary; both re-query the cohort so the bucket counts and the
+to `j.salary_annual_usd IS NOT NULL` — the same column `searchJobs`'s
+`salary_min` filter uses, so the two agree; both re-query the cohort so the bucket counts and the
 header total stay consistent with the visible rows. Client-side filtering would
 leave the header contradicting the list. `Hide applied` needs application state
 that does not exist — it renders `disabled` with an explanatory `title`, the
@@ -189,7 +205,7 @@ bucket's rows below. Rows go to `radius:16px`, `padding:15px`, `gap:10px`; the
 | Control | Now | After |
 |---|---|---|
 | `1/3 free scans` pips | non-navigating `<span>` | `<Link>` to `/jobs/resume` |
-| Hero `Upload resume` / `How scoring works` | inert, reveal a note | link to `/jobs/resume`; the note machinery in `components/HomeHeroCta.jsx` goes away |
+| Hero `Upload resume` / `How scoring works` | inert, reveal a note | `<Link>` to `/jobs/resume` while `DEMO_FIT` is on; the note is kept for the switched-off case |
 | Header nav | `Jobs · Remote Jobs · Categories · Salary Explorer · Discover ▾ · Services` | gains `Matches` |
 | Footer | no resume link | gains `Resume scan`, as the design's footer shows |
 
@@ -206,6 +222,14 @@ Both new sections use `max-width:1440px; margin:0 auto; padding:8px 24px 56px` �
 identical to `.home-shell`. Reusing a class named for the home page on two other
 routes is misleading: rename it to a neutral `.console-shell` (with its phone
 override) and update the one existing usage in `app/page.jsx`.
+
+## Unstated details, now fixed
+
+- Initial rows per bucket, matching the mock: **4** Strong, **3** Good, **2** Low.
+  `Show N more` carries the remainder of that bucket's real count.
+- The phone tab set opens on **Strong**.
+- Page titles: "Resume scan | LeadNear Jobs" and "Your matches | LeadNear Jobs",
+  both `robots: "noindex"`, neither carrying a canonical.
 
 ## States and accessibility
 
@@ -231,7 +255,7 @@ override) and update the one existing usage in `app/page.jsx`.
 | `lib/jobs.js` | modify — add `getMatchCohort({ limit })` |
 | `components/SiteNavbar.jsx` | modify — `Matches` in desktop nav; `Resume scan` + `Matches` in the mobile panel |
 | `components/AuthNav.jsx` | modify — pips become a `Link` |
-| `components/HomeHeroCta.jsx` | modify — CTAs become links; note machinery removed |
+| `components/HomeHeroCta.jsx` | modify — CTAs become links while `DEMO_FIT` is on, keeping the note for the switched-off case |
 | `app/globals.css` | modify — both screens' CSS; `.home-shell` → `.console-shell` |
 | `app/page.jsx` | modify — shell class rename |
 | `scripts/test-demo-resume.mjs` | create — fixture shape, switch-off behaviour |
