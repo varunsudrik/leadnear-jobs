@@ -16,8 +16,8 @@ export default function DemoDisclosure() {
   if (!DEMO_FIT) return null;
   return (
     <p className="demo-disclosure">
-      Demo screen. Nothing here is a real assessment: no resume was read, and
-      these roles are ranked by a placeholder, not by how well they fit anyone.
+      Demo screen: no resume was read. Every score and ranking here is a
+      placeholder, not a real assessment of anyone or of these roles.
     </p>
   );
 }

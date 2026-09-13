@@ -583,9 +583,12 @@ img { max-width: 100%; }
    neither. It is a tinted bar rather than a banner because it is a standing
    fact about the screen, not an alert to dismiss. */
 .demo-disclosure {
-  margin: 0 0 14px; padding: 8px 12px; border-radius: 10px;
-  background: var(--bg2); color: var(--text3);
-  font-size: 12.5px; line-height: 1.45; max-width: 720px;
+  margin: 0 0 14px; padding: 9px 13px; border-radius: 12px;
+  /* .mb-note's language — white with a hairline ring — because that is
+     already this feature's "quiet explanatory strip". --bg2 was the first
+     choice and was invisible: it is #f4f4f6, the page background. */
+  background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.05);
+  color: var(--text3); font-size: 12.5px; line-height: 1.45; max-width: 720px;
 }
 
 /* ─── Resume scan (Direction C — spec lines 195–252) ─────────────── */
