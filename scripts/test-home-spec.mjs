@@ -235,4 +235,24 @@ for (const dead of [".directory-hero", ".directory-content", ".results-header", 
   assert.ok(!selector.test(flat), `dead rule still present: ${dead}`);
 }
 
+// ─── Resume scan (spec 195-252) ───
+decl(".rs-title", "font-size: 22px");
+decl(".rs-body", "grid-template-columns: minmax(250px,1fr) minmax(0,2.2fr)");
+decl(".rs-preview", "aspect-ratio: 8.5/11");
+decl(".rs-score", "padding: 24px");
+decl(".rs-score", "gap: 32px");
+decl(".rs-donut", "width: 132px");
+decl(".rs-donut-inner", "width: 106px");
+decl(".rs-donut-score", "font-size: 38px");
+decl(".rs-parts", "grid-template-columns: repeat(4,1fr)");
+decl(".rs-track", "height: 5px");
+decl(".rs-fix", "grid-template-columns: 18px 70px minmax(0,1fr) 44px");
+decl(".rs-fix", "padding: 13px 18px");
+decl(".rs-sev.high", "background: var(--bad-bg)");
+decl(".rs-sev.medium", "background: var(--warn-bg)");
+decl(".rs-sev.low", "background: var(--bg2)");
+decl(".rs-keywords", "grid-template-columns: 1fr 1fr");
+decl(".rs-chip.found", "background: var(--ok-bg)");
+decl(".rs-chip.missing", "background: var(--bad-bg)");
+
 console.log("home spec ok");

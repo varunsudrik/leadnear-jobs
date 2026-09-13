@@ -619,6 +619,67 @@ img { max-width: 100%; }
 .job-preview .jp-footer a { font-weight: 600; color: var(--accent); }
 .job-preview .jp-footer a:hover { color: var(--accent-hover); }
 
+/* ─── Resume scan (Direction C — spec lines 195–252) ─────────────── */
+.rs-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.rs-head-main { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.rs-title { font-size: 22px; font-weight: 600; letter-spacing: -.025em; color: var(--text); }
+.rs-meta { font-size: 12.5px; color: var(--text3); }
+.rs-actions { display: flex; align-items: center; gap: 9px; }
+.rs-upgrade { background: var(--accent); color: #fff; border: 0; border-radius: var(--radius-pill); padding: 8px 14px; font-weight: 600; font-size: 12.5px; }
+.rs-upload { border: 0; background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.07); border-radius: var(--radius-pill); padding: 8px 13px; font-weight: 600; font-size: 12.5px; cursor: pointer; color: var(--text2); font-family: inherit; }
+.rs-view-matches { background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 9px 15px; font-weight: 600; font-size: 12.5px; display: inline-block; }
+.rs-view-matches:hover { background: var(--accent); color: #fff; }
+
+.rs-body { display: grid; grid-template-columns: minmax(250px,1fr) minmax(0,2.2fr); gap: 16px; align-items: start; }
+.rs-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.rs-card { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.rs-card-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); margin-bottom: 12px; }
+.rs-card-head .mono { letter-spacing: 0; text-transform: none; }
+.rs-preview { aspect-ratio: 8.5/11; border-radius: 12px; background: var(--bg2); display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; font-size: 12px; color: var(--text4); line-height: 1.5; }
+.rs-label { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); margin-bottom: 8px; }
+.rs-select { width: 100%; background: var(--bg2); border: 0; border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; }
+.rs-caption { color: var(--text3); margin-top: 8px; font-size: 12.5px; }
+
+.rs-score { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; display: grid; grid-template-columns: auto minmax(0,1fr); gap: 32px; align-items: center; }
+.rs-donut { position: relative; width: 132px; height: 132px; flex-shrink: 0; border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; }
+.rs-donut-inner { width: 106px; height: 106px; border-radius: var(--radius-pill); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.rs-donut-score { font-family: var(--font-mono), monospace; font-size: 38px; font-weight: 500; letter-spacing: -.03em; line-height: 1; }
+.rs-donut-label { font-size: 11px; color: var(--text4); letter-spacing: .04em; }
+.rs-score-copy { min-width: 0; }
+.rs-headline { font-size: 16px; font-weight: 600; letter-spacing: -.015em; margin-bottom: 4px; }
+.rs-subline { color: var(--text3); margin-bottom: 16px; font-size: 13.5px; }
+.rs-parts { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.rs-part-head { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text3); margin-bottom: 6px; }
+.rs-part-head .mono { color: var(--text); }
+.rs-track { height: 5px; background: var(--bg3); border-radius: var(--radius-pill); overflow: hidden; }
+.rs-track > i { display: block; height: 100%; border-radius: var(--radius-pill); }
+
+.rs-fixes { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.rs-fixes-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); }
+.rs-fix { display: grid; grid-template-columns: 18px 70px minmax(0,1fr) 44px; gap: 14px; padding: 13px 18px; border-top: 1px solid var(--bg2); align-items: start; cursor: pointer; }
+.rs-fix input { margin-top: 2px; accent-color: var(--accent); width: 15px; height: 15px; }
+.rs-sev { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: var(--radius-pill); text-align: center; }
+.rs-sev.high { background: var(--bad-bg); color: var(--bad-fg); }
+.rs-sev.medium { background: var(--warn-bg); color: var(--warn-fg); }
+.rs-sev.low { background: var(--bg2); color: var(--text3); }
+.rs-fix-text { font-size: 13.5px; line-height: 1.45; }
+.rs-fix-text b { font-weight: 600; }
+.rs-fix-text span { color: var(--text3); }
+.rs-impact { font-family: var(--font-mono), monospace; font-size: 12.5px; text-align: right; color: #12876b; }
+
+.rs-keywords { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.rs-chip-card { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+.rs-chip-head { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); margin-bottom: 12px; }
+.rs-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rs-chip { padding: 4px 10px; border-radius: var(--radius-pill); font-size: 12.5px; font-weight: 500; }
+.rs-chip.found { background: var(--ok-bg); color: var(--ok-fg); }
+.rs-chip.missing { background: var(--bad-bg); color: var(--bad-fg); }
+
+/* Shared by every InertButton. Collapses to nothing until a press fills it,
+   so an idle placeholder measures exactly like the live control it mimics. */
+.inert-note { font-size: 12px; color: var(--text3); }
+.inert-note:empty { display: none; }
+
 /* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */
 .filter-bar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 14px; }
 .filter-count { font-size: 12.5px; color: var(--text3); margin-right: 4px; }
