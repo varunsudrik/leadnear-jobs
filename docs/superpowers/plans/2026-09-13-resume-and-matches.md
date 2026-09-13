@@ -1209,7 +1209,9 @@ With the dev server running, load `http://localhost:4100/jobs/matches` at 1440px
 - `Queue all N` shows the **Strong bucket's real count**, not 18.
 - `Show N more` appears where a bucket has more rows than its initial 4 / 3 / 2, and expands on click.
 - Clicking a role title or `Apply` reaches a real job page that renders.
-- Toggling `Remote` adds `?remote=1`, and the header total **and** the bucket counts both drop.
+- Toggling `Remote` adds `?remote=1` and the **rows change** to remote jobs.
+
+  The header total will **not** drop, and that is expected on this dataset: 549 jobs are remote and 597 have a listed salary, both far above the 214 cohort cap, so the cohort stays full and simply contains a different 214 jobs. The count is truthful about what is on screen — buckets still sum to it — but it is not a measure of the filtered corpus.
 - `Hide applied` is visibly disabled and not clickable.
 - The page has exactly one `<h1>`: `curl -s http://localhost:4100/jobs/matches | grep -o '<h1' | wc -l` → `1`
 
