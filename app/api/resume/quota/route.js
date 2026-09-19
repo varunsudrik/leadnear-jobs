@@ -12,5 +12,14 @@ export async function GET() {
   if (!session?.user?.id) {
     return NextResponse.json({ used: 0, quota: QUOTA, remaining: QUOTA, exhausted: false, signedIn: false });
   }
-  return NextResponse.json({ ...(await scanQuota(session.user.id)), signedIn: true });
+  try {
+    const quota = await scanQuota(session.user.id);
+    return NextResponse.json({ ...quota, signedIn: true });
+  } catch (error) {
+    console.error("scanQuota failed", error);
+    return NextResponse.json(
+      { ok: false, reason: "storage", detail: "Could not check your scan quota.", quotaConsumed: false },
+      { status: 503 }
+    );
+  }
 }

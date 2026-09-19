@@ -13,6 +13,14 @@ export async function POST() {
   if (!userId) return NextResponse.json({ ok: false, reason: "signed-out" }, { status: 401 });
 
   // Scoped to the caller's own rows by userId. Cascades to ResumeScanTarget.
-  const { count } = await deleteScans(userId);
-  return NextResponse.json({ ok: true, deleted: count });
+  try {
+    const { count } = await deleteScans(userId);
+    return NextResponse.json({ ok: true, deleted: count });
+  } catch (error) {
+    console.error("deleteScans failed", error);
+    return NextResponse.json(
+      { ok: false, reason: "storage", detail: "Could not delete your scans.", quotaConsumed: false },
+      { status: 503 }
+    );
+  }
 }
