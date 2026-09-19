@@ -142,14 +142,6 @@ decl(".pager-btn", "box-shadow: 0 0 0 1px rgba(21,23,28,.07)");
 decl(".job-preview .jp-actions", "gap: 7px");
 decl(".job-preview .jp-save", "padding: 9px 14px");
 decl(".job-preview .jp-save", "font-size: 13px");
-decl(".job-preview .jp-fit", "margin: 0 24px 20px");
-decl(".job-preview .jp-fit", "border-radius: 14px");
-decl(".job-preview .jp-fit", "padding: 14px 16px");
-decl(".job-preview .jp-fit", "grid-template-columns: auto minmax(0,1fr) auto");
-decl(".job-preview .jp-fit", "--fit-grad-top: #f3f1ff");
-decl(".job-preview .jp-fit", "--fit-fg: #3a2fa8");
-decl(".job-preview .jp-fit-pill", "padding: 5px 11px");
-decl(".job-preview .jp-fit-action", "box-shadow: 0 1px 2px rgba(59,47,168,.14)");
 decl(".job-preview .jp-description h3", "text-transform: uppercase");
 decl(".job-preview .jp-description h3", "margin: 22px 0 8px");
 decl(".job-preview .jp-description ol", "padding-left: 18px");
@@ -230,13 +222,8 @@ for (const needle of [
 // slice, not a bare substring of it. A bare substring proves only that the
 // text appears SOMEWHERE in the block, which for a shared value proves
 // nothing: "grid-template-columns: minmax(0,1fr)" is also produced by
-// .rs-body and .rs-keywords, so the .mb-grid check below passed even when
-// .mb-grid's own phone rule was reverted to the desktop's
-// repeat(3,minmax(0,1fr)) — proven by doing exactly that revert (see
-// task-7-report.md). "min-height: 46px" was asserted twice for two different
-// controls, and ".mb-tabs" asserted only that the string occurred at all, so
-// `.mb-tabs { display: none }` inside this block — phones with one bucket and
-// no way to reach the other two — would have passed.
+// .rs-body and .rs-keywords, and "min-height: 46px" is asserted twice below
+// for two different controls.
 //
 // Anchored the same way rule() is, and for the same reason.
 function phoneRule(selector) {
@@ -255,12 +242,6 @@ function phoneDecl(selector, declaration) {
   );
 }
 
-// The three-column match grid collapses, and the tab strip that replaces it
-// must actually be VISIBLE — the whole phone Matches screen is one bucket
-// plus a switcher.
-phoneDecl(".mb-grid", "grid-template-columns: minmax(0,1fr)");
-phoneDecl(".mb-tabs", "display: flex");
-
 // The hero's single CTA and the resume screen's `View matches` are both
 // full-width 46px pills. Neither is a <button>: HomeHeroCta renders a <Link>
 // while the demo layer is on, and an inline element ignores both of these
@@ -275,12 +256,6 @@ phoneDecl(".rs-view-matches", "width: 100%");
 
 // The resume screen's four dimension bars go 2-up.
 phoneDecl(".rs-parts", "grid-template-columns: 1fr 1fr");
-
-// The design draws both card buttons at a 42px minimum (spec ~444-462). The
-// written spec dropped it when it was transcribed, so the implementation and
-// this gate both matched the spec rather than the design.
-phoneDecl(".mb-queue", "min-height: 42px");
-phoneDecl(".mb-apply", "min-height: 42px");
 
 // ─── Phone header search (spec line 419) ───
 // The header form is the only free-text search on a phone, so the rules that
@@ -304,26 +279,6 @@ for (const needle of [
 ]) {
   assert.ok(phoneHeader.includes(needle), `phone header breakpoint should carry "${needle}"`);
 }
-
-// ─── Matches (spec 253-304) ───
-decl(".mb-grid", "grid-template-columns: repeat(3,minmax(0,1fr))");
-decl(".mb-grid", "gap: 16px");
-decl(".mb-head", "padding: 0 4px 12px");
-decl(".mb-dot", "width: 8px");
-decl(".mb-list", "gap: 8px");
-decl(".mb-card", "border-radius: 16px");
-decl(".mb-card", "padding: 14px 16px");
-decl(".mb-card.strong", "box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(91,78,240,.16)");
-decl(".mb-card.strong:hover", "box-shadow: 0 4px 16px rgba(21,23,28,.09), 0 0 0 1px rgba(91,78,240,.3)");
-decl(".mb-card.low", "background: #fafafb");
-decl(".mb-why", "padding: 8px 10px");
-decl(".mb-why", "border-radius: 10px");
-decl(".mb-why.strong", "background: #f3f1ff");
-decl(".mb-queue-all", "background: var(--accent-tint)");
-decl(".mb-apply", "background: var(--text)");
-decl(".mb-card.good .mb-apply", "background: var(--bg2)");
-decl(".mb-more", "background: transparent");
-decl(".mb-note", "padding: 14px 16px");
 
 // ─── Rules the redesign removes (they styled markup that no longer exists) ───
 // `flat` is already comment-stripped (see the top of this file), so writing

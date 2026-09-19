@@ -514,37 +514,6 @@ img { max-width: 100%; }
    .hh-cta does. */
 .job-preview .jp-note { flex: 0 1 100%; min-width: 0; margin: 8px 0 0; font-size: 12.5px; color: var(--text3); }
 .job-preview .jp-note:empty { position: absolute; margin: 0; }
-.job-preview .jp-fit-note { grid-column: 1 / -1; color: var(--fit-fg); }
-
-/* Fit banner (spec lines 116-120). Two colours live only here: the deep
-   violet the copy is set in, and the gradient's top stop. Scoped to this
-   rule rather than promoted to :root, since nothing else uses them. */
-.job-preview .jp-fit {
-  --fit-fg:       #3a2fa8;
-  --fit-grad-top: #f3f1ff;
-  margin: 0 24px 20px; border-radius: 14px;
-  background: linear-gradient(180deg, var(--fit-grad-top), var(--accent-tint));
-  padding: 14px 16px; display: grid;
-  grid-template-columns: auto minmax(0,1fr) auto; gap: 14px; align-items: center;
-  /* .jp-fit-note takes an implicit second row; with no row gap an empty one
-     costs nothing. column-gap stays the design's 14px. */
-  row-gap: 0;
-}
-.job-preview .jp-fit-pill {
-  font-size: 11.5px; font-weight: 600; background: var(--accent); color: #fff;
-  padding: 5px 11px; border-radius: var(--radius-pill); white-space: nowrap;
-}
-.job-preview .jp-fit-copy { color: var(--fit-fg); min-width: 0; font-size: 13px; }
-/* .mono (globals.css) already supplies the family; <b> would otherwise carry
-   the browser's 700, and the design sets this number at 500. */
-.job-preview .jp-fit-copy b { font-weight: 500; }
-.job-preview .jp-fit-action {
-  border: 0; background: var(--bg); color: var(--accent-hover);
-  border-radius: var(--radius-pill); padding: 8px 13px; font-family: inherit;
-  font-weight: 600; font-size: 12.5px; white-space: nowrap; cursor: pointer;
-  box-shadow: 0 1px 2px rgba(59,47,168,.14);
-}
-.job-preview .jp-fit-action:hover { background: #f6f5ff; }
 
 .job-preview .jp-section { padding: 0 24px 20px; max-width: 720px; }
 .job-preview .jp-description { font-size: 14px; line-height: 1.65; color: var(--text2); }
@@ -906,73 +875,7 @@ img { max-width: 100%; }
    nothing while the note is empty, because an out-of-flow child is not a flex
    item and so never opens a second line. */
 .inert-note-row { flex-wrap: wrap; row-gap: 0; }
-.mb-actions.inert-note-row { --inert-gap: 6px; }
 .rs-actions.inert-note-row { --inert-gap: 9px; }
-
-/* ─── Matches (Direction C — spec lines 253–304) ─────────────────── */
-.mb-page-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-.mb-page-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.mb-filters { display: flex; gap: 7px; }
-.mb-filters .filter-toggle[aria-current="true"] { background: var(--text); color: #fff; box-shadow: none; }
-.mb-filters .filter-toggle:hover { box-shadow: 0 0 0 1px rgba(21,23,28,.2); }
-.mb-filters .filter-toggle[aria-current="true"]:hover { box-shadow: none; }
-.mb-filters .filter-toggle:disabled { opacity: .5; cursor: not-allowed; }
-
-/* Phone-only; the 640px block below turns it back on. */
-.mb-tabs { display: none; }
-.mb-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; align-items: start; }
-.mb-col { min-width: 0; }
-.mb-head { display: flex; justify-content: space-between; align-items: center; padding: 0 4px 12px; }
-.mb-head-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
-.mb-head-label.low { color: var(--text3); }
-.mb-head-label .mono { color: var(--text4); font-weight: 400; }
-.mb-dot { width: 8px; height: 8px; border-radius: var(--radius-pill); }
-.mb-dot.strong { background: var(--accent); }
-.mb-dot.good { background: #a3a4af; }
-.mb-dot.low { background: #d5d5db; }
-.mb-collapsed { font-size: 12px; color: var(--text4); }
-.mb-queue-all { border: 0; background: var(--accent-tint); color: var(--accent-hover); border-radius: var(--radius-pill); padding: 6px 11px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-
-.mb-list { display: flex; flex-direction: column; gap: 8px; }
-.mb-card { background: var(--bg); border-radius: 16px; padding: 14px 16px; transition: box-shadow .15s; }
-.mb-card.strong { box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(91,78,240,.16); }
-.mb-card.strong:hover { box-shadow: 0 4px 16px rgba(21,23,28,.09), 0 0 0 1px rgba(91,78,240,.3); }
-.mb-card.good { box-shadow: 0 1px 2px rgba(21,23,28,.05), 0 0 0 1px rgba(21,23,28,.05); }
-.mb-card.good:hover { box-shadow: 0 4px 16px rgba(21,23,28,.08), 0 0 0 1px rgba(21,23,28,.1); }
-.mb-card.low { background: #fafafb; box-shadow: 0 0 0 1px rgba(21,23,28,.04); }
-.mb-card.low:hover { background: var(--bg); }
-.mb-role { font-weight: 600; font-size: 14.5px; line-height: 1.3; letter-spacing: -.01em; display: block; color: var(--text); }
-.mb-card.low .mb-role { font-size: 14px; color: #4b4d58; }
-.mb-sub { color: var(--text3); margin-top: 2px; }
-.mb-card.low .mb-sub { color: #8b8d99; }
-.mb-why { margin-top: 10px; font-size: 12.5px; padding: 8px 10px; border-radius: 10px; line-height: 1.45; }
-.mb-why.strong { background: #f3f1ff; color: #3a2fa8; }
-.mb-why.good { background: var(--bg2); color: var(--text2); }
-/* Low's why is plain text, not a chip — the design gives it no background. */
-.mb-why.low { background: transparent; padding: 0; margin-top: 8px; color: #8b8d99; }
-/* baseline, not center: `+ Queue` is an InertButton, so pressing it adds a
-   second line inside .mb-actions and doubles this row's height. Centred,
-   the salary re-centred against the taller row and slid 16px down after a
-   tap on the button beside it. Aligned to the buttons' text baseline it
-   stays on the first line where it started — and at rest the two are the
-   same position to within 0.25px (measured: 296.56 vs 296.31). */
-.mb-foot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; }
-.mb-salary { font-family: var(--font-mono), monospace; font-size: 12px; color: var(--text2); }
-.mb-actions { display: flex; gap: 6px; align-items: center; }
-.mb-queue { border: 0; background: var(--bg2); border-radius: var(--radius-pill); padding: 7px 11px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text2); font-family: inherit; }
-.mb-queue:hover { background: var(--border); }
-.mb-queue-all:hover { background: #e0deff; }
-/* inline-flex, not inline-block: this is an <a>, and the phone rule below
-   gives it the design's 42px minimum. An inline-block would honour the height
-   but leave the label sitting against the top padding; the design's own
-   element is a <button>, which centres. */
-.mb-apply { border: 0; background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 7px 13px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
-.mb-apply:hover { background: var(--accent); color: #fff; }
-.mb-card.good .mb-apply { background: var(--bg2); color: var(--text); }
-.mb-card.good .mb-apply:hover { background: var(--text); color: #fff; }
-.mb-more { border: 0; background: transparent; padding: 8px; font-size: 12.5px; font-weight: 600; color: var(--text3); cursor: pointer; font-family: inherit; }
-.mb-more:hover { color: var(--accent); }
-.mb-note { padding: 14px 16px; font-size: 12.5px; color: var(--text3); line-height: 1.5; background: var(--bg); border-radius: 16px; box-shadow: 0 0 0 1px rgba(21,23,28,.05); }
 
 /* Phone values are read from the design's own mobile screen (spec line 420),
    which is not a narrower desktop hero: it drops the second CTA and shortens
@@ -1096,23 +999,6 @@ img { max-width: 100%; }
   .rso-hero { padding: 26px 22px; }
   .rso-cta-row { flex-direction: column; }
   .rso-cta-primary, .rso-cta-ghost { width: 100%; min-height: 46px; justify-content: center; }
-
-  /* ── Matches, phone (spec ~444-462): three tabs over one bucket ── */
-  .mb-tabs { display: flex; gap: 7px; margin-bottom: 14px; }
-  .mb-tab { flex: 1; text-align: center; border: 0; background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.07); border-radius: var(--radius-pill); padding: 8px; font-size: 12.5px; font-weight: 600; color: var(--text2); cursor: pointer; font-family: inherit; }
-  .mb-tab.active { background: var(--text); color: #fff; box-shadow: none; }
-  .mb-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
-  .mb-col { display: none; }
-  .mb-col.active { display: block; }
-  /* The bucket heading is redundant once the tab names it. */
-  .mb-head { display: none; }
-  .mb-list { gap: 10px; }
-  .mb-card { border-radius: 16px; padding: 15px; }
-  /* min-height is the design's own (spec ~444-462 draws both at 42px). It was
-     dropped when the design was transcribed into the written spec, so neither
-     the implementation nor the gate carried it; both do now. */
-  .mb-queue { padding: 10px 13px; min-height: 42px; }
-  .mb-apply { padding: 10px 15px; min-height: 42px; }
 }
 
 /* ─── Filter bar (Direction C re-skin — spec lines 76–85) ────────── */

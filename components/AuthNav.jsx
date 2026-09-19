@@ -38,8 +38,13 @@ export default function AuthNav({ mobile = false }) {
   // the avatar (and with it, the only way to sign out) forever.
   const [quota, setQuota] = useState(undefined);
 
+  // `mobile` never renders pips (see the mobile branch below), so it must
+  // also never fetch — SiteNavbar.jsx mounts a fresh <AuthNav mobile /> every
+  // time the hamburger opens, and without this guard each open fired a real
+  // GET /api/resume/quota (a prisma.resumeScan.count() query) whose answer
+  // was then thrown away unread.
   useEffect(() => {
-    if (status !== "authenticated") { setQuota(undefined); return; }
+    if (mobile || status !== "authenticated") { setQuota(undefined); return; }
     let live = true;
     setQuota(undefined);
     fetch(`${BASE_PATH}/api/resume/quota`)
@@ -47,7 +52,7 @@ export default function AuthNav({ mobile = false }) {
       .then((d) => live && setQuota(d))
       .catch(() => live && setQuota(null));
     return () => { live = false; };
-  }, [status]);
+  }, [status, mobile]);
 
   // Placeholder keeps the navbar from shifting while the session resolves;
   // its dimensions are set in globals.css.

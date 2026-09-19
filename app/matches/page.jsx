@@ -23,9 +23,19 @@ export default function MatchesPage() {
         <div className="em-icon">🎯</div>
         <p>No matches yet</p>
         <p style={{ color: "var(--text3)", marginTop: ".5rem", fontSize: ".9rem" }}>
-          Matches come from your resume. <Link href="/resume">Scan one</Link> and
-          we&apos;ll rank open roles here once ranking is live.
+          Matches come from your resume. Scan one and we&apos;ll rank open roles
+          here once ranking is live.
         </p>
+        {/* .ru-browse and .ru-hint are ResumeUpload.jsx's own classes, reused
+            verbatim here rather than adding new CSS for a second dark pill
+            button and mono caption that look identical. No Strong/Good/Low
+            preview grid and no roles-count claim (the mock's "128,431 live
+            roles" figure) — both would preview a ranking that does not exist
+            yet, the exact kind of forward-looking claim this task removes. */}
+        <Link href="/resume" className="ru-browse" style={{ marginTop: "1rem", display: "inline-block" }}>
+          Upload your resume
+        </Link>
+        <div className="ru-hint mono">PDF · max 2 MB · 3 free scans</div>
       </div>
     </div>
   );
