@@ -64,13 +64,24 @@ assert.ok(stillProse.faults.some((f) => /paragraph/i.test(f.issue)), "prose para
 const awsCase = formatChecks(mk(["SKILLS", "Go", "Python", "AWS", "Experienced building scalable distributed backend systems for large teams."]));
 assert.ok(awsCase.faults.some((f) => /paragraph/i.test(f.issue)), "AWS acronym must not truncate skills window, prose on 5th line should fire");
 
-// Skills section terminated by real heading must stop there.
-const skillsThenExperience = formatChecks(mk(["SKILLS", "Go, Python", "EXPERIENCE", "- did things"]));
+// Skills section terminated by real heading must stop there. The line after
+// EXPERIENCE is long prose with no delimiters (not a short bullet), so this
+// only passes if the window genuinely stopped at the heading: if EXPERIENCE
+// were removed from SECTION_HEADINGS, the scan would swallow this prose too
+// (words > 8, delimiters < words / 6) and wrongly raise the paragraph fault.
+const skillsThenExperience = formatChecks(mk(["SKILLS", "Go, Python", "EXPERIENCE", "Managed engineering teams responsible for building scalable distributed systems across many different products and services for enterprise customers worldwide"]));
 assert.ok(!skillsThenExperience.faults.some((f) => /paragraph/i.test(f.issue)), "EXPERIENCE heading stops window, no prose fault");
 
 // Prose on 5th line should be caught.
 const proseOnFifth = formatChecks(mk(["SKILLS", "Go, Python", "PostgreSQL, Redis", "gRPC, AWS", "Languages and tools include Go Python and PostgreSQL across several teams and organizations."]));
 assert.ok(proseOnFifth.faults.some((f) => /paragraph/i.test(f.issue)), "prose on line 5 of skills should be caught");
+
+// FINDING 1: SKILLS_HEADINGS must agree with SECTION_HEADINGS. A skills
+// section titled "CORE COMPETENCIES" (a recognised heading) followed by
+// prose must still be scanned and flagged, not silently skipped because the
+// finder only looked for the substring "SKILL".
+const coreCompetencies = formatChecks(mk(["CORE COMPETENCIES", "Extensive background architecting resilient distributed systems across cloud environments and teams."]));
+assert.ok(coreCompetencies.faults.some((f) => /paragraph/i.test(f.issue)), "CORE COMPETENCIES prose must be caught");
 
 // CORRECTION 4: Single vague bullet is Medium, not High.
 // 1 of 1 vague is Medium.
@@ -85,6 +96,26 @@ const threeVagueFault = threeVague.faults.find((f) => /measurable/i.test(f.issue
 assert.ok(threeVagueFault, "expected fault for 3-of-4 vague");
 assert.ok(threeVagueFault.sev === "High", `3-of-4 vague should be High, got ${threeVagueFault.sev}`);
 
+// FINDING 3: pin both halves of the `>= 3 && > 50%` High rule independently.
+// 2 of 4 is exactly 50% (not > 50%) AND below the count threshold: Medium.
+const twoOfFour = formatChecks(mk(["EXPERIENCE", "- Worked on something", "- Responsible for something", "- Reduced latency by 50%", "- Increased revenue by 10%"]));
+const twoOfFourFault = twoOfFour.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(twoOfFourFault, "expected fault for 2-of-4 vague");
+assert.ok(twoOfFourFault.sev === "Medium", `2-of-4 (exactly 50%, below count) should be Medium, got ${twoOfFourFault.sev}`);
+
+// 3 of 6 meets the count threshold (>= 3) but is exactly 50%, not > 50%: Medium.
+// This fails if the `> 50%` clause is dropped (count-only would call it High).
+const threeOfSix = formatChecks(mk(["EXPERIENCE", "- Worked on something", "- Responsible for something", "- Helped with something", "- Reduced latency by 50%", "- Increased revenue by 10%", "- Cut costs by 20%"]));
+const threeOfSixFault = threeOfSix.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(threeOfSixFault, "expected fault for 3-of-6 vague");
+assert.ok(threeOfSixFault.sev === "Medium", `3-of-6 (count met, exactly 50%) should be Medium, got ${threeOfSixFault.sev}`);
+
+// 3 of 5 clears both thresholds (60%, count 3): High.
+const threeOfFive = formatChecks(mk(["EXPERIENCE", "- Worked on something", "- Responsible for something", "- Helped with something", "- Reduced latency by 50%", "- Increased revenue by 10%"]));
+const threeOfFiveFault = threeOfFive.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(threeOfFiveFault, "expected fault for 3-of-5 vague");
+assert.ok(threeOfFiveFault.sev === "High", `3-of-5 (60%, count 3) should be High, got ${threeOfFiveFault.sev}`);
+
 // CORRECTION 5: Empty lines give parseScore 0.
 const empty = formatChecks(mk([]));
 assert.ok(empty.parseScore === 0, `empty lines should give parseScore 0, got ${empty.parseScore}`);
@@ -96,13 +127,13 @@ const contactOnFifthFault = contactOnFifth.faults.find((f) => /contact/i.test(f.
 assert.ok(contactOnFifthFault, "expected contact wrap fault for email on 5th line");
 
 // Every fault carries a severity the UI can colour and an actionable fix.
-for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults, ...lowerPresent.faults, ...pipeList.faults, ...awsCase.faults, ...skillsThenExperience.faults, ...proseOnFifth.faults, ...oneVague.faults, ...threeVague.faults, ...contactOnFifth.faults]) {
+for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults, ...lowerPresent.faults, ...pipeList.faults, ...awsCase.faults, ...skillsThenExperience.faults, ...proseOnFifth.faults, ...oneVague.faults, ...threeVague.faults, ...contactOnFifth.faults, ...coreCompetencies.faults, ...twoOfFour.faults, ...threeOfSix.faults, ...threeOfFive.faults]) {
   assert.ok(SEVERITIES.includes(f.sev), `unknown severity: ${f.sev}`);
   assert.ok(f.fix && f.fix.length > 5, "every fault needs an actionable fix");
 }
 
 // Scores are bounded integers.
-for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent, lowerPresent, verbPresent, pipeList, stillProse, awsCase, skillsThenExperience, proseOnFifth, oneVague, threeVague, empty, contactOnFifth]) {
+for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent, lowerPresent, verbPresent, pipeList, stillProse, awsCase, skillsThenExperience, proseOnFifth, oneVague, threeVague, empty, contactOnFifth, coreCompetencies, twoOfFour, threeOfSix, threeOfFive]) {
   for (const s of [r.parseScore, r.formatScore]) {
     assert.ok(Number.isInteger(s) && s >= 0 && s <= 100, `score out of range: ${s}`);
   }
