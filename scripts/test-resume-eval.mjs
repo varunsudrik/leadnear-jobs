@@ -10,6 +10,11 @@
 import assert from "node:assert/strict";
 import { evaluateCase, hasInventedSkills, runEval, loadCases } from "../lib/resume/eval.mjs";
 
+// Capture the real API key and fetch before sections 2–3 delete them, so we
+// can restore them for section 4's live evaluation.
+const REAL_KEY = process.env.OPENROUTER_API_KEY;
+const NATIVE_FETCH = globalThis.fetch;
+
 // --- 1. evaluateCase: the comparison logic, exercised with stubbed
 //        extraction results. No network, no API key. -------------------
 
@@ -136,6 +141,18 @@ console.log("runEval model threading ok");
 
 // --- 4. The real thing: skip cleanly with no key, otherwise run a live
 //        report and fail the build on invention. -----------------------
+
+// Restore the real API key and fetch if they were present at startup, so the
+// live evaluation can run. (Sections 2–3 delete them to test the unconfigured
+// and mocked paths.)
+if (REAL_KEY) {
+  process.env.OPENROUTER_API_KEY = REAL_KEY;
+} else {
+  delete process.env.OPENROUTER_API_KEY;
+}
+if (NATIVE_FETCH) {
+  globalThis.fetch = NATIVE_FETCH;
+}
 
 if (!process.env.OPENROUTER_API_KEY) {
   console.log("resume-eval skipped (no OPENROUTER_API_KEY)");
