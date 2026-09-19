@@ -21,7 +21,8 @@
 - Uploads: PDF only, max 2 MB, max 10 pages.
 - `/resume` and `/matches` stay `robots: "noindex"` and absent from `app/sitemap.js`.
 - Tests are plain `node scripts/test-*.mjs` using `node:assert/strict`, registered in `package.json` as `<name>:test`. No Jest, no Vitest, no jsdom.
-- **Every schema change goes to the Aiven staging database. Production is never modified.** `DATABASE_URL` in `.env.local` points at `pg-3fe711d-redgear204-9f81.i.aivencloud.com:22842/defaultdb` (staging), and `npm run db:push` routes through `scripts/prisma.mjs`, which loads that file — so the default is correct. The production string lives in `PROD_DATABASE_URL` (a raw IP) and is read only by `scripts/seed-from-prod.mjs`. **Do not run `db:seed` / `scripts/seed-from-prod.mjs`, do not pass `PROD_DATABASE_URL` to anything, and do not run any DDL against that host.** If a task appears to need a production change, stop and ask — it is out of scope for this plan.
+- **Every schema change goes to the Aiven staging database. Production is never modified.** `DATABASE_URL` in `.env.local` points at `pg-3fe711d-redgear204-9f81.i.aivencloud.com:22842/defaultdb` (staging). The production string lives in `PROD_DATABASE_URL` (a raw IP) and is read only by `scripts/seed-from-prod.mjs`. **Do not run `db:seed` / `scripts/seed-from-prod.mjs`, do not pass `PROD_DATABASE_URL` to anything, and do not run any DDL against that host.**
+- **Never run `npm run db:push` (or any `prisma db push`) against this database — on staging or anywhere else.** The job-board tables (`jobs`, `job_locations`, `companies`, `title_stats`, `skill_stats`, `site_metrics`, `location_stats`, `country_stats`, `remote_title_stats`, `salary_tier_stats`, `blocked_ips`) are created by `scripts/import_to_postgres.py` in raw SQL and are declared nowhere in `prisma/schema.prisma`, so Prisma treats them as foreign and proposes dropping all eleven — 5,000 jobs and 10,641 locations among them. Verified against staging: a real attempt listed exactly those drops before refusing without `--accept-data-loss`. This hazard predates this feature. Schema changes are applied with explicit additive SQL (Task 6, Step 3); `npx prisma generate` is safe because it reads the schema file only.
 - The database permits **20 connections total** (`lib/prisma.js`). Do not create new clients or pools.
 - Prisma owns the leadnear tables; job-board tables are raw SQL via `lib/db.js`. Do not mix.
 - Copy rule: the product says **"we store the text we show you, never the file"**. Never "we never store your resume".
@@ -904,45 +905,123 @@ Add the back-relation to the existing `User` model alongside its other relation 
 
 `ResumeScanTarget` is unused in plan 1 — plan 2 writes it. It ships now so the migration is one operation on a shared schema rather than two.
 
-- [ ] **Step 2: Confirm the target database BEFORE pushing**
-
-This is the only step in the plan that writes DDL. Print the host and check it
-is staging — never push blind.
+- [ ] **Step 2: Confirm the target database**
 
 ```bash
-node -e '
-require("./lib/load-env.mjs");
-' 2>/dev/null || true
 node --input-type=module -e '
 import { loadEnvFile } from "./lib/load-env.mjs";
 loadEnvFile(".env.local");
 const u = new URL(process.env.DATABASE_URL);
 console.log("target host:", u.hostname);
 if (!u.hostname.endsWith("aivencloud.com")) {
-  console.error("REFUSING: DATABASE_URL is not the Aiven staging host. Stop and ask.");
+  console.error("REFUSING: not the Aiven staging host. Stop and ask.");
   process.exit(1);
 }
 console.log("ok - staging");
 '
 ```
 
-Expected: `target host: pg-3fe711d-redgear204-9f81.i.aivencloud.com` then `ok - staging`.
+Expected: `pg-3fe711d-redgear204-9f81.i.aivencloud.com` then `ok - staging`. Anything else — a raw IP in particular — **stop and ask**. Do not edit `.env.local` to make it pass.
 
-If it prints anything else — a raw IP in particular — **stop and ask**. Do not
-edit `.env.local` to make it pass.
+- [ ] **Step 3: Generate the client, then apply ADDITIVE SQL — never `db:push`**
 
-- [ ] **Step 3: Generate the client and push to staging**
+> **`npm run db:push` must never be run against this database.** It was in an
+> earlier draft of this plan and it is wrong. The job-board tables (`jobs`,
+> `job_locations`, `companies`, `title_stats`, `skill_stats`, `site_metrics`,
+> `location_stats`, `country_stats`, `remote_title_stats`, `salary_tier_stats`,
+> `blocked_ips`) are created by `scripts/import_to_postgres.py` in raw SQL and
+> are declared **nowhere** in `prisma/schema.prisma`. Prisma therefore treats
+> them as foreign and proposes **dropping all eleven** — 5,000 jobs, 10,641
+> locations, 3,380 title stats and the rest. Verified: a real `db:push` attempt
+> against staging listed exactly those drops before refusing without
+> `--accept-data-loss`. This hazard predates this feature and applies to any
+> `db push` on this repo.
+
+Generate the client — this reads the schema file only and never touches the database:
 
 ```bash
 npx prisma generate
-npm run db:push
 ```
 
-`db:push` runs `scripts/prisma.mjs`, which loads `.env.local` and therefore
-targets staging. Read the summary Prisma prints and confirm it reports adding
-`ResumeScan` and `ResumeScanTarget` and **altering nothing else** — this is a
-schema shared with the main leads product, so an unexpected drop or alter on a
-table you did not touch means stop immediately.
+Then apply only the two new tables. Write `scripts/migrate-resume-tables.mjs`, which must re-check the host itself rather than trusting that Step 2 was run:
+
+```js
+// Additive DDL for the resume-scan tables. Deliberately NOT `prisma db push`:
+// the job-board tables are managed by raw SQL and are absent from
+// prisma/schema.prisma, so db push proposes dropping all eleven of them.
+// Statements are idempotent and touch nothing that already exists.
+import pg from "pg";
+import { loadEnvFile } from "../lib/load-env.mjs";
+import { buildPgConfig } from "../lib/pg-config.mjs";
+
+loadEnvFile(".env.local");
+const host = new URL(process.env.DATABASE_URL).hostname;
+if (!host.endsWith("aivencloud.com")) {
+  console.error(`REFUSING: ${host} is not the Aiven staging host.`);
+  process.exit(1);
+}
+
+const STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS "ResumeScan" (
+     "id" TEXT NOT NULL,
+     "userId" TEXT NOT NULL,
+     "filename" TEXT NOT NULL,
+     "pages" INTEGER NOT NULL,
+     "score" INTEGER NOT NULL,
+     "skills" TEXT[],
+     "result" JSONB NOT NULL,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT "ResumeScan_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE TABLE IF NOT EXISTS "ResumeScanTarget" (
+     "id" TEXT NOT NULL,
+     "scanId" TEXT NOT NULL,
+     "canonicalTitle" TEXT NOT NULL,
+     "score" INTEGER NOT NULL,
+     "cohortSize" INTEGER NOT NULL,
+     "detail" JSONB NOT NULL,
+     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     CONSTRAINT "ResumeScanTarget_pkey" PRIMARY KEY ("id")
+   )`,
+  `CREATE INDEX IF NOT EXISTS "ResumeScan_userId_createdAt_idx" ON "ResumeScan"("userId", "createdAt")`,
+  `CREATE INDEX IF NOT EXISTS "ResumeScanTarget_scanId_createdAt_idx" ON "ResumeScanTarget"("scanId", "createdAt")`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "ResumeScanTarget_scanId_canonicalTitle_key" ON "ResumeScanTarget"("scanId", "canonicalTitle")`,
+];
+
+// Foreign keys have no IF NOT EXISTS, so add them only when absent.
+const CONSTRAINTS = [
+  [`ResumeScan_userId_fkey`, `ALTER TABLE "ResumeScan" ADD CONSTRAINT "ResumeScan_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE`],
+  [`ResumeScanTarget_scanId_fkey`, `ALTER TABLE "ResumeScanTarget" ADD CONSTRAINT "ResumeScanTarget_scanId_fkey" FOREIGN KEY ("scanId") REFERENCES "ResumeScan"("id") ON DELETE CASCADE ON UPDATE CASCADE`],
+];
+
+const pool = new pg.Pool(buildPgConfig());
+const client = await pool.connect();
+try {
+  const before = await client.query(`SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'`);
+  await client.query("BEGIN");
+  for (const sql of STATEMENTS) await client.query(sql);
+  for (const [name, sql] of CONSTRAINTS) {
+    const { rows } = await client.query(`SELECT 1 FROM pg_constraint WHERE conname = $1`, [name]);
+    if (!rows.length) await client.query(sql);
+  }
+  await client.query("COMMIT");
+  const after = await client.query(`SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'`);
+  console.log(`tables before: ${before.rows[0].n}  after: ${after.rows[0].n}  (expected +2 on a fresh run, +0 when re-run)`);
+  for (const t of ["ResumeScan", "ResumeScanTarget"]) {
+    const { rows } = await client.query(`SELECT to_regclass($1) AS t`, [`public.\"${t}\"`]);
+    console.log(`  ${t}: ${rows[0].t ? "present" : "MISSING"}`);
+  }
+} catch (error) {
+  await client.query("ROLLBACK").catch(() => {});
+  console.error("migration failed, rolled back:", error.message);
+  process.exitCode = 1;
+} finally {
+  client.release();
+  await pool.end();
+}
+```
+
+Register it as `"resume-tables:migrate": "node scripts/migrate-resume-tables.mjs"` and run it. The table count must go up by exactly 2, and both tables must report `present`. Re-running it must be a no-op (`+0`), which proves it is idempotent.
 
 - [ ] **Step 4: Write the failing test** — `scripts/test-resume-store.mjs`:
 
