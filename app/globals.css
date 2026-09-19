@@ -616,10 +616,206 @@ img { max-width: 100%; }
 .rs-card { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
 .rs-card-head { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); margin-bottom: 12px; }
 .rs-card-head .mono { letter-spacing: 0; text-transform: none; }
-.rs-preview { aspect-ratio: 8.5/11; border-radius: 12px; background: var(--bg2); display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; font-size: 12px; color: var(--text4); line-height: 1.5; }
 .rs-label { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); margin-bottom: 8px; }
 .rs-select { width: 100%; background: var(--bg2); border: 0; border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13.5px; font-weight: 600; color: var(--text); cursor: pointer; font-family: inherit; }
+/* Plan 1 has one scoring method — there is no cohort to pick, so the control
+   stays disabled rather than offering options that don't do anything. */
+.rs-select:disabled { cursor: not-allowed; opacity: .7; }
 .rs-caption { color: var(--text3); margin-top: 8px; font-size: 12.5px; }
+
+/* ParsedTextView (spec lines 246-261): the honest replacement for the
+   design's rasterised "rendered resume page", which needs a PDF renderer
+   this app does not have. Its own scroll container, not the page's — the
+   raw text can carry long unbroken tokens (URLs, emails), so overflow is
+   contained with word-break rather than letting a single line stretch the
+   card past the viewport. */
+.rs-parsed { border-radius: 12px; background: var(--bg2); padding: 12px 4px; max-height: 420px; overflow: auto; box-shadow: 0 0 0 1px var(--bg3) inset; }
+.rs-parsed-line { display: grid; grid-template-columns: 26px minmax(0,1fr); gap: 8px; align-items: baseline; padding: 2px 10px 2px 4px; }
+.rs-parsed-n { font-family: var(--font-mono), monospace; font-size: 10.5px; color: var(--text4); text-align: right; }
+.rs-parsed-t { font-family: var(--font-mono), monospace; font-size: 11.5px; line-height: 1.55; color: var(--text2); white-space: pre-wrap; word-break: break-word; }
+.rs-parsed-line.is-bad { background: var(--bad-bg); }
+.rs-parsed-line.is-bad .rs-parsed-t { color: var(--bad-fg); }
+.rs-parsed-line.is-warn { background: var(--warn-bg); }
+.rs-parsed-line.is-warn .rs-parsed-t { color: var(--warn-fg); }
+.rs-parsed-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--text3); }
+.rs-parsed-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.rs-parsed-swatch { width: 10px; height: 10px; border-radius: 3px; }
+.rs-parsed-swatch.is-bad { background: var(--bad-bg); }
+.rs-parsed-swatch.is-warn { background: var(--warn-bg); }
+
+.rs-foot { margin-top: 16px; display: flex; justify-content: flex-end; }
+/* Deliberately quiet — deletion is in the user's favour (spec D11) but is
+   still destructive, so it reads as a low-emphasis text control, not a
+   button competing with the primary actions in .rs-actions. */
+.rs-delete-link { border: 0; background: none; color: var(--text3); font-weight: 600; font-size: 12.5px; cursor: pointer; font-family: inherit; padding: 6px 2px; }
+.rs-delete-link:hover { color: var(--text); text-decoration: underline; }
+
+/* Shared confirm-modal chrome (spec lines 226-243): "Upload revised" and
+   "Delete my scan" both use it, so the two destructive-ish actions look like
+   the same kind of thing rather than one feeling more casual than the other. */
+.rs-modal-backdrop {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(21,23,28,.42); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 96px 24px; overflow: auto;
+}
+.rs-modal { width: 100%; max-width: 480px; background: var(--bg); border-radius: 22px; box-shadow: 0 30px 70px rgba(21,23,28,.28); overflow: hidden; }
+.rs-modal-pad { padding: 24px 26px 20px; }
+.rs-modal-pips { display: inline-flex; align-items: center; gap: 8px; background: var(--bg2); border-radius: var(--radius-pill); padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text3); margin-bottom: 14px; }
+.rs-modal-title { font-size: 21px; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; margin-bottom: 8px; }
+.rs-modal-body { color: var(--text3); font-size: 13.5px; line-height: 1.5; }
+.rs-modal-body b { font-weight: 500; color: var(--text); }
+.rs-modal-error { color: var(--bad-fg); font-size: 13px; margin-top: 10px; }
+.rs-modal-file { margin: 0 26px 20px; border-radius: 14px; background: var(--bg2); padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+.rs-modal-file-badge { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--bg); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; font-weight: 500; color: var(--text3); }
+.rs-modal-file-info { min-width: 0; }
+.rs-modal-file-name { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rs-modal-file-meta { font-size: 11.5px; color: var(--text4); margin-top: 2px; }
+.rs-modal-actions { padding: 0 26px 24px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.rs-modal-btn-secondary { border: 0; background: var(--bg2); border-radius: var(--radius-pill); padding: 11px 18px; font-weight: 600; font-size: 13px; cursor: pointer; color: var(--text2); font-family: inherit; }
+.rs-modal-btn-secondary:hover { background: var(--bg3); }
+.rs-modal-btn-primary { border: 0; background: var(--accent); color: #fff; border-radius: var(--radius-pill); padding: 11px 20px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 6px 18px rgba(91,78,240,.3); font-family: inherit; }
+.rs-modal-btn-primary:hover { background: var(--accent-hover); }
+.rs-modal-btn-secondary:disabled, .rs-modal-btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+/* The modal's own scanning/error content reuses ResumeScanning/ResumeError
+   `bare`, so it needs no card chrome of its own here — just breathing room. */
+.rs-modal .rsc-dots, .rs-modal .rsc-title, .rs-modal .rsc-body, .rs-modal .rsc-track, .rs-modal .rsc-file { margin-left: auto; margin-right: auto; }
+.rs-modal > .rsc-dots, .rs-modal > .rsc-title { margin-top: 28px; }
+.rs-modal > .rsc-file, .rs-modal > .re-row { margin: 0 26px 26px; }
+.rs-modal > .rsc-title { margin-bottom: 6px; }
+.rs-modal > .rsc-body { margin-bottom: 22px; }
+.rs-modal > .re-row { margin-top: 24px; align-items: flex-start; }
+
+/* Content behind the paywall dims rather than hides — the point is that the
+   scan already ran and is still there, just gated (spec lines 401-406). */
+.rs-dimmed { opacity: .4; filter: blur(2px); pointer-events: none; }
+.rs-upgrade-overlay { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-start; justify-content: center; padding: 48px 24px; overflow: auto; }
+.rs-upgrade-card { width: 100%; max-width: 660px; background: var(--bg); border-radius: 22px; box-shadow: 0 30px 70px rgba(21,23,28,.22); overflow: hidden; }
+.rs-upgrade-head { padding: 26px 28px 22px; }
+.rs-upgrade-pips { display: inline-flex; align-items: center; gap: 8px; background: var(--bg2); border-radius: var(--radius-pill); padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--text3); margin-bottom: 14px; }
+.rs-upgrade-title { font-size: 26px; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; margin-bottom: 8px; text-wrap: pretty; }
+.rs-upgrade-sub { color: var(--text3); font-size: 14.5px; text-wrap: pretty; max-width: 480px; }
+.rs-upgrade-plans { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 28px 4px; }
+.rs-upgrade-plan { border-radius: 16px; background: var(--bg2); padding: 18px 20px; }
+.rs-upgrade-plan.is-pro { background: linear-gradient(180deg, #f3f1ff, var(--accent-tint)); box-shadow: 0 0 0 1px rgba(91,78,240,.2); }
+.rs-upgrade-plan-name { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); }
+.rs-upgrade-plan.is-pro .rs-upgrade-plan-name { color: var(--accent); }
+.rs-upgrade-plan-price { font-size: 22px; font-weight: 600; margin: 4px 0 12px; letter-spacing: -.02em; }
+.rs-upgrade-plan-price span { font-size: 13.5px; color: var(--text3); font-weight: 500; }
+.rs-upgrade-plan ul { list-style: none; display: flex; flex-direction: column; gap: 7px; color: var(--text2); font-size: 13.5px; }
+.rs-upgrade-plan.is-pro ul { color: #2f2a6b; }
+.rs-upgrade-plan ul li.is-muted { color: var(--text4); }
+.rs-upgrade-foot { padding: 20px 28px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rs-upgrade-back { display: inline-flex; align-items: center; background: none; border: 0; color: var(--text3); font-weight: 600; font-size: 13px; cursor: pointer; padding: 8px 0; font-family: inherit; }
+.rs-upgrade-back:hover { color: var(--text); }
+.rs-upgrade-buy { display: flex; align-items: center; gap: 14px; }
+.rs-upgrade-cancel { font-size: 12.5px; color: var(--text4); }
+.rs-upgrade-cta { background: var(--accent); color: #fff; border: 0; border-radius: var(--radius-pill); padding: 12px 22px; font-weight: 600; font-size: 13.5px; cursor: pointer; box-shadow: 0 6px 18px rgba(91,78,240,.32); font-family: inherit; }
+.rs-upgrade-cta:hover { background: var(--accent-hover); }
+
+/* ── ResumeUpload (spec lines 509-548) ───────────────────────────── */
+.ru-pips { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text3); background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.05); border-radius: var(--radius-pill); padding: 6px 12px; }
+.ru-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,1fr); gap: 16px; align-items: start; }
+.ru-panel { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; }
+.ru-drop {
+  position: relative; border-radius: 16px; background: var(--bg2); box-shadow: 0 0 0 1.5px var(--border) inset;
+  padding: 48px 32px; text-align: center; display: flex; flex-direction: column; align-items: center;
+}
+.ru-drop:hover, .ru-drop.is-dragover { background: #f9f8ff; box-shadow: 0 0 0 2px var(--accent) inset; }
+.ru-drop-icon { width: 52px; height: 52px; border-radius: 16px; background: var(--accent-tint); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+.ru-drop-title { font-size: 19px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 6px; }
+.ru-drop-sub { color: var(--text3); font-size: 13.5px; margin-bottom: 20px; }
+.ru-browse { border: 0; background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 12px 22px; font-weight: 600; font-size: 13.5px; cursor: pointer; font-family: inherit; }
+.ru-browse:hover { background: var(--accent); }
+.ru-hint { color: var(--text4); margin-top: 16px; }
+/* Sized to fill the same footprint as the idle content (min-height on the
+   parent) rather than being a separate short-and-tall box, so dragging over
+   the dropzone doesn't change its height and shift the layout beneath it. */
+.ru-drop { min-height: 210px; justify-content: center; }
+.ru-release { font-size: 15px; font-weight: 600; letter-spacing: -.015em; color: var(--accent-hover); }
+.ru-props { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; margin-top: 24px; }
+.ru-prop-n { color: var(--text4); margin-bottom: 6px; }
+.ru-prop-title { font-weight: 600; font-size: 13.5px; margin-bottom: 2px; }
+.ru-prop-desc { color: var(--text3); font-size: 12.5px; line-height: 1.45; }
+.ru-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ru-good { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+.ru-good-head { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); margin-bottom: 12px; }
+.ru-good-list { display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--text2); }
+.ru-good-item { display: flex; gap: 9px; }
+.ru-good-check { color: var(--ok-fg); flex-shrink: 0; }
+
+/* ── ResumeScanning (spec lines 551-568) ─────────────────────────── */
+@keyframes rsc-breathe { 0%, 100% { opacity: .35; transform: scale(.94); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes rsc-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(320%); } }
+.rsc-card { max-width: 620px; margin: 32px auto 0; background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 40px 36px; text-align: center; }
+.rsc-dots { position: relative; width: 76px; height: 76px; margin: 0 auto 22px; }
+.rsc-dot { position: absolute; border-radius: var(--radius-pill); animation: rsc-breathe 2s ease-in-out infinite; }
+.rsc-dot-outer { inset: 0; background: var(--accent-tint); }
+.rsc-dot-inner { inset: 14px; background: var(--accent); animation-delay: .4s; }
+.rsc-title { font-size: 19px; font-weight: 600; letter-spacing: -.02em; margin-bottom: 6px; }
+.rsc-body { color: var(--text3); font-size: 13.5px; max-width: 400px; margin: 0 auto 22px; line-height: 1.5; }
+.rsc-track { height: 5px; border-radius: var(--radius-pill); background: var(--bg3); overflow: hidden; max-width: 300px; margin: 0 auto 22px; }
+.rsc-track > i { display: block; width: 30%; height: 100%; border-radius: var(--radius-pill); background: var(--accent); animation: rsc-sweep 1.5s ease-in-out infinite; }
+.rsc-file { display: inline-flex; align-items: center; gap: 11px; background: var(--bg2); border-radius: var(--radius-pill); padding: 9px 16px; max-width: 100%; }
+.rsc-file-badge { width: 26px; height: 26px; border-radius: var(--radius-sm); background: var(--bg); display: inline-flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 500; color: var(--text3); flex-shrink: 0; }
+.rsc-file-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rsc-file-size { color: var(--text4); flex-shrink: 0; }
+
+/* ── ResumeError (spec lines 572-606) — one card per real failure ───
+   The design's four-card list is its own comparison view; production shows
+   exactly one, so `.re-list` (the optional page-level wrapper) just caps the
+   width the way the design's list does. */
+.re-list { max-width: 720px; }
+.re-card { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; }
+.re-row { display: flex; gap: 14px; align-items: flex-start; }
+.re-icon { width: 34px; height: 34px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 600; font-size: 15px; }
+.re-icon.is-bad { background: var(--bad-bg); color: var(--bad-fg); }
+.re-icon.is-warn { background: var(--warn-bg); color: var(--warn-fg); }
+.re-icon.is-neutral { background: var(--bg2); color: var(--text2); }
+.re-main { min-width: 0; flex: 1; }
+.re-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.re-title { font-size: 15.5px; font-weight: 600; letter-spacing: -.015em; }
+.re-tag { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-pill); white-space: nowrap; }
+.re-tag.is-bad, .re-tag.is-neutral { background: var(--bg2); color: var(--text3); }
+.re-tag.is-warn { background: var(--warn-bg); color: var(--warn-fg); }
+.re-tag.is-ok { background: var(--ok-bg); color: var(--ok-fg); }
+.re-body { color: var(--text3); font-size: 13.5px; line-height: 1.5; margin-bottom: 12px; }
+.re-detail { border-radius: 12px; background: var(--bg2); box-shadow: 0 0 0 1px var(--bg3) inset; padding: 11px 14px; margin-bottom: 12px; color: var(--text2); font-size: 11.5px; }
+.re-actions { display: flex; gap: 9px; flex-wrap: wrap; }
+.re-cta { border: 0; background: var(--text); color: #fff; border-radius: var(--radius-pill); padding: 9px 16px; font-weight: 600; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+.re-cta:hover { opacity: .88; }
+
+/* ── ResumeSignedOut (spec lines 609-649) ────────────────────────── */
+.rso-grid { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(280px,1fr); gap: 16px; align-items: start; }
+.rso-hero {
+  --rso-glow: rgba(91,78,240,.45);
+  --rso-badge-fg: #c9c2ff;
+  --rso-dot: #a99cff;
+  --rso-sub: #a7a8b3;
+  --rso-note: #8b8d99;
+  position: relative; overflow: hidden; background: var(--text); color: #fff; border-radius: var(--radius); padding: 40px 36px;
+}
+.rso-glow { position: absolute; right: -90px; top: -130px; width: 400px; height: 400px; border-radius: var(--radius-pill); background: radial-gradient(circle, var(--rso-glow), transparent 65%); }
+.rso-inner { position: relative; max-width: 520px; }
+.rso-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.1); border-radius: var(--radius-pill); padding: 5px 11px; font-size: 11.5px; font-weight: 600; color: var(--rso-badge-fg); margin-bottom: 16px; }
+.rso-dot { width: 6px; height: 6px; border-radius: var(--radius-pill); background: var(--rso-dot); }
+.rso-hero .rso-title { font-size: 28px; font-weight: 600; letter-spacing: -.03em; line-height: 1.15; margin-bottom: 10px; text-wrap: pretty; color: #fff; }
+.rso-sub { color: var(--rso-sub); font-size: 14.5px; line-height: 1.55; margin-bottom: 24px; max-width: 520px; }
+.rso-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.rso-cta-primary { border: 0; background: #fff; color: var(--text); border-radius: var(--radius-pill); padding: 13px 24px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(0,0,0,.3); display: inline-flex; align-items: center; }
+.rso-cta-primary:hover { background: var(--accent-tint); }
+.rso-cta-ghost { border: 0; background: rgba(255,255,255,.08); color: #fff; border-radius: var(--radius-pill); padding: 13px 20px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; }
+.rso-cta-ghost:hover { background: rgba(255,255,255,.16); }
+.rso-note { color: var(--rso-note); font-size: 12.5px; margin-top: 16px; }
+.rso-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.rso-sample-row { display: flex; gap: 18px; align-items: center; margin-bottom: 16px; }
+.rso-donut { position: relative; width: 78px; height: 78px; flex-shrink: 0; border-radius: var(--radius-pill); background: conic-gradient(var(--accent) 0 72%, var(--border) 72% 100%); display: flex; align-items: center; justify-content: center; }
+.rso-donut-inner { width: 62px; height: 62px; border-radius: var(--radius-pill); background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.rso-donut-score { font-size: 22px; font-weight: 500; letter-spacing: -.02em; line-height: 1; }
+.rso-donut-label { font-size: 8.5px; color: var(--text4); letter-spacing: .04em; }
+.rso-parts { min-width: 0; display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.rso-blur-note { border-radius: 12px; background: var(--bg2); padding: 12px 14px; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+.rso-why-dot { color: var(--accent); flex-shrink: 0; }
 
 .rs-score { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; display: grid; grid-template-columns: auto minmax(0,1fr); gap: 32px; align-items: center; }
 .rs-donut { position: relative; width: 132px; height: 132px; flex-shrink: 0; border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; }
@@ -849,6 +1045,45 @@ img { max-width: 100%; }
   .rs-fix input { width: 16px; height: 16px; }
   .rs-actions { width: 100%; flex-wrap: wrap; }
   .rs-view-matches { width: 100%; text-align: center; padding: 14px; min-height: 46px; }
+  .rs-parsed { max-height: 320px; }
+  .rs-foot { justify-content: center; }
+  .rs-delete-link { padding: 10px 2px; }
+
+  /* ── Confirm modal + upgrade paywall, phone (Upload revised / Delete my
+     scan / C Upgrade). No phone mockup exists for these in the spec; sizing
+     follows the same full-bleed, stacked-button treatment as every other
+     phone CTA in this file. */
+  .rs-modal-backdrop, .rs-upgrade-overlay { padding: 16px; align-items: center; }
+  .rs-modal-pad { padding: 20px 18px 16px; }
+  .rs-modal-file { margin: 0 18px 16px; }
+  .rs-modal-actions { padding: 0 18px 20px; flex-direction: column-reverse; }
+  .rs-modal-btn-secondary, .rs-modal-btn-primary { width: 100%; min-height: 46px; }
+  .rs-modal > .rsc-file, .rs-modal > .re-row { margin-left: 18px; margin-right: 18px; }
+  .rs-upgrade-head { padding: 20px 18px 16px; }
+  .rs-upgrade-plans { grid-template-columns: minmax(0,1fr); padding: 0 18px 4px; }
+  .rs-upgrade-foot { padding: 16px 18px 20px; flex-direction: column; align-items: stretch; gap: 14px; }
+  .rs-upgrade-buy { justify-content: space-between; }
+  .rs-upgrade-cta { width: 100%; min-height: 46px; justify-content: center; }
+
+  /* ── ResumeUpload, phone (spec ~736-750) ── */
+  .ru-grid { grid-template-columns: minmax(0,1fr); }
+  .ru-panel { padding: 18px; }
+  .ru-drop { padding: 32px 18px; min-height: 0; }
+  .ru-browse { width: 100%; min-height: 46px; }
+  .ru-props { grid-template-columns: minmax(0,1fr); gap: 16px; }
+
+  /* ── ResumeScanning, phone (spec ~762-773) ── */
+  .rsc-card { margin-top: 20px; padding: 32px 20px; }
+
+  /* ── ResumeError, phone ── */
+  .re-row { flex-direction: column; }
+  .re-cta { width: 100%; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; }
+
+  /* ── ResumeSignedOut, phone ── */
+  .rso-grid { grid-template-columns: minmax(0,1fr); }
+  .rso-hero { padding: 26px 22px; }
+  .rso-cta-row { flex-direction: column; }
+  .rso-cta-primary, .rso-cta-ghost { width: 100%; min-height: 46px; justify-content: center; }
 
   /* ── Matches, phone (spec ~444-462): three tabs over one bucket ── */
   .mb-tabs { display: flex; gap: 7px; margin-bottom: 14px; }
