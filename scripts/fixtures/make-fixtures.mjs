@@ -4,6 +4,7 @@ import { writeFileSync, mkdtempSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { TWO_COLUMN_HTML } from "./two-column-template.mjs";
 
 const LINES = [
   "ARJUN MEHTA",
@@ -74,38 +75,9 @@ console.log("fixtures written");
 // exactly what welded "...reusable serviceFRONTEND" together in production
 // (see docs/superpowers/.../parser-evidence.md). Chrome's print-to-PDF is
 // used to get real pdfjs position data instead of hand-rolling PDF operators
-// that wouldn't exercise the same code path.
-const TWO_COLUMN_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
-body{font:11pt/1.45 Arial,sans-serif;margin:48px;color:#111}
-h1{font-size:20pt;margin:0 0 4px}
-.contact{font-size:9.5pt;color:#444;margin-bottom:12px}
-h2{font-size:15pt;text-transform:uppercase;margin:14px 0 6px;font-weight:bold}
-.role{font-weight:bold;margin:6px 0 2px}
-p.item{margin:2px 0 2px 26px}
-table{width:100%;border-collapse:collapse;margin-top:2px}
-td{vertical-align:top;padding:0;width:50%}
-td.r{padding-left:24px}
-td p{margin:2px 0}
-</style></head><body>
-<h1>Morgan Ellis</h1>
-<div class="contact">morgan.ellis@example.com | +1 555 0142 | linkedin.com/in/morganellis</div>
-<h2>Experience</h2>
-<p class="role">Senior Backend Engineer, Fenwick Systems</p>
-<p class="role">Mar 2021 - Present</p>
-<p class="item">Design API contracts, database schemas, and reusable service components for the platform.</p>
-<p class="item">Lead code reviews and mentor engineers on architecture decisions and best practices.</p>
-<p class="item">Own the deployment pipeline and coordinate releases across four product teams.</p>
-<p class="item">Reduced average API latency from 420ms to 110ms across core services.</p>
-<p class="item">Cut infrastructure costs by 18% by consolidating redundant services.</p>
-<h2>Technical Skills</h2>
-<table>
-<tr><td><b>BACKEND</b></td><td class="r"><b>FRONTEND</b></td></tr>
-<tr><td><p>Node.js Express TypeScript</p></td><td class="r"><p>React HTML CSS</p></td></tr>
-<tr><td><b>DATABASES</b></td><td class="r"><b>DEVOPS AND CLOUD</b></td></tr>
-<tr><td><p>PostgreSQL MongoDB Redis</p></td><td class="r"><p>Docker AWS Jenkins</p></td></tr>
-</table>
-</body></html>`;
-
+// that wouldn't exercise the same code path. The HTML itself lives in
+// two-column-template.mjs so tests can import it and count its <li>
+// elements without re-running this generator as a side effect.
 const CHROME_PATH = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 function renderPdfWithChrome(html, outPath) {

@@ -194,10 +194,10 @@ assert.equal(
 const indentedInput = [
   { text: "EXPERIENCE", x: 40 },
   { text: "Senior Engineer, Acme Corp", x: 40 },
-  { text: "Owned the checkout service end to end", x: 60 },
-  { text: "Mentored two junior engineers on the team", x: 60 },
-  { text: "Led the migration to a new billing platform", x: 60 },
-  { text: "Cut page load time from 4s to 1s", x: 60 },
+  { text: "Owned the checkout service end to end.", x: 60 },
+  { text: "Mentored two junior engineers on the team.", x: 60 },
+  { text: "Led the migration to a new billing platform.", x: 60 },
+  { text: "Cut page load time from 4s to 1s.", x: 60 },
 ];
 const indented = formatChecks(mkPos(indentedInput));
 const indentedFault = indented.faults.find((f) => /measurable/i.test(f.issue));
@@ -208,12 +208,26 @@ assert.ok(/3 of 4/.test(indentedFault.issue), `expected 3 of 4 vague, got: ${ind
 const BULLET_GLYPH_ONLY = /^\s*[-*•]\s+/;
 assert.equal(indentedInput.filter((l) => BULLET_GLYPH_ONLY.test(l.text)).length, 0);
 
+// A short indented entry (a skills-list value, not an achievement sentence)
+// must not count as a bullet just because it happens to sit at the same
+// indent as real ones - it starts its own unit (the prior bullet already
+// ended with a period) but is too short to read as an achievement.
+const shortIndented = formatChecks(mkPos([
+  { text: "EXPERIENCE", x: 40 },
+  { text: "Senior Engineer, Acme Corp", x: 40 },
+  { text: "Owned the checkout service end to end.", x: 60 },
+  { text: "React", x: 60 },
+]));
+const shortIndentedFault = shortIndented.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(shortIndentedFault, "the one real bullet must still be found");
+assert.ok(/1 of 1/.test(shortIndentedFault.issue), `the short entry must not be counted as a second bullet, got: ${shortIndentedFault.issue}`);
+
 // A line only slightly to the right of the margin (kerning/rounding, not a
 // real hanging indent) must not be mistaken for a bullet.
 const barelyOffset = formatChecks(mkPos([
   { text: "EXPERIENCE", x: 40 },
   { text: "Senior Engineer, Acme Corp", x: 41 },
-  { text: "Owned the checkout service end to end", x: 42 },
+  { text: "Owned the checkout service end to end.", x: 42 },
 ]));
 assert.ok(!barelyOffset.faults.some((f) => /measurable/i.test(f.issue)), "a few points of jitter must not read as an indent");
 
@@ -278,5 +292,31 @@ const twoColFault = twoColChecks.faults.find((f) => /measurable/i.test(f.issue))
 assert.ok(twoColFault, "the real two-column fixture must trigger the measurable-outcomes fault");
 assert.equal(twoColFault.sev, "High");
 assert.ok(/3 of 5/.test(twoColFault.issue), `expected 3 of 5 vague bullets, got: ${twoColFault.issue}`);
+
+// THE assertion this rule was missing: the bullet count is not an estimate
+// to eyeball, it is checkable exactly against the source HTML. One of the
+// five <li> achievements is written long enough to wrap across two PDF
+// lines (verified below), so a naive "one reconstructed line = one bullet"
+// count would report 6, not 5 - this is what catches that regression.
+const { TWO_COLUMN_HTML } = await import("./fixtures/two-column-template.mjs");
+const liCount = (TWO_COLUMN_HTML.match(/<li>/g) || []).length;
+assert.equal(liCount, 5, "sanity: the fixture template itself has 5 <li> achievements");
+const bulletCountMatch = twoColFault.issue.match(/of (\d+) bullets/);
+assert.ok(bulletCountMatch, `could not read bullet count from: ${twoColFault.issue}`);
+assert.equal(Number(bulletCountMatch[1]), liCount, "detected bullet count must equal the HTML's own <li> count, not the reconstructed line count");
+// Confirm the wrap this is guarding against actually happened, so this test
+// cannot pass for the wrong reason (e.g. every bullet fitting on one line).
+const wrappedAchievementLines = twoColParsed.lines.filter((l) => l.col === 0 && /Node\.js, Express, and|TypeScript for high-volume/.test(l.text));
+assert.equal(wrappedAchievementLines.length, 2, "expected the long achievement to reconstruct as two separate visual lines");
+
+// The right-column skills values (BACKEND/FRONTEND/DATABASES/DEVOPS AND
+// CLOUD and their contents) must never contribute to that count: they sit
+// at x=324, "indented" only relative to the LEFT column's x=63.7 margin, not
+// their own column's - the exact cross-column bug reported against the real
+// resume's skills section. The bullet count already checked above (5, equal
+// to the <li> count) is only proof of that if the right column is actually
+// present and would have inflated a wrongly-scoped count.
+const rightColumnLines = twoColParsed.lines.filter((l) => l.col === 1);
+assert.ok(rightColumnLines.length >= 4, "expected the right column to be present in this fixture");
 
 console.log("format-checks ok");
