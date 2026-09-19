@@ -62,6 +62,56 @@ const skillsAsString = await m3c.extractResume("x");
 assert.equal(skillsAsString.ok, false);
 assert.equal(skillsAsString.reason, "invalid");
 
+// `null` is valid JSON but not an object: JSON.parse succeeds and then
+// `payload.skills` must not be allowed to throw. The other non-object JSON
+// values (array, number, boolean) already fall through to "invalid" by
+// accident of `typeof`/`Array.isArray`; pin all four so a future refactor
+// cannot silently turn one back into an uncaught crash.
+for (const content of ["null", "[]", "42", "true"]) {
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content } }] }) });
+  const mod = await import(`../lib/resume/extract.mjs?v=${Date.now()}-nonobj-${content}`);
+  const result = await mod.extractResume("x");
+  assert.equal(result.ok, false, `content ${content} should be ok:false`);
+  assert.equal(result.reason, "invalid", `content ${content} should be reason "invalid"`);
+}
+
+// impact entries missing `why` must not survive into an ok:true result — the
+// documented contract is Array<{bullet, why}> by exact field name, and a
+// later task reads `why` unconditionally.
+const MIXED_IMPACT = JSON.stringify({
+  skills: ["Go"],
+  impact: [
+    { bullet: "Reduced errors", why: "no baseline given" },
+    { bullet: "Owned the migration" }, // missing `why`
+  ],
+  headline: "Passes most ATS filters.",
+  subline: "Keyword coverage is the drag.",
+});
+globalThis.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: MIXED_IMPACT } }] }) });
+const m6 = await import(`../lib/resume/extract.mjs?v=${Date.now()}f`);
+const mixed = await m6.extractResume("x");
+assert.equal(mixed.ok, true);
+assert.equal(mixed.impact.length, 1);
+assert.equal(mixed.impact[0].bullet, "Reduced errors");
+assert.equal(mixed.impact[0].why, "no baseline given");
+
+// `bullet`/`why` are coerced to strings, matching how `skills` is already
+// coerced via String(s).trim() — a numeric bullet must not reach the caller
+// as a number.
+const NUMERIC_BULLET = JSON.stringify({
+  skills: ["Go"],
+  impact: [{ bullet: 12345, why: "no outcome stated" }],
+  headline: "Passes most ATS filters.",
+  subline: "Keyword coverage is the drag.",
+});
+globalThis.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: NUMERIC_BULLET } }] }) });
+const m7 = await import(`../lib/resume/extract.mjs?v=${Date.now()}g`);
+const numericBullet = await m7.extractResume("x");
+assert.equal(numericBullet.ok, true);
+assert.equal(numericBullet.impact.length, 1);
+assert.equal(numericBullet.impact[0].bullet, "12345");
+assert.equal(typeof numericBullet.impact[0].bullet, "string");
+
 // Transport failures pass the underlying reason straight through.
 globalThis.fetch = async () => { throw new TypeError("fetch failed"); };
 const m4 = await import(`../lib/resume/extract.mjs?v=${Date.now()}d`);
