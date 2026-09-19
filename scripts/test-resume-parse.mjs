@@ -27,10 +27,19 @@ const big = await parseResume(Buffer.alloc(LIMITS.maxBytes + 1), "big.pdf");
 assert.equal(big.ok, false);
 assert.equal(big.reason, "too-large");
 
-// Never throws, whatever it is handed.
+// Too many pages is rejected before extraction, once the page count is known.
+const many = await parseResume(fx("resume-too-many-pages.pdf"), "resume-too-many-pages.pdf");
+assert.equal(many.ok, false);
+assert.equal(many.reason, "too-many-pages");
+
+// Never throws, whatever it is handed. A zero-byte or missing upload is a
+// client error, not a server fault, so both pin to "not-pdf" (not
+// "unreadable", which is reserved for a real parse failure).
 const empty = await parseResume(Buffer.alloc(0), "empty.pdf");
 assert.equal(empty.ok, false);
+assert.equal(empty.reason, "not-pdf");
 const nothing = await parseResume(null, "");
 assert.equal(nothing.ok, false);
+assert.equal(nothing.reason, "not-pdf");
 
 console.log("resume-parse ok");

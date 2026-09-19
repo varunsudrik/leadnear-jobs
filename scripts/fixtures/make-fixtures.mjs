@@ -18,14 +18,28 @@ const LINES = [
   "- Owned the Redis caching layer",
 ];
 
-function pdf(lines) {
+// `pages` repeats the page object N times, all sharing one content stream
+// and font — enough to make numPages > 1 without needing N distinct
+// content streams. Defaults to 1, which reproduces the original single-page
+// layout exactly (object numbers 1-5, same as before this parameter existed).
+function pdf(lines, { pages = 1 } = {}) {
   const content = lines
     .map((t, i) => `BT /F1 11 Tf 40 ${740 - i * 18} Td (${t.replace(/[()\\]/g, "")}) Tj ET`)
     .join("\n");
+
+  const pageCount = Math.max(1, pages);
+  const contentObjNum = 3 + pageCount;
+  const fontObjNum = contentObjNum + 1;
+  const pageObjs = Array.from(
+    { length: pageCount },
+    () => `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 ${fontObjNum} 0 R >> >> >>`
+  );
+  const kids = pageObjs.map((_, i) => `${3 + i} 0 R`).join(" ");
+
   const objs = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Type /Pages /Kids [${kids}] /Count ${pageCount} >>`,
+    ...pageObjs,
     `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
   ];
@@ -43,4 +57,6 @@ const here = (n) => new URL(n, import.meta.url);
 writeFileSync(here("resume-normal.pdf"), pdf(LINES), "latin1");
 // No text operators at all: stands in for a scanned or screenshotted page.
 writeFileSync(here("resume-image-only.pdf"), pdf([]), "latin1");
+// One more page than LIMITS.maxPages (10): exercises the too-many-pages guard.
+writeFileSync(here("resume-too-many-pages.pdf"), pdf([], { pages: 11 }), "latin1");
 console.log("fixtures written");
