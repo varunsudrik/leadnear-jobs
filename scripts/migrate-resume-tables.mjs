@@ -7,7 +7,13 @@ import { loadEnvFile } from "../lib/load-env.mjs";
 import { buildPgConfig } from "../lib/pg-config.mjs";
 
 loadEnvFile(".env.local");
-const host = new URL(process.env.DATABASE_URL).hostname;
+let host;
+try {
+  host = new URL(process.env.DATABASE_URL).hostname;
+} catch {
+  console.error(`REFUSING: DATABASE_URL is not set or not a valid URL.`);
+  process.exit(1);
+}
 if (!host.endsWith("aivencloud.com")) {
   console.error(`REFUSING: ${host} is not the Aiven staging host.`);
   process.exit(1);
@@ -55,6 +61,16 @@ try {
   for (const [name, sql] of CONSTRAINTS) {
     const { rows } = await client.query(`SELECT 1 FROM pg_constraint WHERE conname = $1`, [name]);
     if (!rows.length) await client.query(sql);
+  }
+  // prisma/schema.prisma declares `skills String[]` as required, but the
+  // CREATE TABLE above left the column nullable, so Prisma Client believes a
+  // NULL can't occur while Postgres would accept one. The table is empty on
+  // staging, so tightening this now is safe; guarded so re-runs are no-ops.
+  {
+    const { rows } = await client.query(
+      `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'ResumeScan' AND column_name = 'skills' AND is_nullable = 'YES'`
+    );
+    if (rows.length) await client.query(`ALTER TABLE "ResumeScan" ALTER COLUMN "skills" SET NOT NULL`);
   }
   await client.query("COMMIT");
   const after = await client.query(`SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'`);
