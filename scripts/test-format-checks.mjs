@@ -28,6 +28,13 @@ const impact = vague.faults.find((f) => /measurable/i.test(f.issue));
 assert.ok(impact, "expected the measurable-outcomes fault");
 assert.ok(/2 of 2/.test(impact.issue), `expected a real count, got: ${impact.issue}`);
 
+// FIX 1: a fault describing N lines must carry all N of them, not just the
+// first. This is the assertion whose absence let a fault naming "41 of 41
+// bullets" set `line` to only the first one, so of 28 such lines that fell
+// inside the stored preview window, exactly 1 ever rendered highlighted.
+assert.deepEqual(impact.lines, [2, 3], "the fault must carry every vague bullet's line number, not just the first");
+assert.equal(impact.line, impact.lines[0], "`line` must stay a working alias for `lines[0]`");
+
 // A bullet carrying a number is not flagged.
 const measured = formatChecks(mk(["EXPERIENCE", "- Reduced p99 latency from 480ms to 190ms"]));
 assert.ok(!measured.faults.some((f) => /measurable/i.test(f.issue)));
@@ -174,9 +181,16 @@ assert.equal(
   "both fixtures have the same line count, so parseScore must match and not confound the comparison"
 );
 
+// Impact (FIX 2) is now ALSO derived from weakBullets/totalBullets — the
+// very ratio this fixture pair deliberately varies to produce the format
+// fault under test — so without pinning it, fixing the format fault would
+// also move Impact and contaminate this format-only comparison. Pin it to
+// the same value on both sides so the only thing that can still move
+// between the two scans is the format fault itself.
+const pinnedImpactInputs = { weakBullets: withFaultChecks.weakBullets, totalBullets: withFaultChecks.totalBullets };
 const extracted = { skills: ["Go", "Python"], impact: [] };
-const withFaultScan = buildScan({ parsed: { pages: 1, lines: withFault.lines }, checks: withFaultChecks, extracted, filename: "a.pdf" });
-const withoutFaultScan = buildScan({ parsed: { pages: 1, lines: withoutFault.lines }, checks: withoutFaultChecks, extracted, filename: "a.pdf" });
+const withFaultScan = buildScan({ parsed: { pages: 1, lines: withFault.lines }, checks: { ...withFaultChecks, ...pinnedImpactInputs }, extracted, filename: "a.pdf" });
+const withoutFaultScan = buildScan({ parsed: { pages: 1, lines: withoutFault.lines }, checks: { ...withoutFaultChecks, ...pinnedImpactInputs }, extracted, filename: "a.pdf" });
 
 const advertised = Number(highFault.impact.replace("+", ""));
 const actualDelta = withoutFaultScan.score - withFaultScan.score;
@@ -318,5 +332,61 @@ assert.equal(wrappedAchievementLines.length, 2, "expected the long achievement t
 // present and would have inflated a wrongly-scoped count.
 const rightColumnLines = twoColParsed.lines.filter((l) => l.col === 1);
 assert.ok(rightColumnLines.length >= 4, "expected the right column to be present in this fixture");
+
+// TASK: the design specifies a "Two-column header" fault (Medium severity,
+// warning that some parsers read columns out of order) for exactly the
+// layout this fixture exercises, but the parser could never detect a
+// column split before now. It must fire here, at Medium, with its `lines`
+// covering every right-column line, and its `impact` derived the same way
+// every other fault's is (not the design mockup's hardcoded "+3").
+const twoColFault2 = twoColChecks.faults.find((f) => /two-column/i.test(f.issue));
+assert.ok(twoColFault2, "expected the Two-column header fault on a real multi-column resume");
+assert.equal(twoColFault2.sev, "Medium");
+assert.match(twoColFault2.fix, /columns out of order/i);
+assert.deepEqual(
+  [...twoColFault2.lines].sort((a, b) => a - b),
+  [...rightColumnLines.map((l) => l.n)].sort((a, b) => a - b),
+  "the fault must flag every right-column line, not just one"
+);
+assert.equal(twoColFault2.impact, `+${Math.round(8 * 0.33)}`, "impact must be derived from SEVERITY_COST, not hardcoded");
+
+// A genuinely single-column fixture must never raise it.
+const normalParsed = await parseResume(
+  readFileSync(new URL("./fixtures/resume-normal.pdf", import.meta.url)),
+  "resume-normal.pdf",
+);
+assert.equal(normalParsed.ok, true);
+const normalChecks = formatChecks(normalParsed);
+assert.ok(!normalChecks.faults.some((f) => /two-column/i.test(f.issue)), "a single-column resume must not raise the two-column fault");
+
+// TASK: Parse now measures readability, not density, and must never
+// saturate a multi-column resume to the same ceiling as a clean one.
+assert.ok(Number.isInteger(twoColChecks.parseScore) && twoColChecks.parseScore < 100, "a multi-column resume must not saturate Parse to 100");
+
+// Isolate the multi-column penalty itself: two documents identical in every
+// Parse signal (heading count, text-per-page, line shape) except that one
+// has a line in a second column must differ by exactly the flat deduction
+// - the classic ATS failure mode this task calls out, made to actually
+// move the number instead of being invisible under a density floor.
+const parseSignalFixture = (hasCol1) => {
+  const headings = ["EXPERIENCE", "SKILLS", "EDUCATION", "PROJECTS"];
+  const body = [
+    "Owned the checkout service end to end with strong ownership overall.",
+    "Mentored two junior engineers on the team this year in total.",
+    "Led the migration to a new billing platform smoothly overall.",
+    "Cut page load time from four seconds down to about one now.",
+  ];
+  const all = [...headings, ...body];
+  return {
+    pages: 1, text: all.join("\n"),
+    lines: all.map((t, i) => ({ n: i + 1, text: t, col: hasCol1 && i === all.length - 1 ? 1 : 0 })),
+  };
+};
+const singleColSignals = formatChecks(parseSignalFixture(false));
+const multiColSignals = formatChecks(parseSignalFixture(true));
+assert.equal(
+  singleColSignals.parseScore - multiColSignals.parseScore, 20,
+  "a detected second column must cost exactly the flat multi-column penalty, all else held equal"
+);
 
 console.log("format-checks ok");

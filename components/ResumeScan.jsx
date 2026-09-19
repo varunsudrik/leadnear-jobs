@@ -240,8 +240,17 @@ export default function ResumeScan({ data, quota }) {
                 <div className="rs-parts">
                   {parts.map((p) => (
                     <div key={p.label}>
-                      <div className="rs-part-head"><span>{p.label}</span><span className="mono">{p.value}</span></div>
-                      <div className="rs-track"><i style={{ width: `${p.value}%`, background: p.color }} /></div>
+                      <div className="rs-part-head">
+                        <span>{p.label}</span>
+                        {p.available === false
+                          ? <span className="rs-part-soon">Coming soon</span>
+                          : <span className="mono">{p.value}</span>}
+                      </div>
+                      <div className={`rs-track${p.available === false ? " rs-track-soon" : ""}`}>
+                        {p.available === false
+                          ? null
+                          : <i style={{ width: `${p.value}%`, background: p.color }} />}
+                      </div>
                     </div>
                   ))}
                 </div>

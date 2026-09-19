@@ -811,6 +811,12 @@ img { max-width: 100%; }
 .rs-part-head .mono { color: var(--text); }
 .rs-track { height: 5px; background: var(--bg3); border-radius: var(--radius-pill); overflow: hidden; }
 .rs-track > i { display: block; height: 100%; border-radius: var(--radius-pill); }
+/* Keywords has no honest number yet (corpus comparison is a later plan) —
+   this reads as visibly "not yet measured", not a grey zero: a caption in
+   place of the percentage, and a dashed track instead of an empty fill that
+   would look like the worst possible score. */
+.rs-part-soon { color: var(--text4); font-weight: 500; font-style: italic; }
+.rs-track-soon { background-color: transparent; background-image: repeating-linear-gradient(135deg, var(--border) 0 6px, transparent 6px 12px); }
 
 .rs-fixes { background: var(--bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .rs-fixes-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); }

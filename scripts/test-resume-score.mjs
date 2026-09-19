@@ -8,6 +8,10 @@ const parsed = {
 };
 const checks = {
   parseScore: 96, formatScore: 78,
+  // FIX 2: Impact is now derived from this real ratio (weak bullets over
+  // total bullets), not from extracted.impact.length. 6 of 11 matches the
+  // fault text below, on purpose.
+  weakBullets: 6, totalBullets: 11,
   faults: [
     { sev: "High", issue: "No measurable outcomes in 6 of 11 bullets", fix: "add a number", impact: "+5", line: 15 },
     // A fault with no location must never crash the line-flagging pass, and
@@ -26,9 +30,14 @@ const extracted = {
 
 const out = buildScan({ parsed, checks, extracted, filename: "arjun.pdf" });
 
-// The four bars the design draws, in the design's order.
+// The four bars the design draws, in the design's order — Keywords stays in
+// this layout even though it has no honest number yet (FIX 4).
 assert.deepEqual(out.parts.map((p) => p.label), ["Parse", "Keywords", "Format", "Impact"]);
+const keywordsPart = out.parts.find((p) => p.label === "Keywords");
+assert.equal(keywordsPart.available, false, "Keywords must be marked unavailable, not given a fabricated number");
+assert.equal(keywordsPart.value, undefined, "an unavailable Keywords bar must not carry a value, fake or otherwise");
 for (const p of out.parts) {
+  if (p.label === "Keywords") continue;
   assert.ok(Number.isInteger(p.value) && p.value >= 0 && p.value <= 100, `bad part value: ${p.value}`);
   assert.ok(/^#[0-9a-f]{6}$/i.test(p.color), `part needs a colour: ${p.color}`);
 }
@@ -36,20 +45,26 @@ for (const p of out.parts) {
 // Each bar must reflect its own source, not just land in range: a part that
 // silently reports the wrong number (or another part's number) must fail
 // here even though every value independently still passes the range check
-// above. Keywords/Impact are recomputed independently of the module under
-// test so a mutated formula cannot coincidentally match.
+// above. Impact is recomputed independently of the module under test so a
+// mutated formula cannot coincidentally match.
 const byLabel = Object.fromEntries(out.parts.map((p) => [p.label, p.value]));
 assert.equal(byLabel.Parse, checks.parseScore, "Parse bar must equal checks.parseScore");
 assert.equal(byLabel.Format, checks.formatScore, "Format bar must equal checks.formatScore");
 assert.equal(
-  byLabel.Keywords,
-  Math.round((extracted.skills.length / 12) * 100),
-  "Keywords bar must be derived from distinct stated skills"
-);
-assert.equal(
   byLabel.Impact,
-  Math.max(0, 100 - extracted.impact.length * 8),
-  "Impact bar must be derived from the count of unmeasured bullets"
+  Math.round(100 * (1 - checks.weakBullets / checks.totalBullets)),
+  "Impact bar must be derived from the deterministic weak/total bullet ratio"
+);
+// A resume that lists 40 skills used to saturate the old Keywords formula
+// at 100 regardless of relevance; Keywords being unavailable must hold
+// however many skills were stated.
+const manySkillsOut = buildScan({
+  parsed, checks, filename: "arjun.pdf",
+  extracted: { ...extracted, skills: Array.from({ length: 40 }, (_, i) => `skill-${i}`) },
+});
+assert.equal(
+  manySkillsOut.parts.find((p) => p.label === "Keywords").available, false,
+  "Keywords must stay unavailable no matter how many skills were stated"
 );
 
 // Overall score is a bounded integer derived from the parts, not a constant.
@@ -118,10 +133,36 @@ const noFaultOut = buildScan({ parsed, checks: { parseScore: 90, formatScore: 10
 assert.equal(noFaultOut.scan.lines[0].n, 1, "with no faults, the window must start at line 1");
 assert.equal(noFaultOut.scan.lines.length, PREVIEW_LINES, "with no faults, the window must still fill the cap");
 
-// AI impact findings drive the Impact subscore only; they must not also
-// produce issue rows (that would double-count one root cause as ~7 rows
-// and inject a hardcoded sev/impact alongside Task 3's real ones).
-// `issues` must be exactly Task 3's faults: same count, same `issue` text.
+// FIX 1, the exact bug this exists to catch: a fault that describes N
+// separate lines (format-checks' real shape for e.g. "no measurable
+// outcomes in N of M bullets") must highlight all N of them when they fit
+// in the window, not just the first — that was the bug that made "of 28
+// weak bullets inside the stored window, exactly 1 rendered highlighted"
+// under a caption promising every highlighted line costs points.
+const manyLines = [3, 6, 9, 12, 18, 24, 30, 36];
+const multiLineChecks = {
+  parseScore: 90, formatScore: 60,
+  faults: [{
+    sev: "High", issue: `No measurable outcomes in ${manyLines.length} of ${manyLines.length} bullets`,
+    fix: "add a number", impact: "+5", lines: manyLines,
+  }],
+};
+const multiLineOut = buildScan({ parsed, checks: multiLineChecks, extracted, filename: "multi.pdf" });
+assert.equal(
+  multiLineOut.scan.lines.filter((l) => l.flag).length, manyLines.length,
+  `a fault describing ${manyLines.length} lines must highlight all ${manyLines.length} when they fit in the window`
+);
+for (const n of manyLines) {
+  assert.ok(multiLineOut.scan.lines.find((l) => l.n === n)?.flag, `line ${n} must be flagged`);
+}
+// buildScan must read `lines` directly rather than requiring a `line` alias
+// too — this fixture deliberately carries no `line` at all.
+assert.equal(multiLineChecks.faults[0].line, undefined, "sanity: this fixture only sets `lines`, no legacy `line`");
+
+// AI impact findings must never produce their OWN issue rows (that would
+// double-count one root cause as ~7 rows and inject a hardcoded sev/impact
+// alongside Task 3's real ones). `issues` must be exactly Task 3's faults:
+// same count, same `issue` text.
 assert.equal(out.issues.length, checks.faults.length, "issues must be exactly Task 3's faults, not merged with AI findings");
 assert.deepEqual(
   out.issues.map((i) => i.issue).sort(),
@@ -131,20 +172,54 @@ assert.deepEqual(
 for (const bullet of extracted.impact) {
   assert.ok(
     !out.issues.some((i) => i.issue === bullet.bullet.slice(0, 80)),
-    "an AI impact finding must never appear as an issue row"
+    "an AI impact finding must never appear as its own issue row"
   );
 }
 
-// AI impact findings must still be USED, just not displayed: they move the
-// Impact part and the overall score. Two scans differing only in
-// extracted.impact.length must disagree on both numbers.
+// FIX 2: AI impact findings are supporting detail on the ONE fault they
+// corroborate, not a number driver. The "measurable outcomes" issue must
+// carry the AI's bullets as `examples`; every other issue must not.
+const measurableIssue = out.issues.find((i) => /measurable/i.test(i.issue));
+assert.deepEqual(
+  measurableIssue.examples, extracted.impact.map((i) => i.bullet),
+  "the measurable-outcomes issue must carry the AI's findings as examples"
+);
+for (const i of out.issues) {
+  if (i === measurableIssue) continue;
+  assert.equal(i.examples, undefined, "only the measurable-outcomes issue may carry AI examples");
+}
+
+// FIX 2, the bug itself: extracted.impact no longer drives any number.
+// Changing ONLY extracted.impact.length (checks, and so the real
+// weak/total ratio, held fixed) must NOT move Impact or the overall score
+// — this is exactly the regression that let a capped, count-only AI list
+// floor Impact at 4 regardless of the resume's actual content.
 const fewerImpact = buildScan({
   parsed, checks, filename: "arjun.pdf",
   extracted: { ...extracted, impact: [] },
 });
 const fewerByLabel = Object.fromEntries(fewerImpact.parts.map((p) => [p.label, p.value]));
-assert.notEqual(fewerByLabel.Impact, byLabel.Impact, "changing extracted.impact.length must change the Impact part");
-assert.notEqual(fewerImpact.score, out.score, "changing extracted.impact.length must change the overall score");
+assert.equal(fewerByLabel.Impact, byLabel.Impact, "extracted.impact.length alone must not change the Impact part");
+assert.equal(fewerImpact.score, out.score, "extracted.impact.length alone must not change the overall score");
+
+// Impact DOES move with the real, deterministic ratio (extracted held
+// fixed): a resume where every bullet is measured must score higher than
+// one where almost none are.
+const betterRatio = buildScan({
+  parsed, extracted, filename: "arjun.pdf",
+  checks: { ...checks, weakBullets: 0, totalBullets: 11 },
+});
+const worseRatio = buildScan({
+  parsed, extracted, filename: "arjun.pdf",
+  checks: { ...checks, weakBullets: 11, totalBullets: 11 },
+});
+assert.equal(betterRatio.parts.find((p) => p.label === "Impact").value, 100, "0% weak bullets must score Impact 100");
+assert.equal(worseRatio.parts.find((p) => p.label === "Impact").value, 0, "100% weak bullets must score Impact 0");
+const halfRatio = buildScan({
+  parsed, extracted, filename: "arjun.pdf",
+  checks: { ...checks, weakBullets: 5, totalBullets: 10 },
+});
+assert.equal(halfRatio.parts.find((p) => p.label === "Impact").value, 50, "a half-measured resume must land mid-scale, not at an extreme");
 
 // Prose and skills pass through.
 assert.equal(out.headline, "Passes most ATS filters.");
