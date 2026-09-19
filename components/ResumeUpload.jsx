@@ -145,8 +145,8 @@ export default function ResumeUpload({ quota }) {
             </div>
             <div className="ru-prop">
               <div className="ru-prop-n mono">03</div>
-              <div className="ru-prop-title">Every open role ranked by fit</div>
-              <div className="ru-prop-desc">Strong, Good or Low against every live posting.</div>
+              <div className="ru-prop-title">Specific fixes, ranked by impact</div>
+              <div className="ru-prop-desc">The faults hurting your score most, each with what to change and what fixing it is worth.</div>
             </div>
           </div>
         </div>

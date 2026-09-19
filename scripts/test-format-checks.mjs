@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { formatChecks, SEVERITIES } from "../lib/resume/format-checks.mjs";
+import { buildScan } from "../lib/resume/score.mjs";
 
 const mk = (arr) => ({ lines: arr.map((t, i) => ({ n: i + 1, text: t })), pages: 1, text: arr.join("\n") });
 
@@ -141,5 +142,37 @@ for (const r of [prose, list, vague, measured, longContact, shortContact, twoPre
 
 // A clean resume must outscore a faulty one, or the score means nothing.
 assert.ok(list.formatScore > prose.formatScore, "clean skills list must score higher than prose");
+
+// FIX 2: "Est. impact" must not be an invented number — it must equal what
+// removing the fault actually does to the overall score the user sees.
+// Isolate a single High fault (4-of-5 vague bullets — deliberately NOT 3,
+// since the old hardcoded `+${Math.min(6, vague.length)}` happens to equal
+// the correctly-derived High estimate at vague.length===3, which would let
+// a reverted fix hide behind this test) against an otherwise-identical
+// resume with the fault fixed, so the only thing that can move between the
+// two scans is the one fault under test.
+const withFault = mk(["EXPERIENCE", "- Worked on something", "- Responsible for something", "- Helped with something", "- Led something", "- Reduced latency by 50%"]);
+const withoutFault = mk(["EXPERIENCE", "- Cut cost by 5%", "- Boosted output by 10%", "- Reduced errors by 15%", "- Improved uptime by 20%", "- Reduced latency by 50%"]);
+
+const withFaultChecks = formatChecks(withFault);
+const withoutFaultChecks = formatChecks(withoutFault);
+const highFault = withFaultChecks.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(highFault && highFault.sev === "High", "fixture must produce exactly the High measurable-outcomes fault");
+assert.equal(withoutFaultChecks.faults.length, 0, "the fixed fixture must have no faults, isolating the comparison");
+assert.equal(
+  withFaultChecks.parseScore, withoutFaultChecks.parseScore,
+  "both fixtures have the same line count, so parseScore must match and not confound the comparison"
+);
+
+const extracted = { skills: ["Go", "Python"], impact: [] };
+const withFaultScan = buildScan({ parsed: { pages: 1, lines: withFault.lines }, checks: withFaultChecks, extracted, filename: "a.pdf" });
+const withoutFaultScan = buildScan({ parsed: { pages: 1, lines: withoutFault.lines }, checks: withoutFaultChecks, extracted, filename: "a.pdf" });
+
+const advertised = Number(highFault.impact.replace("+", ""));
+const actualDelta = withoutFaultScan.score - withFaultScan.score;
+assert.equal(
+  advertised, actualDelta,
+  `advertised impact (+${advertised}) must equal the real overall-score delta from removing the fault (+${actualDelta})`
+);
 
 console.log("format-checks ok");

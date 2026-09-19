@@ -23,7 +23,7 @@ export default function ResumeSignedOut() {
             <h2 className="rso-title">See your resume the way an ATS sees it.</h2>
             <p className="rso-sub">
               Sign in and we score your PDF out of 100, show the extracted text with
-              every parsing problem flagged, and rank every open role by how well you fit.
+              every parsing problem flagged, and list the specific fixes worth making, ranked by impact.
             </p>
             <div className="rso-cta-row">
               <Link href={{ pathname: "/signin", query: { callbackUrl: "/resume" } }} className="rso-cta-primary">
@@ -55,7 +55,7 @@ export default function ResumeSignedOut() {
               </div>
             </div>
             <div className="rso-blur-note">
-              This is a sample. Sign in to see your own score, the text a parser reads and every role ranked by fit.
+              This is a sample. Sign in to see your own score, the text a parser reads and the fixes worth making.
             </div>
           </div>
 
@@ -63,7 +63,7 @@ export default function ResumeSignedOut() {
             <div className="ru-good-head">Why sign in</div>
             <div className="ru-good-list">
               <div className="ru-good-item"><span className="rso-why-dot">·</span><span>Your scans, matches and saved jobs stay on your account.</span></div>
-              <div className="ru-good-item"><span className="rso-why-dot">·</span><span>Rescore against any job title later, free.</span></div>
+              <div className="ru-good-item"><span className="rso-why-dot">·</span><span>Rescore your resume again later, free.</span></div>
               <div className="ru-good-item"><span className="rso-why-dot">·</span><span>Delete your scan whenever you want.</span></div>
             </div>
           </div>

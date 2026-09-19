@@ -36,7 +36,7 @@ export default async function JobsPage({ searchParams }) {
     <div className="console-shell">
       <HomeHero />
       <Suspense>
-        <Filters initialCount={Number(results.total)} allowFitSort />
+        <Filters initialCount={Number(results.total)} />
       </Suspense>
       {/* JobsSplitView validates `selectedSlug` against the incoming `jobs`
           itself (falling back to the first row when the previous selection

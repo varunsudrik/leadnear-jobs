@@ -52,7 +52,7 @@ function formatUpdated(updatedAt) {
   return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
-export default function Filters({ initialCount = 0, pollOnly = false, allowFitSort = false }) {
+export default function Filters({ initialCount = 0, pollOnly = false }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();

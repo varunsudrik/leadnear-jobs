@@ -95,9 +95,14 @@ export function useModalFocusTrap(active, containerRef, restoreKey, onEscape) {
 // request that reaches these reasons ever writes a scan row. "quota" is not
 // a card here at all: it hands off to <UpgradePanel>, matching C Upgrade.
 const CARDS = {
+  // parseResume returns this reason for ANY non-PDF upload, not only Word
+  // docs — a dropped PNG or a zero-byte file lands here too, and drag-and-
+  // drop isn't gated by the file input's `accept` attribute. The headline
+  // must therefore stay generic; the Word-to-PDF steps still belong in the
+  // body since that's the single most common case.
   "not-pdf": {
     glyph: "✕", tone: "bad", tag: "Not scanned",
-    title: "That file is a Word document",
+    title: "That file isn't a PDF",
     body: "We only read PDF, because that is what most ATS software receives. In Word, choose File → Save as → PDF, then upload the PDF.",
     cta: "Upload a PDF instead",
   },

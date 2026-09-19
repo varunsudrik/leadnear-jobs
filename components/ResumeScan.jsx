@@ -8,9 +8,12 @@
 //    modal (spec lines 225-243) rather than firing on click. Confirming runs
 //    the same POST /api/resume/scan as a first scan, then refreshes the
 //    route so the server component re-reads the new row.
-//  - "Delete my scan" (spec D11 — the product's own deletion promise) reuses
-//    that same modal chrome, per the brief: two destructive-ish actions
-//    should look like the same kind of thing.
+//  - "Delete my scan data" (spec D11 — the product's own deletion promise)
+//    reuses that same modal chrome, per the brief: two destructive-ish
+//    actions should look like the same kind of thing. It redacts rather than
+//    deletes the row (lib/resume/store.mjs's redactScans): the quota is
+//    COUNT(*) over ResumeScan rows (spec D8), so a real delete would let a
+//    user reset their free scans for free by deleting and re-scanning.
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -137,10 +140,10 @@ export default function ResumeScan({ data, quota }) {
         refreshAfter("delete");
         return;
       }
-      setDeleteError(json.detail || "Could not delete your scan. Try again.");
+      setDeleteError(json.detail || "Could not delete your scan data. Try again.");
       setDeleteStage("confirm");
     } catch {
-      setDeleteError("Could not delete your scan. Try again.");
+      setDeleteError("Could not delete your scan data. Try again.");
       setDeleteStage("confirm");
     }
   }
@@ -268,7 +271,7 @@ export default function ResumeScan({ data, quota }) {
 
         <div className="rs-foot">
           <button type="button" className="rs-delete-link" onClick={openDeleteConfirm}>
-            Delete my scan
+            Delete my scan data
           </button>
         </div>
       </div>
@@ -344,21 +347,23 @@ export default function ResumeScan({ data, quota }) {
             tabIndex={-1}
             role="dialog"
             aria-modal="true"
-            aria-label="Confirm delete scan"
+            aria-label="Confirm delete scan data"
           >
             <div className="rs-modal-pad">
-              <h2 className="rs-modal-title">Delete this scan?</h2>
+              <h2 className="rs-modal-title">Delete your scan data?</h2>
               <p className="rs-modal-body">
-                Deleting removes the stored text and the result. Your free scans go back to {quota.quota}.
+                This removes the stored text and result for every scan on your account, not just this
+                one. Your used scans still count against your free limit — deleting does not give you
+                more free scans.
               </p>
               {deleteError && <p className="rs-modal-error">{deleteError}</p>}
             </div>
             <div className="rs-modal-actions">
               <button type="button" className="rs-modal-btn-secondary" onClick={closeDelete} disabled={deleteStage === "deleting"}>
-                Keep my scan
+                Keep my data
               </button>
               <button type="button" className="rs-modal-btn-primary" onClick={confirmDelete} disabled={deleteStage === "deleting"}>
-                {deleteStage === "deleting" ? "Deleting…" : "Delete my scan"}
+                {deleteStage === "deleting" ? "Deleting…" : "Delete my data"}
               </button>
             </div>
           </div>
