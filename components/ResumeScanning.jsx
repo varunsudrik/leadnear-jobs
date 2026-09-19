@@ -4,9 +4,14 @@
 // the request is tied to this tab, and neither promise is one the product
 // can keep.
 //
-// `bare` drops the outer card so components/ResumeScan.jsx can reuse this
+// `bare` drops the outer CARD so components/ResumeScan.jsx can reuse this
 // exact indicator inside its own "Upload revised" modal instead of duplicating
-// the markup and the breathing-dots animation.
+// the markup and the breathing-dots animation — but it must not drop the
+// live region that goes with it: a screen-reader user driving the replace
+// flow is told nothing when the rescan starts, succeeds or fails otherwise
+// (review finding). Both branches below render exactly one
+// `role="status" aria-live="polite"` element; only the class (hence the
+// chrome) differs.
 export default function ResumeScanning({ filename, sizeLabel, bare = false }) {
   const content = (
     <>
@@ -27,9 +32,8 @@ export default function ResumeScanning({ filename, sizeLabel, bare = false }) {
     </>
   );
 
-  if (bare) return content;
   return (
-    <div className="rsc-card" role="status" aria-live="polite">
+    <div className={bare ? "rsc-live" : "rsc-card"} role="status" aria-live="polite">
       {content}
     </div>
   );

@@ -17,7 +17,7 @@ import Link from "next/link";
 import ScanPips from "@/components/ScanPips";
 import ParsedTextView from "@/components/ParsedTextView";
 import ResumeScanning from "@/components/ResumeScanning";
-import ResumeError, { UpgradePanel } from "@/components/ResumeError";
+import ResumeError, { UpgradePanel, useModalFocusTrap } from "@/components/ResumeError";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
@@ -43,6 +43,8 @@ export default function ResumeScan({ data, quota }) {
   const wasPending = useRef(false);
   const pendingKind = useRef(null);
   const fileInputRef = useRef(null);
+  const replaceModalRef = useRef(null);
+  const deleteModalRef = useRef(null);
 
   // "Upload revised": idle -> confirm (file picked) -> scanning (posted) ->
   // error | quota (rejected) -> idle again once a success refreshes the route.
@@ -151,13 +153,21 @@ export default function ResumeScan({ data, quota }) {
   function onBackdropClick(e, close) {
     if (e.target === e.currentTarget) close();
   }
-  function onBackdropKeyDown(e, close) {
-    if (e.key === "Escape") close();
-  }
 
   const dimmed = replaceStage === "quota" || upgradeOpen;
   const replaceModalOpen = replaceStage === "confirm" || replaceStage === "scanning" || replaceStage === "error";
+  const deleteModalOpen = deleteStage !== "idle";
   const scansAfterReplace = Math.max(0, quota.remaining - 1);
+  const replaceModalLabel =
+    replaceStage === "confirm" ? "Confirm resume replacement"
+    : replaceStage === "scanning" ? "Uploading revised resume"
+    : "Resume replacement failed";
+
+  // Escape now works reliably because a descendant genuinely holds focus
+  // (the hook moves it there on open) — the backdrop's own onKeyDown, which
+  // only fired if focus already happened to be inside, is gone.
+  useModalFocusTrap(replaceModalOpen, replaceModalRef, replaceStage, closeReplace);
+  useModalFocusTrap(deleteModalOpen, deleteModalRef, deleteStage, closeDelete);
 
   return (
     <div className="console-shell">
@@ -266,13 +276,16 @@ export default function ResumeScan({ data, quota }) {
       {replaceModalOpen && (
         <div
           className="rs-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-label={replaceStage === "confirm" ? "Confirm resume replacement" : "Uploading revised resume"}
           onClick={(e) => onBackdropClick(e, closeReplace)}
-          onKeyDown={(e) => onBackdropKeyDown(e, closeReplace)}
         >
-          <div className="rs-modal">
+          <div
+            className="rs-modal"
+            ref={replaceModalRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={replaceModalLabel}
+          >
             {replaceStage === "confirm" && (
               <>
                 <div className="rs-modal-pad">
@@ -307,22 +320,32 @@ export default function ResumeScan({ data, quota }) {
               <ResumeScanning bare filename={replaceFile?.name} sizeLabel={formatSize(replaceFile?.size)} />
             )}
             {replaceStage === "error" && (
-              <ResumeError bare reason={replaceError.reason} detail={replaceError.detail} quota={quota} onRetry={closeReplace} />
+              <ResumeError
+                bare
+                reason={replaceError.reason}
+                detail={replaceError.detail}
+                filename={replaceFile?.name}
+                quota={quota}
+                onRetry={closeReplace}
+              />
             )}
           </div>
         </div>
       )}
 
-      {deleteStage !== "idle" && (
+      {deleteModalOpen && (
         <div
           className="rs-modal-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Confirm delete scan"
           onClick={(e) => onBackdropClick(e, closeDelete)}
-          onKeyDown={(e) => onBackdropKeyDown(e, closeDelete)}
         >
-          <div className="rs-modal">
+          <div
+            className="rs-modal"
+            ref={deleteModalRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm delete scan"
+          >
             <div className="rs-modal-pad">
               <h2 className="rs-modal-title">Delete this scan?</h2>
               <p className="rs-modal-body">

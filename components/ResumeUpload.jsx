@@ -79,7 +79,13 @@ export default function ResumeUpload({ quota }) {
           <span className="ru-pips"><ScanPips used={quota.used} quota={quota.quota} /></span>
         </div>
         <div className="re-list">
-          <ResumeError reason={errorInfo.reason} detail={errorInfo.detail} quota={quota} onRetry={resetToIdle} />
+          <ResumeError
+            reason={errorInfo.reason}
+            detail={errorInfo.detail}
+            filename={pendingFile?.name}
+            quota={quota}
+            onRetry={resetToIdle}
+          />
         </div>
       </div>
     );
