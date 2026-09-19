@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 
 delete process.env.OPENROUTER_API_KEY;
 const { isAiConfigured, chat } = await import("../lib/ai/openrouter.mjs");
@@ -79,5 +80,27 @@ sent = null;
 const m5 = await import(`../lib/ai/openrouter.mjs?v=${Date.now()}e`);
 await m5.chat({ system: "s", user: "u" });
 assert.equal("response_format" in sent, false);
+
+// RESUME_MODEL is read at import time, so `?v=` cache-busting cannot reach it:
+// openrouter.mjs imports model.mjs with a bare specifier that always resolves
+// to the cached instance. A child process starts with an empty module cache,
+// which is the only way to observe the override.
+const overridden = execFileSync(
+  process.execPath,
+  ["--input-type=module", "-e", "import('./lib/resume/model.mjs').then(m => console.log(m.MODEL))"],
+  { env: { ...process.env, RESUME_MODEL: "test/override-model" }, encoding: "utf8" }
+).trim();
+assert.equal(overridden, "test/override-model");
+
+// And with the variable absent it must fall back to the real default, so this
+// pair fails if the `||` is dropped in either direction.
+const fallbackEnv = { ...process.env };
+delete fallbackEnv.RESUME_MODEL;
+const fallback = execFileSync(
+  process.execPath,
+  ["--input-type=module", "-e", "import('./lib/resume/model.mjs').then(m => console.log(m.MODEL))"],
+  { env: fallbackEnv, encoding: "utf8" }
+).trim();
+assert.equal(fallback, "deepseek/deepseek-v4-flash");
 
 console.log("openrouter ok");
