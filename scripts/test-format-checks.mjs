@@ -41,14 +41,60 @@ assert.ok(presentFault.sev === "Low", `expected Low severity, got ${presentFault
 const onePresent = formatChecks(mk(["Role 1, Jan 2020 - Present"]));
 assert.ok(!onePresent.faults.some((f) => /Present/i.test(f.issue)), "'Present' in one role must not be flagged");
 
+// CORRECTION 1: Present rule now requires date context.
+// Lowercase "present" with date should fire.
+const lowerPresent = formatChecks(mk(["Jan 2020 - present", "Jan 2022 - present"]));
+assert.ok(lowerPresent.faults.some((f) => /Present/i.test(f.issue)), "lowercase 'present' with dates should fire");
+
+// "Present" as a verb (without date) should not fire.
+const verbPresent = formatChecks(mk(["- Present monthly metrics to leadership", "Jan 2022 - present"]));
+assert.ok(!verbPresent.faults.some((f) => /Present/i.test(f.issue)), "'Present' verb with one date should not fire");
+
+// CORRECTION 2: Skills can use pipe, slash, semicolon delimiters.
+// Pipe-delimited list should not be flagged.
+const pipeList = formatChecks(mk(["SKILLS", "Python | Go | Java | PostgreSQL | Kubernetes | AWS"]));
+assert.ok(!pipeList.faults.some((f) => /paragraph/i.test(f.issue)), "pipe-delimited list must not be flagged");
+
+// Prose paragraph should still be flagged.
+const stillProse = formatChecks(mk(["SKILLS", "Languages and tools include Go, Python and PostgreSQL across several teams."]));
+assert.ok(stillProse.faults.some((f) => /paragraph/i.test(f.issue)), "prose paragraph must still be flagged");
+
+// CORRECTION 3: Skills scan extends to next heading or 8 lines.
+// Prose on 5th line should be caught.
+const proseOnFifth = formatChecks(mk(["SKILLS", "Go, Python", "PostgreSQL, Redis", "gRPC, AWS", "Languages and tools include Go Python and PostgreSQL across several teams and organizations."]));
+assert.ok(proseOnFifth.faults.some((f) => /paragraph/i.test(f.issue)), "prose on line 5 of skills should be caught");
+
+// CORRECTION 4: Single vague bullet is Medium, not High.
+// 1 of 1 vague is Medium.
+const oneVague = formatChecks(mk(["EXPERIENCE", "- Worked on the ingestion pipeline"]));
+const oneVagueFault = oneVague.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(oneVagueFault, "expected fault for single vague bullet");
+assert.ok(oneVagueFault.sev === "Medium", `single vague bullet should be Medium, got ${oneVagueFault.sev}`);
+
+// 3 of 4 vague is High.
+const threeVague = formatChecks(mk(["EXPERIENCE", "- Worked on something", "- Responsible for something", "- Led something", "- Reduced latency by 50%"]));
+const threeVagueFault = threeVague.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(threeVagueFault, "expected fault for 3-of-4 vague");
+assert.ok(threeVagueFault.sev === "High", `3-of-4 vague should be High, got ${threeVagueFault.sev}`);
+
+// CORRECTION 5: Empty lines give parseScore 0.
+const empty = formatChecks(mk([]));
+assert.ok(empty.parseScore === 0, `empty lines should give parseScore 0, got ${empty.parseScore}`);
+
+// CORRECTION 6: Contact line scan extends to 6 lines.
+// Email on 5th line should be caught if long.
+const contactOnFifth = formatChecks(mk(["John Doe", "Senior Engineer", "Tech Lead", "San Francisco, CA", "john.doe@company.com | (555) 123-4567 | Very Long Additional Info Herex"]));
+const contactOnFifthFault = contactOnFifth.faults.find((f) => /contact/i.test(f.issue));
+assert.ok(contactOnFifthFault, "expected contact wrap fault for email on 5th line");
+
 // Every fault carries a severity the UI can colour and an actionable fix.
-for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults]) {
+for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults, ...lowerPresent.faults, ...pipeList.faults, ...proseOnFifth.faults, ...oneVague.faults, ...threeVague.faults, ...contactOnFifth.faults]) {
   assert.ok(SEVERITIES.includes(f.sev), `unknown severity: ${f.sev}`);
   assert.ok(f.fix && f.fix.length > 5, "every fault needs an actionable fix");
 }
 
 // Scores are bounded integers.
-for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent]) {
+for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent, lowerPresent, verbPresent, pipeList, stillProse, proseOnFifth, oneVague, threeVague, empty, contactOnFifth]) {
   for (const s of [r.parseScore, r.formatScore]) {
     assert.ok(Number.isInteger(s) && s >= 0 && s <= 100, `score out of range: ${s}`);
   }
