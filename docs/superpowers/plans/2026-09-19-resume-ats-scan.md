@@ -21,6 +21,7 @@
 - Uploads: PDF only, max 2 MB, max 10 pages.
 - `/resume` and `/matches` stay `robots: "noindex"` and absent from `app/sitemap.js`.
 - Tests are plain `node scripts/test-*.mjs` using `node:assert/strict`, registered in `package.json` as `<name>:test`. No Jest, no Vitest, no jsdom.
+- **Every schema change goes to the Aiven staging database. Production is never modified.** `DATABASE_URL` in `.env.local` points at `pg-3fe711d-redgear204-9f81.i.aivencloud.com:22842/defaultdb` (staging), and `npm run db:push` routes through `scripts/prisma.mjs`, which loads that file — so the default is correct. The production string lives in `PROD_DATABASE_URL` (a raw IP) and is read only by `scripts/seed-from-prod.mjs`. **Do not run `db:seed` / `scripts/seed-from-prod.mjs`, do not pass `PROD_DATABASE_URL` to anything, and do not run any DDL against that host.** If a task appears to need a production change, stop and ask — it is out of scope for this plan.
 - The database permits **20 connections total** (`lib/prisma.js`). Do not create new clients or pools.
 - Prisma owns the leadnear tables; job-board tables are raw SQL via `lib/db.js`. Do not mix.
 - Copy rule: the product says **"we store the text we show you, never the file"**. Never "we never store your resume".
@@ -903,14 +904,47 @@ Add the back-relation to the existing `User` model alongside its other relation 
 
 `ResumeScanTarget` is unused in plan 1 — plan 2 writes it. It ships now so the migration is one operation on a shared schema rather than two.
 
-- [ ] **Step 2: Generate the client and push**
+- [ ] **Step 2: Confirm the target database BEFORE pushing**
+
+This is the only step in the plan that writes DDL. Print the host and check it
+is staging — never push blind.
+
+```bash
+node -e '
+require("./lib/load-env.mjs");
+' 2>/dev/null || true
+node --input-type=module -e '
+import { loadEnvFile } from "./lib/load-env.mjs";
+loadEnvFile(".env.local");
+const u = new URL(process.env.DATABASE_URL);
+console.log("target host:", u.hostname);
+if (!u.hostname.endsWith("aivencloud.com")) {
+  console.error("REFUSING: DATABASE_URL is not the Aiven staging host. Stop and ask.");
+  process.exit(1);
+}
+console.log("ok - staging");
+'
+```
+
+Expected: `target host: pg-3fe711d-redgear204-9f81.i.aivencloud.com` then `ok - staging`.
+
+If it prints anything else — a raw IP in particular — **stop and ask**. Do not
+edit `.env.local` to make it pass.
+
+- [ ] **Step 3: Generate the client and push to staging**
 
 ```bash
 npx prisma generate
 npm run db:push
 ```
 
-- [ ] **Step 3: Write the failing test** — `scripts/test-resume-store.mjs`:
+`db:push` runs `scripts/prisma.mjs`, which loads `.env.local` and therefore
+targets staging. Read the summary Prisma prints and confirm it reports adding
+`ResumeScan` and `ResumeScanTarget` and **altering nothing else** — this is a
+schema shared with the main leads product, so an unexpected drop or alter on a
+table you did not touch means stop immediately.
+
+- [ ] **Step 4: Write the failing test** — `scripts/test-resume-store.mjs`:
 
 ```js
 import assert from "node:assert/strict";
@@ -930,12 +964,12 @@ assert.equal(quotaFrom(5).exhausted, true);
 console.log("resume-store ok");
 ```
 
-- [ ] **Step 4: Run it and watch it fail**
+- [ ] **Step 5: Run it and watch it fail**
 
 Run: `node scripts/test-resume-store.mjs`
 Expected: FAIL — module not found.
 
-- [ ] **Step 5: Implement `lib/resume/store.mjs`**
+- [ ] **Step 6: Implement `lib/resume/store.mjs`**
 
 ```js
 // The only module that knows Prisma. Quota is derived from scan rows rather
@@ -993,12 +1027,12 @@ export async function deleteScans(userId) {
 }
 ```
 
-- [ ] **Step 6: Run the test**
+- [ ] **Step 7: Run the test**
 
 Run: `node scripts/test-resume-store.mjs`
 Expected: PASS.
 
-- [ ] **Step 7: Register and commit**
+- [ ] **Step 8: Register and commit**
 
 Add `"resume-store:test": "node scripts/test-resume-store.mjs"`.
 
