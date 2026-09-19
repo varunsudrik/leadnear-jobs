@@ -79,8 +79,33 @@ assert.equal(
   "only the one in-window fault (line 15) may flag a retained line"
 );
 
-// Both fault sources merge into one issues list.
-assert.ok(out.issues.length >= 2, "format faults and AI impact findings must merge");
+// AI impact findings drive the Impact subscore only; they must not also
+// produce issue rows (that would double-count one root cause as ~7 rows
+// and inject a hardcoded sev/impact alongside Task 3's real ones).
+// `issues` must be exactly Task 3's faults: same count, same `issue` text.
+assert.equal(out.issues.length, checks.faults.length, "issues must be exactly Task 3's faults, not merged with AI findings");
+assert.deepEqual(
+  out.issues.map((i) => i.issue).sort(),
+  checks.faults.map((f) => f.issue).sort(),
+  "every issue row must trace back to a format-checks fault"
+);
+for (const bullet of extracted.impact) {
+  assert.ok(
+    !out.issues.some((i) => i.issue === bullet.bullet.slice(0, 80)),
+    "an AI impact finding must never appear as an issue row"
+  );
+}
+
+// AI impact findings must still be USED, just not displayed: they move the
+// Impact part and the overall score. Two scans differing only in
+// extracted.impact.length must disagree on both numbers.
+const fewerImpact = buildScan({
+  parsed, checks, filename: "arjun.pdf",
+  extracted: { ...extracted, impact: [] },
+});
+const fewerByLabel = Object.fromEntries(fewerImpact.parts.map((p) => [p.label, p.value]));
+assert.notEqual(fewerByLabel.Impact, byLabel.Impact, "changing extracted.impact.length must change the Impact part");
+assert.notEqual(fewerImpact.score, out.score, "changing extracted.impact.length must change the overall score");
 
 // Prose and skills pass through.
 assert.equal(out.headline, "Passes most ATS filters.");
