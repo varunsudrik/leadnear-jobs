@@ -340,7 +340,17 @@ for (const dead of [".directory-hero", ".directory-content", ".results-header", 
 // ─── Resume scan (spec 195-252) ───
 decl(".rs-title", "font-size: 22px");
 decl(".rs-body", "grid-template-columns: minmax(250px,1fr) minmax(0,2.2fr)");
-decl(".rs-preview", "aspect-ratio: 8.5/11");
+// Task 8 replaced the mock's rasterised, page-shaped .rs-preview (aspect-ratio
+// 8.5/11 — a rendered PDF page) with ParsedTextView's .rs-parsed: rendering a
+// PDF to an image isn't viable on serverless (spec deviations table). These
+// three pin the properties that make that honest replacement work, not just
+// exist: its own scroll container rather than stretching the page, the
+// monospace type that backs "see it the way a parser reads it", and the
+// flagged-line highlight that is the panel's whole point.
+decl(".rs-parsed", "overflow: auto");
+decl(".rs-parsed", "max-height: 420px");
+decl(".rs-parsed-t", "font-family: var(--font-mono), monospace");
+decl(".rs-parsed-line.is-bad", "background: var(--bad-bg)");
 decl(".rs-score", "padding: 24px");
 decl(".rs-score", "gap: 32px");
 decl(".rs-donut", "width: 132px");
