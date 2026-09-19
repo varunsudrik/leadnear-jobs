@@ -1,8 +1,22 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { parseResume, LIMITS } from "../lib/resume/parse.mjs";
+import { parseResume, LIMITS, buildLineSummary } from "../lib/resume/parse.mjs";
 
 const fx = (n) => readFileSync(new URL(`./fixtures/${n}`, import.meta.url));
+
+// UNIT: x2 must be the RIGHTMOST item's own right edge, not the leftmost's
+// (a Math.max/Math.min mix-up that every PDF fixture on hand happens not to
+// exercise, since each of their lines is reconstructed from a single pdfjs
+// text item where the two are identical). Three items, deliberately out of
+// x order and with the widest one in the middle, so neither "first" nor
+// "last in the array" would coincidentally produce the right answer either.
+const multiItemLine = buildLineSummary([
+  { str: "Right ", x: 100, width: 30, height: 10 }, // right edge 130 - the true max
+  { str: "Left ", x: 10, width: 15, height: 10 }, // right edge 25 - the true min
+  { str: "Mid ", x: 50, width: 20, height: 10 }, // right edge 70
+]);
+assert.equal(multiItemLine.x, 10, "x must be the leftmost item's own start");
+assert.equal(multiItemLine.x2, 130, "x2 must be the rightmost item's own right edge, not the leftmost's");
 
 // A normal text PDF parses into numbered lines.
 const ok = await parseResume(fx("resume-normal.pdf"), "resume-normal.pdf");

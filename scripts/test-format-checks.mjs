@@ -39,6 +39,27 @@ assert.equal(impact.line, impact.lines[0], "`line` must stay a working alias for
 const measured = formatChecks(mk(["EXPERIENCE", "- Reduced p99 latency from 480ms to 190ms"]));
 assert.ok(!measured.faults.some((f) => /measurable/i.test(f.issue)));
 
+// A measurable outcome isn't always written in digits - "grew the team from
+// three engineers to nine" is just as quantified as "3 to 9". HAS_NUMBER
+// must also recognise a spelled-out cardinal.
+const spelledOut = formatChecks(mk(["EXPERIENCE", "- Grew the platform team from three engineers to nine"]));
+assert.ok(!spelledOut.faults.some((f) => /measurable/i.test(f.issue)), "a spelled-out cardinal must count as a measured outcome");
+
+// The traps: a spelled-out number's word-boundary match must not fire on a
+// substring buried inside an unrelated, longer word. "someone" contains
+// "one", "often" contains "ten", "nineteen" contains "nine" - none of
+// these bullets state an actual quantity, so all three must still read as
+// unmeasured.
+const wordBoundaryTraps = formatChecks(mk([
+  "EXPERIENCE",
+  "- Someone on the team helped with onboarding new hires",
+  "- Often collaborated with cross-functional teams on releases",
+  "- Managed nineteen active client accounts across the region",
+]));
+const trapsFault = wordBoundaryTraps.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(trapsFault, "expected all three trap bullets to read as unmeasured");
+assert.ok(/3 of 3/.test(trapsFault.issue), `"someone"/"often"/"nineteen" must not be mistaken for a number, got: ${trapsFault.issue}`);
+
 // Long contact line wraps and breaks ATS parsing.
 const longContact = formatChecks(mk(["John Doe | john.doe@company.com | (555) 123-4567 | San Francisco CA 94102"]));
 const contactFault = longContact.faults.find((f) => /contact/i.test(f.issue));
@@ -209,7 +230,7 @@ const indentedInput = [
   { text: "EXPERIENCE", x: 40 },
   { text: "Senior Engineer, Acme Corp", x: 40 },
   { text: "Owned the checkout service end to end.", x: 60 },
-  { text: "Mentored two junior engineers on the team.", x: 60 },
+  { text: "Mentored several junior engineers on the team.", x: 60 },
   { text: "Led the migration to a new billing platform.", x: 60 },
   { text: "Cut page load time from 4s to 1s.", x: 60 },
 ];
@@ -304,8 +325,13 @@ assert.equal(twoColParsed.ok, true);
 const twoColChecks = formatChecks(twoColParsed);
 const twoColFault = twoColChecks.faults.find((f) => /measurable/i.test(f.issue));
 assert.ok(twoColFault, "the real two-column fixture must trigger the measurable-outcomes fault");
-assert.equal(twoColFault.sev, "High");
-assert.ok(/3 of 5/.test(twoColFault.issue), `expected 3 of 5 vague bullets, got: ${twoColFault.issue}`);
+// "Own the deployment pipeline and coordinate releases across four product
+// teams." reads as measured now that HAS_NUMBER recognises spelled-out
+// quantities ("four") alongside digits, dropping this from 3-of-5 (High)
+// to 2-of-5 (Medium) vague bullets - a real, correct change in behaviour
+// from that fix, not a fixture regression.
+assert.equal(twoColFault.sev, "Medium");
+assert.ok(/2 of 5/.test(twoColFault.issue), `expected 2 of 5 vague bullets, got: ${twoColFault.issue}`);
 
 // THE assertion this rule was missing: the bullet count is not an estimate
 // to eyeball, it is checkable exactly against the source HTML. One of the
@@ -411,17 +437,17 @@ assert.equal(
   noPeriodsChecks.totalBullets, noPeriodsLiCount,
   `detected bullet count must equal the HTML's own <li> count (${noPeriodsLiCount}), got ${noPeriodsChecks.totalBullets} - the wrap-merge bug collapses this to 1`
 );
-// None of these five bullets ever end with a digit under the HAS_NUMBER
-// regex - "three engineers", "nine", "eighteen months" are spelled out, not
-// digits, so only the p99/480ms/190ms bullet counts as measured. That is a
-// pre-existing, unrelated property of digit-only number detection, not
-// part of the wrap-merge fix; asserted here so a future change to that
-// regex (e.g. to also recognise spelled-out numbers) shows up as an
-// intentional change to this number, not a silent regression.
-assert.equal(noPeriodsChecks.weakBullets, 4, `expected 4 of 5 bullets to read as unmeasured, got ${noPeriodsChecks.weakBullets}`);
+// HAS_NUMBER recognises spelled-out quantities as well as digits (see its
+// definition above), so "Grew the platform team from three engineers to
+// nine over eighteen months" now reads as measured too ("three" and "nine"
+// both match; "eighteen" doesn't - only cardinals one through twelve are
+// recognised, deliberately). That leaves 3 of 5 unmeasured: the p99/480ms/
+// 190ms bullet and the three/nine one are both measured, the other three
+// bullets contain no number in any form.
+assert.equal(noPeriodsChecks.weakBullets, 3, `expected 3 of 5 bullets to read as unmeasured, got ${noPeriodsChecks.weakBullets}`);
 const noPeriodsFault = noPeriodsChecks.faults.find((f) => /measurable/i.test(f.issue));
 assert.ok(noPeriodsFault, "expected the measurable-outcomes fault");
-assert.ok(/4 of 5/.test(noPeriodsFault.issue), `expected 4 of 5, got: ${noPeriodsFault.issue}`);
+assert.ok(/3 of 5/.test(noPeriodsFault.issue), `expected 3 of 5, got: ${noPeriodsFault.issue}`);
 
 // REGRESSION: the right-edge lookup must be scoped to (page, col, x), not
 // just (page, col). A real resume's left column routinely holds a wide,
