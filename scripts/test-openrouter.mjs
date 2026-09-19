@@ -30,7 +30,7 @@ assert.equal(on.ok, true);
 assert.equal(on.text, "hello");
 assert.equal(seen.url, "https://openrouter.ai/api/v1/chat/completions");
 assert.equal(seen.init.headers.Authorization, "Bearer test-key");
-assert.equal(JSON.parse(seen.init.body).model, "deepseek/deepseek-chat");
+assert.equal(JSON.parse(seen.init.body).model, "deepseek/deepseek-v4-flash");
 
 // A non-2xx response is reported, not thrown. The stub deliberately has no
 // .json() method, so an implementation that reads the body before checking
@@ -51,5 +51,33 @@ const mod3 = await import(`../lib/ai/openrouter.mjs?v=${Date.now()}c`);
 const netErr = await mod3.chat({ system: "s", user: "u" });
 assert.equal(netErr.ok, false);
 assert.equal(netErr.reason, "network");
+
+// A schema request must send strict json_schema, temperature 0, a seed, low
+// reasoning effort and provider privacy. Every one is a Global Constraint.
+process.env.OPENROUTER_API_KEY = "test-key";
+let sent = null;
+globalThis.fetch = async (_url, init) => {
+  sent = JSON.parse(init.body);
+  return { ok: true, json: async () => ({ choices: [{ message: { content: "{}" } }] }) };
+};
+const m4 = await import(`../lib/ai/openrouter.mjs?v=${Date.now()}d`);
+await m4.chat({
+  system: "s", user: "u",
+  schema: { name: "probe", schema: { type: "object", properties: {}, additionalProperties: false } },
+});
+assert.equal(sent.response_format.type, "json_schema");
+assert.equal(sent.response_format.json_schema.strict, true);
+assert.equal(sent.response_format.json_schema.name, "probe");
+assert.equal(sent.temperature, 0);
+assert.equal(typeof sent.seed, "number");
+assert.equal(sent.reasoning.effort, "low");
+assert.equal(sent.provider.data_collection, "deny");
+
+// Without a schema there must be no response_format key at all: an empty
+// object is sent as {} and rejected by the API.
+sent = null;
+const m5 = await import(`../lib/ai/openrouter.mjs?v=${Date.now()}e`);
+await m5.chat({ system: "s", user: "u" });
+assert.equal("response_format" in sent, false);
 
 console.log("openrouter ok");
