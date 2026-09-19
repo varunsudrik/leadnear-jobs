@@ -1,8 +1,18 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { formatChecks, SEVERITIES } from "../lib/resume/format-checks.mjs";
 import { buildScan } from "../lib/resume/score.mjs";
+import { parseResume } from "../lib/resume/parse.mjs";
 
 const mk = (arr) => ({ lines: arr.map((t, i) => ({ n: i + 1, text: t })), pages: 1, text: arr.join("\n") });
+// Like `mk`, but for lines that also carry position data (x, h), so tests
+// can exercise indentation-based bullets and height-based headings without
+// going through a real PDF.
+const mkPos = (arr) => ({
+  lines: arr.map((l, i) => ({ n: i + 1, text: l.text, ...(l.x !== undefined ? { x: l.x } : {}), ...(l.h !== undefined ? { h: l.h } : {}) })),
+  pages: 1,
+  text: arr.map((l) => l.text).join("\n"),
+});
 
 // Skills as prose is a real ATS fault: parsers index list items, not sentences.
 const prose = formatChecks(mk(["SKILLS", "Languages and tools include Go, Python and PostgreSQL across several teams."]));
@@ -174,5 +184,99 @@ assert.equal(
   advertised, actualDelta,
   `advertised impact (+${advertised}) must equal the real overall-score delta from removing the fault (+${actualDelta})`
 );
+
+// TASK: positional bullets. Real resumes routinely hang-indent achievement
+// lines with no bullet glyph at all (see docs/superpowers/.../
+// parser-evidence.md - the actual redacted fixture has ZERO bullet
+// characters anywhere). The old glyph-only BULLET regex finds nothing on
+// such a resume, so the flagship "no measurable outcomes" fault can never
+// fire; this must fail against that old behaviour.
+const indentedInput = [
+  { text: "EXPERIENCE", x: 40 },
+  { text: "Senior Engineer, Acme Corp", x: 40 },
+  { text: "Owned the checkout service end to end", x: 60 },
+  { text: "Mentored two junior engineers on the team", x: 60 },
+  { text: "Led the migration to a new billing platform", x: 60 },
+  { text: "Cut page load time from 4s to 1s", x: 60 },
+];
+const indented = formatChecks(mkPos(indentedInput));
+const indentedFault = indented.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(indentedFault, "indented achievement lines with no glyph must still be detected as bullets");
+assert.ok(/3 of 4/.test(indentedFault.issue), `expected 3 of 4 vague, got: ${indentedFault.issue}`);
+// None of these lines carry a bullet glyph, so the rule this replaces
+// (glyph-only) would have found zero bullets and never raised this fault.
+const BULLET_GLYPH_ONLY = /^\s*[-*•]\s+/;
+assert.equal(indentedInput.filter((l) => BULLET_GLYPH_ONLY.test(l.text)).length, 0);
+
+// A line only slightly to the right of the margin (kerning/rounding, not a
+// real hanging indent) must not be mistaken for a bullet.
+const barelyOffset = formatChecks(mkPos([
+  { text: "EXPERIENCE", x: 40 },
+  { text: "Senior Engineer, Acme Corp", x: 41 },
+  { text: "Owned the checkout service end to end", x: 42 },
+]));
+assert.ok(!barelyOffset.faults.some((f) => /measurable/i.test(f.issue)), "a few points of jitter must not read as an indent");
+
+// Lines with no position data at all (hand-built fixtures, or a pre-rewrite
+// parse's flat text) must fall back to glyph detection exactly as before -
+// this is what keeps every fault above and below unaffected by the fields
+// simply not being present.
+assert.deepEqual(formatChecks(mk(["EXPERIENCE", "Owned the checkout service"])).faults, []);
+
+// TASK: font-height widens heading detection beyond the fixed list. An
+// unlisted heading in a clearly taller font stops the skills-section scan
+// window before it swallows the next paragraph...
+const tallHeading = formatChecks(mkPos([
+  { text: "SKILLS", h: 11 },
+  { text: "Go, Python", h: 11 },
+  { text: "RANDOM UNLISTED HEADING", h: 16 },
+  { text: "Extensive background architecting resilient distributed systems across cloud environments and teams with strong communication skills for enterprise customers.", h: 11 },
+]));
+assert.ok(!tallHeading.faults.some((f) => /paragraph/i.test(f.issue)), "a tall short unlisted heading must stop the skills window");
+
+// ...whereas the same unlisted heading at body height does not stop
+// anything (proving the height signal, not something else, did that above),
+// so the trailing prose is scanned and correctly flagged.
+const sameHeightNotHeading = formatChecks(mkPos([
+  { text: "SKILLS", h: 11 },
+  { text: "Go, Python", h: 11 },
+  { text: "RANDOM UNLISTED HEADING", h: 11 },
+  { text: "Extensive background architecting resilient distributed systems across cloud environments and teams with strong communication skills for enterprise customers.", h: 11 },
+]));
+assert.ok(sameHeightNotHeading.faults.some((f) => /paragraph/i.test(f.issue)), "an unlisted heading at body height must not stop the window");
+
+// REGRESSION GUARD: a short all-caps skill acronym at BODY height (not
+// taller) must not be mistaken for a heading even under the new signal -
+// this is the bug fixed earlier that must not come back.
+const awsAtBodyHeight = formatChecks(mkPos([
+  { text: "SKILLS", h: 11 },
+  { text: "Go", h: 11 },
+  { text: "Python", h: 11 },
+  { text: "AWS", h: 11 },
+  { text: "Experienced building scalable distributed backend systems for large teams across many products.", h: 11 },
+]));
+assert.ok(awsAtBodyHeight.faults.some((f) => /paragraph/i.test(f.issue)), "AWS at body height must not truncate the skills window");
+
+// Real headings a fixed list didn't know about (found in an actual resume)
+// now stop the skills window via the extended list alone, with no height
+// data at all.
+const unlistedRealHeading = formatChecks(mk(["TECHNICAL SKILLS", "BACKEND", "Node.js Express TypeScript JavaScript REST APIs WebSocket Microservices RabbitMQ", "FRONTEND", "React.js HTML CSS Bootstrap"]));
+assert.ok(!unlistedRealHeading.faults.some((f) => /paragraph/i.test(f.issue)), "BACKEND must stop the skills window even though the original fixed list didn't know it");
+
+// TASK: end-to-end through the real parser. A two-column PDF rendered with
+// headless Chrome (table layout - the layout that actually produces the
+// real defect - see scripts/fixtures/make-fixtures.mjs) has achievement
+// lines that are indented but carry no bullet glyph. The fault must fire
+// off the ACTUAL parseResume() output, not just a hand-built fixture.
+const twoColParsed = await parseResume(
+  readFileSync(new URL("./fixtures/resume-two-column.pdf", import.meta.url)),
+  "resume-two-column.pdf",
+);
+assert.equal(twoColParsed.ok, true);
+const twoColChecks = formatChecks(twoColParsed);
+const twoColFault = twoColChecks.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(twoColFault, "the real two-column fixture must trigger the measurable-outcomes fault");
+assert.equal(twoColFault.sev, "High");
+assert.ok(/3 of 5/.test(twoColFault.issue), `expected 3 of 5 vague bullets, got: ${twoColFault.issue}`);
 
 console.log("format-checks ok");

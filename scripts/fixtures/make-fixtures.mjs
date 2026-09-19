@@ -1,6 +1,9 @@
 // Hand-built minimal PDFs so the fixtures are reviewable text, not opaque
 // binaries checked into the repo.
-import { writeFileSync } from "node:fs";
+import { writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const LINES = [
   "ARJUN MEHTA",
@@ -60,3 +63,72 @@ writeFileSync(here("resume-image-only.pdf"), pdf([]), "latin1");
 // One more page than LIMITS.maxPages (10): exercises the too-many-pages guard.
 writeFileSync(here("resume-too-many-pages.pdf"), pdf([], { pages: 11 }), "latin1");
 console.log("fixtures written");
+
+// --- Two-column fixture, rendered with headless Chrome -------------------
+// The hand-built `pdf()` above emits one Tj per line in top-to-bottom order,
+// which can never reproduce the real defect: a genuine two-column PDF whose
+// content stream lists text in DOM/row order, not visual reading order. A
+// resume template that lays out side-by-side categories as a <table> (a
+// common pattern in real resume-builder output) does that naturally - each
+// row's left and right cells are adjacent in the content stream - and is
+// exactly what welded "...reusable serviceFRONTEND" together in production
+// (see docs/superpowers/.../parser-evidence.md). Chrome's print-to-PDF is
+// used to get real pdfjs position data instead of hand-rolling PDF operators
+// that wouldn't exercise the same code path.
+const TWO_COLUMN_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
+body{font:11pt/1.45 Arial,sans-serif;margin:48px;color:#111}
+h1{font-size:20pt;margin:0 0 4px}
+.contact{font-size:9.5pt;color:#444;margin-bottom:12px}
+h2{font-size:15pt;text-transform:uppercase;margin:14px 0 6px;font-weight:bold}
+.role{font-weight:bold;margin:6px 0 2px}
+p.item{margin:2px 0 2px 26px}
+table{width:100%;border-collapse:collapse;margin-top:2px}
+td{vertical-align:top;padding:0;width:50%}
+td.r{padding-left:24px}
+td p{margin:2px 0}
+</style></head><body>
+<h1>Morgan Ellis</h1>
+<div class="contact">morgan.ellis@example.com | +1 555 0142 | linkedin.com/in/morganellis</div>
+<h2>Experience</h2>
+<p class="role">Senior Backend Engineer, Fenwick Systems</p>
+<p class="role">Mar 2021 - Present</p>
+<p class="item">Design API contracts, database schemas, and reusable service components for the platform.</p>
+<p class="item">Lead code reviews and mentor engineers on architecture decisions and best practices.</p>
+<p class="item">Own the deployment pipeline and coordinate releases across four product teams.</p>
+<p class="item">Reduced average API latency from 420ms to 110ms across core services.</p>
+<p class="item">Cut infrastructure costs by 18% by consolidating redundant services.</p>
+<h2>Technical Skills</h2>
+<table>
+<tr><td><b>BACKEND</b></td><td class="r"><b>FRONTEND</b></td></tr>
+<tr><td><p>Node.js Express TypeScript</p></td><td class="r"><p>React HTML CSS</p></td></tr>
+<tr><td><b>DATABASES</b></td><td class="r"><b>DEVOPS AND CLOUD</b></td></tr>
+<tr><td><p>PostgreSQL MongoDB Redis</p></td><td class="r"><p>Docker AWS Jenkins</p></td></tr>
+</table>
+</body></html>`;
+
+const CHROME_PATH = process.env.CHROME_PATH || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+
+function renderPdfWithChrome(html, outPath) {
+  const dir = mkdtempSync(join(tmpdir(), "resume-fixture-"));
+  const htmlPath = join(dir, "source.html");
+  writeFileSync(htmlPath, html, "utf8");
+  try {
+    execFileSync(CHROME_PATH, [
+      "--headless",
+      "--disable-gpu",
+      "--no-sandbox",
+      "--no-pdf-header-footer",
+      `--print-to-pdf=${outPath}`,
+      `file://${htmlPath}`,
+    ], { stdio: "pipe" });
+    return true;
+  } catch (error) {
+    console.warn(`Skipping headless-Chrome fixture (${outPath}): ${error.message}`);
+    return false;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+renderPdfWithChrome(TWO_COLUMN_HTML, here("resume-two-column.pdf").pathname);
+console.log("two-column fixture written (or skipped if Chrome is unavailable)");
