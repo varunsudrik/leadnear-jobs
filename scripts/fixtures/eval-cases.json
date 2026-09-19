@@ -1,0 +1,20 @@
+[
+  {
+    "name": "backend-normalisation",
+    "text": "SKILLS\nGolang, K8s, Postgres, gRPC\nEXPERIENCE\n- Built services handling 2M records daily",
+    "expectSkills": ["Go", "Kubernetes", "PostgreSQL", "gRPC"],
+    "forbidSkills": ["Golang", "K8s", "Postgres"]
+  },
+  {
+    "name": "no-invention",
+    "text": "SKILLS\nExcel, PowerPoint\nEXPERIENCE\n- Managed the monthly reporting pack",
+    "expectSkills": ["Excel", "PowerPoint"],
+    "forbidSkills": ["Python", "SQL", "Tableau"]
+  },
+  {
+    "name": "impact-detection",
+    "text": "EXPERIENCE\n- Responsible for the billing service\n- Cut infra cost by 32% in one quarter",
+    "expectImpactContains": "billing",
+    "forbidImpactContains": "32%"
+  }
+]
