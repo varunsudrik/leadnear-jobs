@@ -31,7 +31,8 @@
     "ai:test": "node scripts/test-openrouter.mjs",
     "resume-parse:test": "node scripts/test-resume-parse.mjs",
     "format-checks:test": "node scripts/test-format-checks.mjs",
-    "resume-extract:test": "node scripts/test-resume-extract.mjs"
+    "resume-extract:test": "node scripts/test-resume-extract.mjs",
+    "resume-score:test": "node scripts/test-resume-score.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
