@@ -21,14 +21,34 @@ assert.ok(/2 of 2/.test(impact.issue), `expected a real count, got: ${impact.iss
 const measured = formatChecks(mk(["EXPERIENCE", "- Reduced p99 latency from 480ms to 190ms"]));
 assert.ok(!measured.faults.some((f) => /measurable/i.test(f.issue)));
 
+// Long contact line wraps and breaks ATS parsing.
+const longContact = formatChecks(mk(["John Doe | john.doe@company.com | (555) 123-4567 | San Francisco CA 94102"]));
+const contactFault = longContact.faults.find((f) => /contact/i.test(f.issue));
+assert.ok(contactFault, "expected contact line wrap fault for >70 chars");
+assert.ok(contactFault.sev === "Medium", `expected Medium severity, got ${contactFault.sev}`);
+
+// Short contact line on one line is fine.
+const shortContact = formatChecks(mk(["john@example.com | (555) 1234"]));
+assert.ok(!shortContact.faults.some((f) => /contact/i.test(f.issue)), "short contact line must not be flagged");
+
+// "Present" in two roles confuses date parsers.
+const twoPresent = formatChecks(mk(["Role 1, Jan 2020 - Present", "Role 2, Jan 2022 - Present"]));
+const presentFault = twoPresent.faults.find((f) => /Present/i.test(f.issue));
+assert.ok(presentFault, "expected fault for 'Present' in two roles");
+assert.ok(presentFault.sev === "Low", `expected Low severity, got ${presentFault.sev}`);
+
+// "Present" in only one role is fine.
+const onePresent = formatChecks(mk(["Role 1, Jan 2020 - Present"]));
+assert.ok(!onePresent.faults.some((f) => /Present/i.test(f.issue)), "'Present' in one role must not be flagged");
+
 // Every fault carries a severity the UI can colour and an actionable fix.
-for (const f of [...prose.faults, ...vague.faults]) {
+for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults]) {
   assert.ok(SEVERITIES.includes(f.sev), `unknown severity: ${f.sev}`);
   assert.ok(f.fix && f.fix.length > 5, "every fault needs an actionable fix");
 }
 
 // Scores are bounded integers.
-for (const r of [prose, list, vague, measured]) {
+for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent]) {
   for (const s of [r.parseScore, r.formatScore]) {
     assert.ok(Number.isInteger(s) && s >= 0 && s <= 100, `score out of range: ${s}`);
   }
