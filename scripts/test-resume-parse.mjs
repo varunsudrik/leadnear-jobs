@@ -12,14 +12,17 @@ assert.ok(ok.lines.length > 5, "expected several extracted lines");
 assert.equal(ok.lines[0].n, 1, "line numbers are 1-based");
 assert.ok(/ARJUN MEHTA/.test(ok.text), "expected the fixture's own content");
 
-// The positional contract: every line carries x (indentation), h (font
-// height) and page in addition to the original {n, text}, so Tasks 3/5/8's
-// {n, text} consumers keep working unchanged while format-checks can use the
-// new fields.
+// The positional contract: every line carries x (indentation), x2 (right
+// edge - did this line run out of room and wrap?), h (font height) and page
+// in addition to the original {n, text}, so Tasks 3/5/8's {n, text}
+// consumers keep working unchanged while format-checks can use the new
+// fields.
 for (const l of ok.lines) {
   assert.equal(typeof l.n, "number");
   assert.equal(typeof l.text, "string");
   assert.equal(typeof l.x, "number", `line ${l.n} missing x`);
+  assert.equal(typeof l.x2, "number", `line ${l.n} missing x2`);
+  assert.ok(l.x2 >= l.x, `line ${l.n} right edge must not be left of its own start`);
   assert.equal(typeof l.h, "number", `line ${l.n} missing h`);
   assert.equal(typeof l.page, "number", `line ${l.n} missing page`);
 }

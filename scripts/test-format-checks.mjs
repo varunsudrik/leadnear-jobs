@@ -389,4 +389,100 @@ assert.equal(
   "a detected second column must cost exactly the flat multi-column penalty, all else held equal"
 );
 
+// REGRESSION: the wrap-merge bug. Five independent achievement bullets,
+// none ending in terminal punctuation and all at uniform line-height, so
+// neither the punctuation signal nor the y-gap signal can tell one bullet
+// from the next - they used to all merge into a single "bullet", reporting
+// Impact 100 on a resume with three genuinely unmeasured achievements. Only
+// the right-edge signal (does a line actually reach its block's own
+// established edge?) can separate them, and only once real position data
+// is in play, so this runs through the actual parseResume() output like
+// the two-column fixture above, not a hand-built one.
+const noPeriodsParsed = await parseResume(
+  readFileSync(new URL("./fixtures/resume-no-periods.pdf", import.meta.url)),
+  "resume-no-periods.pdf",
+);
+assert.equal(noPeriodsParsed.ok, true);
+const noPeriodsChecks = formatChecks(noPeriodsParsed);
+const { NO_PERIODS_HTML } = await import("./fixtures/no-periods-template.mjs");
+const noPeriodsLiCount = (NO_PERIODS_HTML.match(/<li>/g) || []).length;
+assert.equal(noPeriodsLiCount, 5, "sanity: the fixture template itself has 5 <li> bullets");
+assert.equal(
+  noPeriodsChecks.totalBullets, noPeriodsLiCount,
+  `detected bullet count must equal the HTML's own <li> count (${noPeriodsLiCount}), got ${noPeriodsChecks.totalBullets} - the wrap-merge bug collapses this to 1`
+);
+// None of these five bullets ever end with a digit under the HAS_NUMBER
+// regex - "three engineers", "nine", "eighteen months" are spelled out, not
+// digits, so only the p99/480ms/190ms bullet counts as measured. That is a
+// pre-existing, unrelated property of digit-only number detection, not
+// part of the wrap-merge fix; asserted here so a future change to that
+// regex (e.g. to also recognise spelled-out numbers) shows up as an
+// intentional change to this number, not a silent regression.
+assert.equal(noPeriodsChecks.weakBullets, 4, `expected 4 of 5 bullets to read as unmeasured, got ${noPeriodsChecks.weakBullets}`);
+const noPeriodsFault = noPeriodsChecks.faults.find((f) => /measurable/i.test(f.issue));
+assert.ok(noPeriodsFault, "expected the measurable-outcomes fault");
+assert.ok(/4 of 5/.test(noPeriodsFault.issue), `expected 4 of 5, got: ${noPeriodsFault.issue}`);
+
+// REGRESSION: the right-edge lookup must be scoped to (page, col, x), not
+// just (page, col). A real resume's left column routinely holds a wide,
+// unindented header/contact line (x=25) sharing a page with a narrower
+// hang-indented achievement block (x=35, its own true wrap edge much
+// closer than the header's) - pooling both into one boundary let the wide
+// header stand in for the block's actual edge and blocked every genuine
+// wrap in it (measured on a real two-page resume: 41 real bullets read
+// back as 60). Two roles here each contribute one genuinely wrapped
+// two-line bullet at x=35 (so the block's own edge is corroborated twice,
+// ~295), alongside one wide unindented line at x=25 reaching almost twice
+// as far - that line must not affect where the x=35 block's edge is judged
+// to be.
+const headerPollution = formatChecks({
+  pages: 1,
+  text: "",
+  lines: [
+    { n: 1, text: "EXPERIENCE", x: 25, x2: 100, y: 700, col: 0, page: 1 },
+    { n: 2, text: "Role A", x: 25, x2: 90, y: 682, col: 0, page: 1 },
+    { n: 3, text: "Contact-style line reaching far wider than the achievement block ever does", x: 25, x2: 500, y: 664, col: 0, page: 1 },
+    { n: 4, text: "Building distributed systems across many teams and services in", x: 35, x2: 295, y: 646, col: 0, page: 1 },
+    { n: 5, text: "several regions worldwide.", x: 35, x2: 150, y: 628, col: 0, page: 1 },
+    { n: 6, text: "Role B", x: 25, x2: 85, y: 610, col: 0, page: 1 },
+    { n: 7, text: "Owned migration efforts across the whole platform without any", x: 35, x2: 290, y: 592, col: 0, page: 1 },
+    { n: 8, text: "issues at all during the transition period.", x: 35, x2: 220, y: 574, col: 0, page: 1 },
+  ],
+});
+assert.equal(
+  headerPollution.totalBullets, 2,
+  `an unrelated wide header line must not corrupt the achievement block's own wrap edge, got ${headerPollution.totalBullets} bullets (expected 2 merged ones)`
+);
+
+// REGRESSION: WRAP_MATCH_TOLERANCE must actually be wide enough for
+// realistic word-wrap slack (measured up to ~57pt on a real resume), not
+// just the near-zero gaps every other hand-built fixture above happens to
+// use. Roles A and B each wrap a bullet whose FIRST line reaches within a
+// couple of points of the same ~300pt edge - corroborating each other, so
+// the block's edge is credible - while role C's first line falls 55pt
+// short of that same edge before it, too, wraps. It's C's own line, not
+// A's or B's, that has to clear WRAP_MATCH_TOLERANCE, so this catches a
+// tolerance that regresses back toward the credibility tolerance (20) or
+// anything tighter, in a way the near-zero gaps above cannot.
+const wideSlack = formatChecks({
+  pages: 1,
+  text: "",
+  lines: [
+    { n: 1, text: "EXPERIENCE", x: 25, x2: 100, y: 700, col: 0, page: 1 },
+    { n: 2, text: "Role A", x: 25, x2: 90, y: 682, col: 0, page: 1 },
+    { n: 3, text: "Some sentence that runs most of the way across the page and", x: 35, x2: 300, y: 664, col: 0, page: 1 },
+    { n: 4, text: "stops.", x: 35, x2: 100, y: 646, col: 0, page: 1 },
+    { n: 5, text: "Role B", x: 25, x2: 85, y: 628, col: 0, page: 1 },
+    { n: 6, text: "Another sentence that also reaches nearly the same edge and", x: 35, x2: 298, y: 610, col: 0, page: 1 },
+    { n: 7, text: "ends here.", x: 35, x2: 100, y: 592, col: 0, page: 1 },
+    { n: 8, text: "Role C", x: 25, x2: 80, y: 574, col: 0, page: 1 },
+    { n: 9, text: "A shorter first line that still wraps despite falling well", x: 35, x2: 245, y: 556, col: 0, page: 1 },
+    { n: 10, text: "short of the edge established by the other two roles.", x: 35, x2: 200, y: 538, col: 0, page: 1 },
+  ],
+});
+assert.equal(
+  wideSlack.totalBullets, 3,
+  `a first line 55pt short of a credible, corroborated edge must still count as wrapped, got ${wideSlack.totalBullets} bullets (expected 3 merged ones)`
+);
+
 console.log("format-checks ok");

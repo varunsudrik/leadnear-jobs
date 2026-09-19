@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { TWO_COLUMN_HTML } from "./two-column-template.mjs";
+import { NO_PERIODS_HTML } from "./no-periods-template.mjs";
 
 const LINES = [
   "ARJUN MEHTA",
@@ -104,3 +105,14 @@ function renderPdfWithChrome(html, outPath) {
 
 renderPdfWithChrome(TWO_COLUMN_HTML, here("resume-two-column.pdf").pathname);
 console.log("two-column fixture written (or skipped if Chrome is unavailable)");
+
+// --- No-periods fixture, rendered with headless Chrome -------------------
+// A permanent regression test for the wrap-merge fix: five independent
+// achievement bullets, none ending in terminal punctuation, all at uniform
+// line-height - a resume that defeats both the punctuation and y-gap
+// continuation signals at once and relies entirely on the right-edge
+// signal (lib/resume/format-checks.mjs's makeRightEdgeLookup) to tell that
+// none of them actually wrap. The HTML lives in no-periods-template.mjs so
+// tests can import NO_PERIODS_HTML and count its <li> elements directly.
+renderPdfWithChrome(NO_PERIODS_HTML, here("resume-no-periods.pdf").pathname);
+console.log("no-periods fixture written (or skipped if Chrome is unavailable)");
