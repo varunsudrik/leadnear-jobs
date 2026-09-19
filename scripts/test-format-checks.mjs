@@ -60,6 +60,14 @@ const stillProse = formatChecks(mk(["SKILLS", "Languages and tools include Go, P
 assert.ok(stillProse.faults.some((f) => /paragraph/i.test(f.issue)), "prose paragraph must still be flagged");
 
 // CORRECTION 3: Skills scan extends to next heading or 8 lines.
+// Exact case: AWS acronym should not stop the window prematurely.
+const awsCase = formatChecks(mk(["SKILLS", "Go", "Python", "AWS", "Experienced building scalable distributed backend systems for large teams."]));
+assert.ok(awsCase.faults.some((f) => /paragraph/i.test(f.issue)), "AWS acronym must not truncate skills window, prose on 5th line should fire");
+
+// Skills section terminated by real heading must stop there.
+const skillsThenExperience = formatChecks(mk(["SKILLS", "Go, Python", "EXPERIENCE", "- did things"]));
+assert.ok(!skillsThenExperience.faults.some((f) => /paragraph/i.test(f.issue)), "EXPERIENCE heading stops window, no prose fault");
+
 // Prose on 5th line should be caught.
 const proseOnFifth = formatChecks(mk(["SKILLS", "Go, Python", "PostgreSQL, Redis", "gRPC, AWS", "Languages and tools include Go Python and PostgreSQL across several teams and organizations."]));
 assert.ok(proseOnFifth.faults.some((f) => /paragraph/i.test(f.issue)), "prose on line 5 of skills should be caught");
@@ -88,13 +96,13 @@ const contactOnFifthFault = contactOnFifth.faults.find((f) => /contact/i.test(f.
 assert.ok(contactOnFifthFault, "expected contact wrap fault for email on 5th line");
 
 // Every fault carries a severity the UI can colour and an actionable fix.
-for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults, ...lowerPresent.faults, ...pipeList.faults, ...proseOnFifth.faults, ...oneVague.faults, ...threeVague.faults, ...contactOnFifth.faults]) {
+for (const f of [...prose.faults, ...vague.faults, ...longContact.faults, ...twoPresent.faults, ...lowerPresent.faults, ...pipeList.faults, ...awsCase.faults, ...skillsThenExperience.faults, ...proseOnFifth.faults, ...oneVague.faults, ...threeVague.faults, ...contactOnFifth.faults]) {
   assert.ok(SEVERITIES.includes(f.sev), `unknown severity: ${f.sev}`);
   assert.ok(f.fix && f.fix.length > 5, "every fault needs an actionable fix");
 }
 
 // Scores are bounded integers.
-for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent, lowerPresent, verbPresent, pipeList, stillProse, proseOnFifth, oneVague, threeVague, empty, contactOnFifth]) {
+for (const r of [prose, list, vague, measured, longContact, shortContact, twoPresent, onePresent, lowerPresent, verbPresent, pipeList, stillProse, awsCase, skillsThenExperience, proseOnFifth, oneVague, threeVague, empty, contactOnFifth]) {
   for (const s of [r.parseScore, r.formatScore]) {
     assert.ok(Number.isInteger(s) && s >= 0 && s <= 100, `score out of range: ${s}`);
   }
