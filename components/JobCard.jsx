@@ -1,7 +1,12 @@
 "use client";
 import Link from "next/link";
 import { fmtSalary, fmtDate, initials } from "@/lib/format";
-import { FIT_LABEL, fitFor } from "@/lib/demo-fit";
+
+// The only consumer of this label set, now that the old fit-layer module is
+// gone — moved here rather than deleted outright because job.fit still uses these
+// three tiers, and will keep using them once a real scoring subsystem sets
+// job.fit (plan 2).
+const FIT_LABEL = { strong: "Strong fit", good: "Good fit", low: "Low fit" };
 
 export default function JobCard({ job, selected = false, onSelect = null }) {
   const href = `/${job.job_slug}`;
@@ -11,12 +16,11 @@ export default function JobCard({ job, selected = false, onSelect = null }) {
     ? locations.map((item) => item.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())).join(", ")
     : job.remote ? "Remote" : "Location flexible";
 
-  // job.fit is what a real scoring subsystem will set. Until one exists it is
-  // always undefined, and the demo layer supplies a deterministic stand-in
-  // (lib/demo-fit.js). With NEXT_PUBLIC_DEMO_FIT=false, fitFor returns null
-  // and no badge renders at all — never a fabricated "Low fit", which would
-  // read as a judgement of the job.
-  const fit = job.fit ?? fitFor(job.job_slug);
+  // job.fit is set by the scoring subsystem for signed-in users who have
+  // scanned. Nothing else sets it, and nothing fabricates one: a job with no
+  // computed fit renders no badge at all, never a guessed "Low fit", which
+  // would read as a judgement of the job.
+  const fit = job.fit ?? null;
 
   // Standalone (no onSelect passed): a normal navigable link, same as before.
   // Split-pane (Task 5 passes onSelect): intercept the click and hand

@@ -3,7 +3,6 @@ import { searchJobs } from "@/lib/jobs";
 import Filters from "@/components/Filters";
 import HomeHero from "@/components/HomeHero";
 import JobsSplitView from "./JobsSplitView";
-import { DEMO_FIT, fitRank } from "@/lib/demo-fit";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -26,14 +25,12 @@ export default async function JobsPage({ searchParams }) {
     page: sp.page || 1,
   }).catch(() => ({ jobs: [], total: 0, page: 1, pageSize: 20 }));
 
-  // "Sort: best fit" has no backing query — lib/jobs.js deliberately falls
-  // back to newest for an unrecognised sort value rather than erroring — so
-  // the demo ordering is applied to the fetched page here. This reorders the
-  // current 20 rows only; it is a presentation of the demo tiers, not a
-  // ranking across the corpus, and it disappears with the demo layer.
-  const jobs = sp.sort === "fit" && DEMO_FIT
-    ? [...results.jobs].sort((a, b) => fitRank(a.job_slug) - fitRank(b.job_slug))
-    : results.jobs;
+  // "Sort: best fit" is disabled in components/Filters.jsx until real fit
+  // ranking exists (plan 2), so there is no "fit" ordering to apply here
+  // either — an injected ?sort=fit isn't special-cased; lib/jobs.js's
+  // searchJobs() already falls back to newest for any sort value it doesn't
+  // recognise.
+  const jobs = results.jobs;
 
   return (
     <div className="console-shell">

@@ -345,7 +345,8 @@ img { max-width: 100%; }
 .home-hero .hh-cta button, .home-hero .hh-cta a {
   /* Block-level and self-centring, both load-bearing. A <button> is neither by
      accident (the UA stylesheet blockifies it and centres its text) but an <a>
-     is not, and DEMO_FIT swaps one for the other. At desktop .hh-cta is a flex
+     is not, and this component's old on/off switch used to swap one for the
+     other depending on whether resume scanning was live. At desktop .hh-cta is a flex
      container, so the anchor was blockified as a flex item and nobody noticed;
      at 640px .hh-cta becomes display:block and the anchor fell back to
      display:inline, where the phone rule's width:100% and min-height:46px do
@@ -575,21 +576,6 @@ img { max-width: 100%; }
 }
 .job-preview .jp-footer a { font-weight: 600; color: var(--accent); }
 .job-preview .jp-footer a:hover { color: var(--accent-hover); }
-
-/* ─── Demo disclosure (components/DemoDisclosure.jsx) ───────── */
-/* One muted line above the header on /resume and /matches. Deliberately not
-   part of .rs-head or .mb-page-head: the measurement gate probes those and
-   their descendants, so the strip carries its own bottom margin and touches
-   neither. It is a tinted bar rather than a banner because it is a standing
-   fact about the screen, not an alert to dismiss. */
-.demo-disclosure {
-  margin: 0 0 14px; padding: 9px 13px; border-radius: 12px;
-  /* .mb-note's language — white with a hairline ring — because that is
-     already this feature's "quiet explanatory strip". --bg2 was the first
-     choice and was invisible: it is #f4f4f6, the page background. */
-  background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.05);
-  color: var(--text3); font-size: 12.5px; line-height: 1.45; max-width: 720px;
-}
 
 /* ─── Resume scan (Direction C — spec lines 195–252) ─────────────── */
 /* flex-start, not center: `Upload revised` is an InertButton, so pressing it

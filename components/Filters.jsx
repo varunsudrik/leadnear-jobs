@@ -2,7 +2,6 @@
 import { useCallback, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import LiveJobCount from "@/app/LiveJobCount";
-import { DEMO_FIT } from "@/lib/demo-fit";
 
 const EMP_TYPES  = ["Full-time","Part-time","Contract","Internship","Freelance"];
 const SALARY_OPTS = [
@@ -69,10 +68,12 @@ export default function Filters({ initialCount = 0, pollOnly = false, allowFitSo
 
   const remote = get("remote"), type = get("type"), salary_min = get("salary_min");
   const category = get("category"), days = get("days");
-  // "fit" is a legal sort value only where something applies the ordering
-  // (app/page.jsx) and only while the demo layer is on. Everywhere else the
-  // option stays disabled and an injected ?sort=fit clamps back to newest.
-  const fitSortEnabled = allowFitSort && DEMO_FIT;
+  // Real fit ranking needs corpus comparison against a parsed resume — that
+  // is plan 2's job, not this one's. Until it lands this stays permanently
+  // disabled: sorting by a fit nothing computes would present an arbitrary
+  // order as a ranking. An injected ?sort=fit still clamps back to newest
+  // below.
+  const fitSortEnabled = false;
   const rawSort = get("sort");
   const sort = (fitSortEnabled ? [...SORTS, "fit"] : SORTS).includes(rawSort) ? rawSort : "newest";
   const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location") || rawSort;

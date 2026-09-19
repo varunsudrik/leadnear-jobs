@@ -15,52 +15,50 @@
 //
 // The session comes from useSession() rather than a hand-rolled fetch of
 // /api/auth/session, because this app owns its NextAuth routes.
+//
+// The pips themselves used to come from the old fit-layer module's static
+// scan-count and quota fixtures. That layer is retired: this component
+// is a client component (it needs useSession()), so it cannot call
+// scanQuota() directly the way app/resume/page.jsx does — instead it fetches
+// Task 7's GET /api/resume/quota once the session resolves to authenticated.
 
+import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { initials } from "@/lib/format";
-import { DEMO_FIT, DEMO_QUOTA, DEMO_SCANS_USED } from "@/lib/demo-fit";
 import ScanPips from "@/components/ScanPips";
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 export default function AuthNav({ mobile = false }) {
   const { data: session, status } = useSession();
+  // undefined = not yet asked or in flight, an object = the quota response,
+  // null = signed out (nothing to ask) or the request failed. Distinguishing
+  // "in flight" from "failed" matters below: a failed request must not hide
+  // the avatar (and with it, the only way to sign out) forever.
+  const [quota, setQuota] = useState(undefined);
 
-  // The design shows the pips for every visitor (spec line 57) while the demo
-  // layer is on, with the mock's own default of 2 used. With
-  // NEXT_PUBLIC_DEMO_FIT=false the page degrades to today's honest behaviour:
-  // pips return to signed-in-only, and the count returns to the real (zero)
-  // scans used rather than the mock's 2 — "3/3 free scans" is true, "1/3"
-  // would not be. `status` (not `session?.user`) decides "signed in" here so
-  // that loading, which cannot yet say either way, does not show pips when
-  // the demo layer is off — the placeholder below already covers that
-  // layout shift. Desktop only — the mock's phone header has no pips
-  // (spec line 417).
-  const showPips = !mobile && (DEMO_FIT || status === "authenticated");
-  const scansUsed = DEMO_FIT ? DEMO_SCANS_USED : 0;
-  // With the layer off there is no resume-scan screen to send anyone to —
-  // /resume renders DemoOffPanel — so a signed-in user's pips (still shown;
-  // see showPips above) render bare rather than as a link to that panel.
-  const pips = showPips ? (
-    DEMO_FIT ? (
-      <Link href="/resume" className="scan-pips-link" aria-label={`${DEMO_QUOTA - scansUsed} of ${DEMO_QUOTA} free scans — open resume scan`}>
-        <ScanPips used={scansUsed} quota={DEMO_QUOTA} />
-      </Link>
-    ) : (
-      <ScanPips used={scansUsed} quota={DEMO_QUOTA} />
-    )
-  ) : null;
+  useEffect(() => {
+    if (status !== "authenticated") { setQuota(undefined); return; }
+    let live = true;
+    setQuota(undefined);
+    fetch(`${BASE_PATH}/api/resume/quota`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => live && setQuota(d))
+      .catch(() => live && setQuota(null));
+    return () => { live = false; };
+  }, [status]);
 
   // Placeholder keeps the navbar from shifting while the session resolves;
-  // its dimensions are set in globals.css. While the demo layer is on, the
-  // pips don't depend on the session and render straight away; with it off
-  // they wait for `status` to resolve, so nothing renders here (see `pips`
-  // above).
+  // its dimensions are set in globals.css.
   if (status === "loading") {
-    return <>{pips}<div className="auth-nav-placeholder" aria-hidden="true" /></>;
+    return <div className="auth-nav-placeholder" aria-hidden="true" />;
   }
 
   if (session?.user) {
     if (mobile) {
+      // Mobile never shows pips (spec line 417), so it doesn't wait on the
+      // quota fetch below — only desktop needs that.
       return (
         <button
           type="button"
@@ -73,11 +71,29 @@ export default function AuthNav({ mobile = false }) {
       );
     }
 
+    // While the quota request is in flight, keep extending the same
+    // placeholder that covers session resolution — the avatar appearing
+    // first and the pips popping in a beat later would be its own layout
+    // shift. A failed request (network error, a 503 from a storage outage)
+    // resolves to `null` rather than hanging here forever: the avatar, and
+    // the ability to sign out, still has to render even without pips.
+    if (quota === undefined) {
+      return <div className="auth-nav-placeholder" aria-hidden="true" />;
+    }
+
     // The avatar has no menu, so it doubles as the sign-out control itself
     // rather than opening an account surface that does not exist yet.
     return (
       <>
-        {pips}
+        {quota ? (
+          <Link
+            href="/resume"
+            className="scan-pips-link"
+            aria-label={`${quota.remaining} of ${quota.quota} free scans — open resume scan`}
+          >
+            <ScanPips used={quota.used} quota={quota.quota} />
+          </Link>
+        ) : null}
         <button
           type="button"
           className="avatar"
@@ -92,11 +108,8 @@ export default function AuthNav({ mobile = false }) {
   }
 
   return (
-    <>
-      {pips}
-      <Link href="/signin" className={mobile ? "mobile-auth-link" : "nav-login"}>
-        Log in
-      </Link>
-    </>
+    <Link href="/signin" className={mobile ? "mobile-auth-link" : "nav-login"}>
+      Log in
+    </Link>
   );
 }

@@ -4,7 +4,6 @@ import "./globals.css";
 import "./tailwind.css";
 import Link from "next/link";
 import { sans, mono } from "@/app/fonts";
-import { DEMO_FIT } from "@/lib/demo-fit";
 import SiteNavbar from "@/components/SiteNavbar";
 import SessionProvider from "@/components/SessionProvider";
 
@@ -30,7 +29,7 @@ export default function RootLayout({ children }) {
         <Link href="/">Search jobs</Link>
         <Link href="/remote">Remote</Link>
         <Link href="/salaries">Salaries</Link>
-        {DEMO_FIT ? <Link href="/resume">Resume scan</Link> : null}
+        <Link href="/resume">Resume scan</Link>
         <a href={blogUrl} rel="noopener">Blog</a>
         <Link href="/contact-us?subject=Post%20a%20Job">Post a job</Link>
         <Link href="/about">About</Link>

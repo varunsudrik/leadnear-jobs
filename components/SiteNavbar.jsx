@@ -3,20 +3,18 @@
 
 import { useState } from "react";
 import AuthNav from "@/components/AuthNav";
-import { DEMO_FIT } from "@/lib/demo-fit";
 
-const baseLinks = [
+// Matches used to be demo-only content, hidden from the nav whenever the old
+// fit-layer's switch was off. That switch is retired now: /jobs/matches is a
+// real route, currently a fixed "no matches yet" empty state until
+// plan 2's fit ranking lands, so it stays in the nav unconditionally.
+const links = [
   ["Jobs", "/jobs"],
   ["Remote Jobs", "/jobs/remote"],
+  ["Matches", "/jobs/matches"],
   ["Categories", "/jobs/categories"],
   ["Salary Explorer", "/jobs/salaries"],
 ];
-
-// Matches only exists as demo content; with the layer off it would lead to the
-// "not enabled" panel, so the nav simply does not offer it.
-const links = DEMO_FIT
-  ? [baseLinks[0], baseLinks[1], ["Matches", "/jobs/matches"], baseLinks[2], baseLinks[3]]
-  : baseLinks;
 
 const discoverLinks = [
   ["Company", "/company"],
@@ -134,7 +132,7 @@ export default function SiteNavbar() {
         <nav id="mobile-navigation" className="mobile-navigation" aria-label="Mobile navigation">
           <div>
             {links.map(([label, href]) => <a key={label} href={href} onClick={closeNavigation}>{label}</a>)}
-            {DEMO_FIT ? <a href="/jobs/resume" onClick={closeNavigation}>Resume scan</a> : null}
+            <a href="/jobs/resume" onClick={closeNavigation}>Resume scan</a>
             <section>
               <p>Discover</p>
               {discoverLinks.map(([label, href]) => <a key={label} href={href} onClick={closeNavigation}>{label}</a>)}

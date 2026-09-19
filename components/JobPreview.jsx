@@ -5,10 +5,8 @@ import { formatAtsLabel } from "@/lib/ats";
 import { fmtSalary, fmtDate } from "@/lib/format";
 import { decodeEntities, sanitiseHtml } from "@/lib/sanitize";
 import { getPreviewBreakpointQuery } from "@/lib/previewBreakpoint";
-import { bannerFor, fitFor } from "@/lib/demo-fit";
 
 const SAVE_NOT_LIVE = "Saved jobs aren't live yet";
-const QUEUE_NOT_LIVE = "Auto-apply isn't live yet";
 
 // Split-pane preview (Task 5, spec lines 105-133). Only the "ready" state is
 // in the design — loading/empty/error are ours (edge cases 17-19).
@@ -17,23 +15,23 @@ const QUEUE_NOT_LIVE = "Auto-apply isn't live yet";
 //  - jobs.description is one unstructured TEXT blob with no reliable
 //    delimiter, so it renders whole under one heading rather than split into
 //    "What you will do" / "What we look for".
-//  - The violet ATS-fit banner (Task 6) sources its score and copy from
-//    lib/demo-fit.js's static fixtures, the same demo layer JobCard's badge
-//    uses — there is still no real resume-scoring subsystem behind it.
-//  - The header's "Save" and the banner's "+ Auto-apply queue" buttons (Task
-//    6) render but are inert: both need subsystems that do not exist (no
-//    SavedJob model/API, no auto-apply queue anywhere in this repo). They
-//    used to carry aria-disabled and a `title` and no handler — an
-//    explanation a touch device can never see, since `title` has no tooltip
-//    there. They now say the same thing in an aria-live region beside them
-//    when activated, so aria-disabled is gone (a control that answers you is
-//    not disabled) and cursor: pointer is honest. `title` stays for pointer
-//    users; `disabled` is still not used, because it would suppress the
-//    tooltip and drop them out of the tab order.
+//  - The header's "Save" button (Task 6) renders but is inert: it needs a
+//    subsystem that does not exist (no SavedJob model/API). It used to carry
+//    aria-disabled and a `title` and no handler — an explanation a touch
+//    device can never see, since `title` has no tooltip there. It now says
+//    the same thing in an aria-live region beside it when activated, so
+//    aria-disabled is gone (a control that answers you is not disabled) and
+//    cursor: pointer is honest. `title` stays for pointer users; `disabled`
+//    is still not used, because it would suppress the tooltip and drop it
+//    out of the tab order.
+//
+// The violet ATS-fit banner and its "+ Auto-apply queue" button (Task 6) are
+// retired now: both sourced their score and copy from the old fit-layer
+// module's static fixtures, and there is still no real resume-scoring
+// subsystem to replace them with — that is plan 2's job.
 export default function JobPreview({ slug }) {
   const [state, setState] = useState({ status: "empty" });
   const [saveNote, setSaveNote] = useState("");
-  const [queueNote, setQueueNote] = useState("");
   const paneRef = useRef(null);
 
   useEffect(() => {
@@ -56,7 +54,6 @@ export default function JobPreview({ slug }) {
       return;
     }
     setSaveNote("");
-    setQueueNote("");
     if (!slug) { setState({ status: "empty" }); return; }
     let live = true;
     setState({ status: "loading" });
@@ -89,11 +86,6 @@ export default function JobPreview({ slug }) {
   // for JobCard. No slug-to-title-case transform needed (or wanted).
   const locationLabel = locations.length ? locations.join(", ") : job.remote ? "Remote" : "Location flexible";
   const salary = fmtSalary(job) ?? "—";
-
-  // Same slug, same function as JobCard — so a card badged "Low fit" can
-  // never open a "Strong fit" banner. Returns null with the demo layer off,
-  // and the banner disappears entirely rather than showing a blank score.
-  const banner = bannerFor(fitFor(job.job_slug));
 
   const rawDesc = job.description || "";
   const decodedDesc = decodeEntities(rawDesc);
@@ -141,19 +133,6 @@ export default function JobPreview({ slug }) {
           </div>
         </div>
       </div>
-
-      {banner ? (
-        <div className="jp-fit">
-          <span className="jp-fit-pill">{banner.label}</span>
-          <p className="jp-fit-copy">
-            {banner.copy} ATS score for this posting <b className="mono">{banner.score}</b>.
-          </p>
-          <button type="button" className="jp-fit-action" title={QUEUE_NOT_LIVE} onClick={() => setQueueNote(QUEUE_NOT_LIVE)}>
-            + Auto-apply queue
-          </button>
-          <p className="jp-note jp-fit-note" role="status" aria-live="polite">{queueNote}</p>
-        </div>
-      ) : null}
 
       <section className="jp-section" aria-label="Job description">
         {cleanDesc.trim() ? (
