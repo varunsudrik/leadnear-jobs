@@ -31,7 +31,7 @@ assert.equal(on.ok, true);
 assert.equal(on.text, "hello");
 assert.equal(seen.url, "https://openrouter.ai/api/v1/chat/completions");
 assert.equal(seen.init.headers.Authorization, "Bearer test-key");
-assert.equal(JSON.parse(seen.init.body).model, "deepseek/deepseek-v4-flash");
+assert.equal(JSON.parse(seen.init.body).model, "openai/gpt-5-mini");
 
 // A non-2xx response is reported, not thrown. The stub deliberately has no
 // .json() method, so an implementation that reads the body before checking
@@ -101,6 +101,6 @@ const fallback = execFileSync(
   ["--input-type=module", "-e", "import('./lib/resume/model.mjs').then(m => console.log(m.MODEL))"],
   { env: fallbackEnv, encoding: "utf8" }
 ).trim();
-assert.equal(fallback, "deepseek/deepseek-v4-flash");
+assert.equal(fallback, "openai/gpt-5-mini");
 
 console.log("openrouter ok");

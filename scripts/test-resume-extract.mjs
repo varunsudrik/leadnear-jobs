@@ -127,10 +127,16 @@ globalThis.fetch = async (_u, init) => {
   return { ok: true, json: async () => ({ choices: [{ message: { content: VALID } }] }) };
 };
 const m5 = await import(`../lib/resume/extract.mjs?v=${Date.now()}e`);
-await m5.extractResume("x", { model: "openai/gpt-5-mini" });
-assert.equal(usedModel, "openai/gpt-5-mini");
-// ...and omitting it must fall through to the configured default, not undefined.
+// A deliberately fake id, so this stays distinguishable from whatever the
+// real default happens to be. Naming a real model here coupled the test to
+// the current default and broke the moment the default changed.
+await m5.extractResume("x", { model: "test/override-model" });
+assert.equal(usedModel, "test/override-model");
+// ...and omitting it must fall through to the configured default, not
+// undefined. Compared against MODEL rather than a literal, so a future
+// model change does not require editing this assertion.
+const { MODEL } = await import("../lib/resume/model.mjs");
 await m5.extractResume("x");
-assert.ok(usedModel && usedModel !== "openai/gpt-5-mini", `expected the default model, got ${usedModel}`);
+assert.equal(usedModel, MODEL, `expected the configured default, got ${usedModel}`);
 
 console.log("resume-extract ok");
