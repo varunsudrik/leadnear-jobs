@@ -30,8 +30,8 @@ Each was taken deliberately; the rationale matters more than the choice.
 | D8 | Quota is `COUNT(*)` over scan rows, not a counter column | A counter is a second source of truth that drifts the first time a write half-fails. Derived means "2 of 3 used" and the scan history can never disagree. |
 | D9 | Synchronous scan, async-ready structure | One blocking request with `maxDuration`. The scan function is written to be callable from a queue later without restructuring. |
 | D10 | Comparison cohorts come from `canonical_title`, restricted to titles with >= 200 live jobs | Measured: 143 such titles exist in production. Below that the percentages are computed off too small a sample to act on. |
-| D11 | **UNRESOLVED — needs a ruling.** The parser view stores extracted resume text | `C Resume ATS` renders the extracted text with problem lines highlighted, and it must survive a page revisit. That means persisting resume text, which is exactly what D3 originally refused. The privacy claim changes: "we never store your resume" becomes "we store the text, not the file". Options in section 13. |
-| D12 | **UNRESOLVED — needs a ruling.** The fate of the site-wide demo fit layer | Making these two screens real leaves hash-based fake fit badges on every job card site-wide. Options in section 13. |
+| D11 | **RESOLVED.** Persist only the extracted lines the parser view displays (~20-40), never the full text and never the file | `C Resume ATS` must render on a revisit, so some text has to be stored. Capping it at what the screen shows bounds the exposure and keeps the copy true without qualification: "we store the text we show you, never the file". |
+| D12 | **RESOLVED.** Real fit on dynamic pages for users with a scan; no badge otherwise; **never on `/[slug]`** | Per-user fit must not be server-rendered into a shared cache — see section 13. `fitFor()` and the hash layer are deleted. |
 
 ## 3. Measured corpus facts
 
@@ -308,49 +308,70 @@ content pages, and DOCX support.
 | 1.44M soft-deleted rows inflate every full-table operation | All new queries filter `status='success'`; the new index is partial. |
 
 
-## 13. Unresolved decisions
+## 13. Resolved decisions (D11, D12)
 
-Both surfaced by the spec self-review. Neither blocks planning the rest, but
-both change what gets built.
+Both surfaced by the spec self-review and ruled on 2026-09-19.
 
-### D11 — the parser view needs resume text
+### D11 — parser view text: store only what is displayed
 
-`C Resume ATS` shows the extracted text with problem lines highlighted, and that
-screen must render on a revisit, not only in the response to the upload. So the
-text has to be persisted, which contradicts D3 as originally taken.
+`C Resume ATS` shows the extracted text with problem lines highlighted, and the
+screen must survive a revisit — so text must be persisted, contradicting D3 as
+originally taken. **Ruling: store only the lines the view renders** (contact
+block, section headings, flagged bullets — roughly 20-40 lines), in the scan's
+`result` JSON.
 
-| option | consequence |
-|---|---|
-| **A. Store the displayed lines only** (recommended) | The parser view is capped at what it renders (~20-40 lines: contact block, section headings, flagged bullets). Enough for the screen, materially less than the whole CV. Copy becomes "we store the text we show you, never the file". |
-| B. Store the full extracted text | The parser view can page through the whole document and a better scorer can be re-run later. The shared database now holds complete CVs. |
-| C. Do not persist it | The parser view appears once after scanning and is blank on revisit. Cheapest privacy story, but it breaks the screen as designed. |
+Rejected: storing the full extracted text (puts complete CVs in a database
+shared with the leads product, for a benefit — paging the whole document — the
+screen does not offer); storing nothing (breaks the screen as designed).
 
-Recommendation: **A**. It keeps the screen, bounds the exposure, and the copy
-stays truthful without qualification.
+Consequence for copy: the upload screen's "Good to know" block and the account
+delete action both say **"we store the text we show you, never the file"**. The
+design's "Delete the file any time from your account" was already being reworded
+to "delete your scan" (section 9); that wording remains correct.
 
-### D12 — the site-wide demo fit layer
+### D12 — site-wide fit: real where possible, absent where not
 
-`NEXT_PUBLIC_DEMO_FIT` is not confined to these two screens. It also drives:
+`NEXT_PUBLIC_DEMO_FIT` reaches beyond these two screens, driving the fit badge on
+every job card, the preview banner, the fit sort, the header pips and the hero
+copy variant.
 
-- `components/JobCard.jsx` — the fit badge on **every** job card, site-wide
-- `components/JobPreview.jsx` — the violet fit banner on the preview pane
-- `components/Filters.jsx` — the "sort by fit" control
-- `components/AuthNav.jsx` — the scan-quota pips in the header
-- `components/HomeHeroCta.jsx` — the hero copy variant
+**Ruling: populate `job.fit` with real scores for signed-in users who have a
+scan; render no badge for everyone else; delete `fitFor()` and the hash layer.**
 
-Ship this feature and `/matches` tells the truth while every job card elsewhere
-still shows a fit tier derived from an FNV-1a hash of the slug.
+`components/JobCard.jsx` already accepts `job.fit` and falls back to `fitFor()`
+only because no scorer existed — its own comment says so. The work is to
+populate the field and remove the fallback.
 
-| option | consequence |
-|---|---|
-| **A. Real fit where we can, nothing where we cannot** (recommended) | A signed-in user with a scan sees real fit badges site-wide (their skill vector is stored, so scoring a listed job is a cheap lookup). Everyone else sees no badge at all. Honest in both states. Cost: `JobCard` gains a data dependency it does not have today. |
-| B. Strip the demo layer entirely | Delete `fitFor`, the badges, the fit sort and the hero variant. Smallest surface, fully honest immediately. Cost: visibly removes polish from the home page the previous effort just built. |
-| C. Leave it | `/matches` is real, the rest of the site is fabricated. Cost: the same number means two different things on two screens — the exact inconsistency the disclosure was added to cover. |
+**Where fit may appear, decided by rendering mode:**
 
-Recommendation: **A**, with **B** as the fallback if the `JobCard` data
-dependency proves too invasive. **C** should not ship.
+| page | mode | fit badge |
+|---|---|---|
+| `/` | `force-dynamic` | yes — server-injected |
+| `/search` | `force-dynamic` | yes — server-injected |
+| `/matches` | `force-dynamic` | yes — it is the point of the screen |
+| `/[slug]` | **`revalidate = false`** | **no — never** |
 
-Also unstated until this is settled: whether `components/DemoDisclosure.jsx`
-is removed from these two screens (it should be, once nothing on them is demo
-content) and whether `lib/demo-fit.js` and `lib/demo-resume.js` are deleted or
-reduced.
+`/[slug]` is excluded on correctness, not performance. It is a permanently
+cached public page across 685,959 jobs; server-rendering a per-user judgement
+into it would place one user's profile-derived fit in a shared cache and serve
+it to every subsequent visitor. Client-side decoration after hydration was
+considered and deferred — it is a separate mechanism, and the detail page is not
+where this feature earns its value.
+
+Consequences to carry into the plan:
+- `lib/demo-fit.js` is deleted. `FIT_LABEL` and the tier vocabulary move to the
+  real scoring module; `fitFor()`, `bannerFor()`, `DEMO_SCANS_USED` and
+  `DEMO_QUOTA` go away.
+- `lib/demo-resume.js` is deleted once `/resume` renders real scans.
+- `components/DemoDisclosure.jsx` is removed from both screens — nothing on
+  them is demo content any more — and the component deleted if unused.
+- `components/DemoOffPanel.jsx`'s role changes: the honest-degradation case is
+  no longer "the demo switch is off" but "you have not scanned yet", which is
+  what `C Matches Empty` and `C Resume Upload` already draw. Reuse those.
+- `components/Filters.jsx` fit sort is enabled only when the viewer has a scan.
+- `components/AuthNav.jsx` pips read the real derived quota (D8).
+- `NEXT_PUBLIC_DEMO_FIT` is retired entirely.
+
+Fallback if populating `job.fit` on `/` and `/search` proves more invasive than
+expected: strip the fit layer outright (the option B considered above) rather
+than keep hash-derived badges. Fabricated fit must not survive this work.
