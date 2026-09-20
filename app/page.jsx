@@ -1,11 +1,8 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { searchJobs } from "@/lib/jobs";
-import JobCard from "@/components/JobCard";
 import Filters from "@/components/Filters";
-import Pagination from "@/components/Pagination";
-import SearchBox from "./SearchBox";
-import LiveJobCount from "./LiveJobCount";
+import HomeHero from "@/components/HomeHero";
+import JobsSplitView from "./JobsSplitView";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -16,6 +13,39 @@ export const metadata = {
 
 export default async function JobsPage({ searchParams }) {
   const sp = (await searchParams) || {};
-  const results = await searchJobs({ q: sp.q, location: sp.location, remote: sp.remote, type: sp.type, salary_min: sp.salary_min, category: sp.category, days: sp.days, page: sp.page || 1 }).catch(() => ({ jobs: [], total: 0, page: 1, pageSize: 20 }));
-  return <div><section className="directory-hero"><div className="container"><span className="eyebrow">LeadNear Jobs</span><h1>Find your next opportunity</h1><p>Search current openings by role, company, location, salary, and work style.</p><SearchBox initialQuery={sp.q || ""} initialLocation={sp.location || ""} /></div></section><div className="container directory-content"><Suspense><Filters /></Suspense><div className="results-header"><h1 className="results-count"><LiveJobCount initialCount={Number(results.total)} /> jobs available</h1><Link href="/remote" className="section-action-btn">Browse remote jobs</Link></div>{results.jobs.length ? <><div className="job-list">{results.jobs.map((job) => <JobCard key={job.db_id} job={job} />)}</div><Suspense><Pagination total={results.total} pageSize={20} /></Suspense></> : <div className="empty-box"><div className="em-icon">⌕</div><p>No jobs found. Try changing your search or filters.</p></div>}</div></div>;
+  const results = await searchJobs({
+    q: sp.q,
+    location: sp.location,
+    remote: sp.remote,
+    type: sp.type,
+    salary_min: sp.salary_min,
+    category: sp.category,
+    days: sp.days,
+    sort: sp.sort,
+    page: sp.page || 1,
+  }).catch(() => ({ jobs: [], total: 0, page: 1, pageSize: 20 }));
+
+  // "Sort: best fit" is disabled in components/Filters.jsx until real fit
+  // ranking exists (plan 2), so there is no "fit" ordering to apply here
+  // either — an injected ?sort=fit isn't special-cased; lib/jobs.js's
+  // searchJobs() already falls back to newest for any sort value it doesn't
+  // recognise.
+  const jobs = results.jobs;
+
+  return (
+    <div className="console-shell">
+      <HomeHero />
+      <Suspense>
+        <Filters initialCount={Number(results.total)} />
+      </Suspense>
+      {/* JobsSplitView validates `selectedSlug` against the incoming `jobs`
+          itself (falling back to the first row when the previous selection
+          isn't in the new result set) — see the effect there. No `key` here:
+          keying on the raw searchParams would remount on any unrelated
+          param and would also discard a still-valid selection whenever the
+          new jobs array happens to contain it (e.g. a sort-order change),
+          forcing a needless preview refetch and loading flash. */}
+      <JobsSplitView jobs={jobs} total={results.total} />
+    </div>
+  );
 }

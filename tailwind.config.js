@@ -21,6 +21,17 @@ module.exports = {
     },
     extend: {
       screens: { xlg: "1100px" },
+      colors: {
+        accent: { DEFAULT: "#5b4ef0", hover: "#4a3ee0", tint: "#ecebff" },
+        ink:    { DEFAULT: "#15171c", 2: "#3d3f4a", 3: "#6b6d78", 4: "#9a9aa4" },
+        canvas: "#f4f4f6",
+        hairline: "#eaeaef",
+      },
+      fontFamily: {
+        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
+      borderRadius: { pill: "999px" },
     },
   },
   plugins: [require("tailwindcss-animate")],

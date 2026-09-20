@@ -1,0 +1,42 @@
+import Link from "next/link";
+
+// Real ranking needs corpus comparison against a parsed resume — plan 2's
+// job. Task 9 retired the hash-based fit layer (the old fit-tier module, its
+// job-bucketing helper, and the resume-fixture module it shared) that used
+// to bucket a cohort of jobs here into Strong/Good/Low: a fabricated ranking attached to real,
+// named employers and their real postings is worse than none, because a
+// visitor cannot tell it's fake. Until plan 2 ships, this route is a fixed
+// "no matches yet" empty state pointing at the real (Task 2-8) resume scan.
+export const metadata = {
+  title: "Your matches | LeadNear Jobs",
+  description: "Open roles ranked against your resume.",
+  // Nothing here is per-user or rankable yet, so it stays out of the index —
+  // same reasoning as when this page showed demo content, different cause.
+  robots: "noindex",
+};
+
+export default function MatchesPage() {
+  return (
+    <div className="console-shell">
+      <h1 className="rs-title" style={{ marginBottom: 16 }}>Matches</h1>
+      <div className="empty-box">
+        <div className="em-icon">🎯</div>
+        <p>No matches yet</p>
+        <p style={{ color: "var(--text3)", marginTop: ".5rem", fontSize: ".9rem" }}>
+          Matches come from your resume. Scan one and we&apos;ll rank open roles
+          here once ranking is live.
+        </p>
+        {/* .ru-browse and .ru-hint are ResumeUpload.jsx's own classes, reused
+            verbatim here rather than adding new CSS for a second dark pill
+            button and mono caption that look identical. No Strong/Good/Low
+            preview grid and no roles-count claim (the mock's "128,431 live
+            roles" figure) — both would preview a ranking that does not exist
+            yet, the exact kind of forward-looking claim this task removes. */}
+        <Link href="/resume" className="ru-browse" style={{ marginTop: "1rem", display: "inline-block" }}>
+          Upload your resume
+        </Link>
+        <div className="ru-hint mono">PDF · max 2 MB · 3 free scans</div>
+      </div>
+    </div>
+  );
+}

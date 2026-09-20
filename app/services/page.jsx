@@ -442,7 +442,7 @@ export default function ServicesPage() {
         }
         .service-hero {
           padding: 150px 0 86px;
-          background: radial-gradient(circle at 78% 14%, rgba(37, 99, 235, 0.2), transparent 34%),
+          background: radial-gradient(circle at 78% 14%, rgba(91, 78, 240, 0.2), transparent 34%),
             linear-gradient(180deg, #0b1020 0%, #09090b 100%);
           border-bottom: 1px solid #27272a;
         }
@@ -451,8 +451,8 @@ export default function ServicesPage() {
         .proof-copy span,
         .node-top span,
         .pipeline-node span {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-          color: #60a5fa;
+          font-family: var(--font-mono), ui-monospace, monospace;
+          color: #a78bfa;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           font-size: 0.75rem;
@@ -505,8 +505,8 @@ export default function ServicesPage() {
           transition: 160ms ease;
         }
         .service-btn.primary {
-          background: #2563eb;
-          border: 1px solid #3b82f6;
+          background: var(--accent);
+          border: 1px solid var(--accent-hover);
           color: white;
         }
         .service-btn.secondary {
@@ -535,7 +535,7 @@ export default function ServicesPage() {
         }
         .metrics-panel strong {
           display: block;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-family: var(--font-mono), ui-monospace, monospace;
           color: #f4f4f5;
           font-size: 2.35rem;
           font-weight: 800;
@@ -545,7 +545,7 @@ export default function ServicesPage() {
           display: block;
           margin-top: 10px;
           color: #a1a1aa;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-family: var(--font-mono), ui-monospace, monospace;
           font-size: 0.78rem;
           font-weight: 800;
           letter-spacing: 0.09em;
@@ -659,9 +659,9 @@ export default function ServicesPage() {
           height: 44px;
           display: grid;
           place-items: center;
-          color: #60a5fa;
-          background: rgba(37, 99, 235, 0.12);
-          border: 1px solid rgba(96, 165, 250, 0.22);
+          color: #a78bfa;
+          background: rgba(91, 78, 240, 0.12);
+          border: 1px solid rgba(91, 78, 240, 0.22);
           border-radius: 8px;
         }
         .case-card ul,
@@ -735,14 +735,14 @@ export default function ServicesPage() {
         }
         .node-proof svg,
         .capability-card svg {
-          color: #60a5fa;
+          color: #a78bfa;
           flex: 0 0 auto;
         }
         .node-card a {
           display: inline-flex;
           align-items: center;
           gap: 7px;
-          color: #60a5fa;
+          color: #a78bfa;
           text-decoration: none;
           margin-top: 22px;
           font-weight: 700;
@@ -785,7 +785,7 @@ export default function ServicesPage() {
           padding: 58px 34px;
         }
         .contact-panel svg {
-          color: #60a5fa;
+          color: #a78bfa;
         }
         .contact-panel p {
           max-width: 650px;

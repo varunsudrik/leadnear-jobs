@@ -1,0 +1,143 @@
+Jordan Blake
+Senior Software Engineer
+Senior Software Engineer with 5+ years of experience building scalable web applications and backend services using Node.js, TypeScript,
+React, microservices, and DevOps tools. Experienced in API and database design, event-driven systems, code reviews, CI/CD, production
+monitoring, and end-to-end delivery.
+Email: jordan.blake@example.com Phone: 5550000000 LinkedIn: linkedin.com/in/jordan-blake GitHub: github.com/jordanblake
+EXPERIENCE
+Senior Software Engineer
+Aziro Technologies
+09/2025 - Present
+Develop and maintain scalable microservices and REST APIs using NestJS
+and TypeScript for high-volume campaign and promotion platforms.
+Design API contracts, database schemas, and reusable service
+components with a focus on clean architecture, performance, and
+maintainability.
+Implement event-driven workflows with RabbitMQ for reliable
+asynchronous processing and service-to-service communication.
+Lead code reviews and contribute to architecture decisions, coding
+standards, security practices, and technical documentation.
+Use Claude and Codex to accelerate development, code reviews, test
+creation, debugging, and technical documentation.
+Support Docker-based environments and Argo CD deployments;
+monitor services with Datadog and troubleshoot production issues.
+Collaborate with product, QA, DevOps, and cross-functional teams to
+estimate, develop, test, and release features.
+Software Engineer
+HDFC Ergo
+02/2024 - 08/2025
+Employed through Bigiota Analytics LLP
+Worked as a Software Engineer through Bigiota Analytics LLP on
+enterprise insurance applications.
+Built and enhanced React and Node.js features, REST APIs, and backend
+workflows for policy and customer operations.
+Implemented RabbitMQ-based processing for scalable, responsive
+systems handling high-volume transactions.
+Performed code reviews and provided feedback on API design, database
+schemas, performance, and maintainability.
+Troubleshot defects, improved service reliability, and supported
+deployment and production monitoring activities.
+Jr. Full Stack Developer
+Valuenable
+06/2023 - 02/2024
+Developed reusable React components and Node.js/Express APIs for
+scalable full-stack applications.
+Designed client-side and server-side architecture and integrated APIs for
+seamless data exchange between application components.
+Managed MySQL and MongoDB data models, queries, and application
+performance to maintain smooth functionality.
+Collaborated with stakeholders to deliver features, resolve defects, and
+support production applications.
+TECHNICAL SKILLS
+BACKEND
+Node.js Express TypeScript JavaScript
+REST APIs WebSocket Microservices RabbitMQ
+FRONTEND
+React.js HTML CSS Bootstrap
+DATABASES
+MySQL PostgreSQL MongoDB Redis
+DEVOPS AND CLOUD
+Docker Argo CD AWS Cloudflare Datadog
+Linux Git cPanel / WHM Jenkins
+ENGINEERING PRACTICES
+API Design System Design Clean Architecture
+Code Review CI/CD Serverless
+AI DEVELOPMENT TOOLS
+Claude ChatGPT Codex
+CORE STRENGTHS
+End-to-end ownership from requirement analysis and
+architecture through development, testing, deployment,
+and support.
+Strong backend engineering with practical frontend
+experience for complete feature delivery.
+Production-focused development with emphasis on
+scalability, observability, reliability, and secure coding.
+Clear collaboration with product, QA, DevOps, and
+engineering stakeholders.
+Experience reviewing code and improving maintainability
+through reusable patterns and documentation.
+Jordan Blake Page 1 of 2
+Jordan Blake
+Senior Software Engineer
+Email: jordan.blake@example.com Phone: 5550000000 LinkedIn: linkedin.com/in/jordan-blake GitHub: github.com/jordanblake
+EXPERIENCE CONTINUED
+Graduate Engineer
+HCL Technologies
+09/2022 - 04/2023
+Designed, developed, and maintained user-friendly banking web
+applications.
+Debugged and resolved frontend and backend issues to improve
+stability and user experience.
+Optimized web applications for speed, scalability, responsiveness, and
+cross-browser compatibility.
+Worked with engineering and QA teams to implement enhancements
+and support release activities.
+Web Developer
+Cellbuddy
+03/2021 - 08/2022
+Developed and maintained responsive e-commerce websites and
+landing pages.
+Implemented product, form, e-commerce, and custom post type
+features based on business requirements.
+Improved usability, performance, and content management for
+day-to-day website operations.
+EDUCATION
+Bachelor of Engineering (EXTC)
+Atharva College of Engineering, Malad
+2017 - 2021
+Class XII
+Kendriya Vidyalaya No. 2, Colaba
+2016
+PROJECTS
+Ethereum-Based Order Tracking Solution
+Developed Solidity smart contracts to manage order
+creation, updates, and deletion with blockchain-backed data
+integrity.
+Built Node.js and Express services to connect the frontend
+with the Ethereum blockchain and manage transaction
+workflows.
+Integrated MetaMask for secure authorization and
+execution of blockchain transactions.
+View project on GitHub
+Full-Stack Music Streaming Platform
+Built a Spotify-style platform using React and
+Node.js/Express with a microservices architecture.
+Developed authentication, audio playback, and file upload
+capabilities across isolated services.
+Containerized services with Docker for consistent local
+development and scalable deployment.
+View project on GitHub
+Jenkins Docker Node Deployment
+Built a CI/CD pipeline using Jenkins and Docker for a Node.js
+application.
+Automated build, test, and deployment stages using a
+Jenkinsfile.
+Integrated GitHub with Jenkins for continuous integration
+and consistent deployments.
+View project on GitHub
+CERTIFICATES
+Full Stack Developer - Coding Ninjas
+Jenkins - KodeKloud
+SQL - HackerRank
+cPanel Professional Certification
+Jordan Blake Page 2 of 2

@@ -31,6 +31,7 @@ export default async function SearchPage({ searchParams }) {
     salary_min: sp.salary_min,
     category:   sp.category,
     days:       sp.days,
+    sort:       sp.sort,
     page:       sp.page || 1,
   }).catch(() => ({ jobs: [], total: 0, page: 1 }));
 
@@ -55,8 +56,11 @@ export default async function SearchPage({ searchParams }) {
       </div>
 
       {/* Filters */}
+      {/* pollOnly: this page's result set is always scoped by `q` (which
+          Filters' own hasFilters doesn't track), so /api/live-count's
+          sitewide number must never be displayed here. */}
       <Suspense>
-        <Filters />
+        <Filters initialCount={Number(results.total)} pollOnly />
       </Suspense>
 
       {results.jobs.length === 0 ? (

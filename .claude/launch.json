@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jobs-portal",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd ../jobs-portal && npm run dev"],
+      "port": 4000
+    },
+    {
+      "name": "leadnear-main",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd ../leadnear-main && npm run dev"],
+      "port": 3000
+    },
+    {
+      "name": "leadnear-jobs",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 4100
+    }
+  ]
+}

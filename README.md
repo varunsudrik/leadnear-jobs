@@ -148,6 +148,7 @@ values for the Python importer, which uses psycopg. Keep them in sync.
 | `npm run publish:jobs` | Publish pending job pages |
 | `npm run refresh:counts` | Refresh `site_metrics` only (needs a running app) |
 | `npm run job-slug:test` | Slug generation tests |
+| `npm run home-spec:test` | Asserts the C Home spec literals reached `app/globals.css` |
 
 Prisma commands go through `scripts/prisma.mjs`, which loads `.env.local` —
 the Prisma CLI reads only `.env`. A bare `npx prisma …` will not find

@@ -84,6 +84,7 @@ model User {
   AdminLoginLogs    AdminLoginLogs[]
   ExtensionTracking ExtensionTracking[]
   PricingClickLogs  PricingClickLog[]
+  resumeScans       ResumeScan[]
 }
 
 model Ratelimit {
@@ -650,4 +651,33 @@ model PricingClickLog {
   @@index([createdAt])
   @@index([currency])
   @@index([paymentGateway])
+}
+
+model ResumeScan {
+  id        String   @id @default(cuid())
+  userId    String
+  filename  String
+  pages     Int
+  score     Int
+  skills    String[]
+  result    Json
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targets   ResumeScanTarget[]
+
+  @@index([userId, createdAt])
+}
+
+model ResumeScanTarget {
+  id             String     @id @default(cuid())
+  scanId         String
+  canonicalTitle String
+  score          Int
+  cohortSize     Int
+  detail         Json
+  createdAt      DateTime   @default(now())
+  scan           ResumeScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@unique([scanId, canonicalTitle])
+  @@index([scanId, createdAt])
 }

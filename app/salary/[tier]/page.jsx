@@ -25,6 +25,6 @@ export default async function SalaryPage({ params, searchParams }) {
   const data = await getBySalary(tier, sp?.page || 1).catch(() => ({ jobs: [], total: 0 }));
   return (
     <JobListLayout heading={meta.label} prefix="💰" subtitle={`salary ≥ ${meta.min} annually (USD)`}
-      jobs={data.jobs} total={data.total} highlightSalary />
+      jobs={data.jobs} total={data.total} />
   );
 }

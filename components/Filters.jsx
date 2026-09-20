@@ -1,7 +1,9 @@
 "use client";
+import { useCallback, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import LiveJobCount from "@/app/LiveJobCount";
 
-const EMP_TYPES  = ["Full-Time","Part-Time","Contract","Internship","Freelance"];
+const EMP_TYPES  = ["Full-time","Part-time","Contract","Internship","Freelance"];
 const SALARY_OPTS = [
   { label:"Any salary", value:"" },
   { label:"$50K+",  value:"50000"  },
@@ -15,23 +17,46 @@ const DAYS_OPTS = [
   { label:"Last 7 days", value:"7" },
   { label:"Last 30 days",value:"30" },
 ];
+// Full set of real category_slugs values in the seeded DB (all ten have
+// non-zero job counts), ordered by job count desc. The Direction C spec
+// (spec lines 76-85) only mock-listed seven of these; the other three —
+// operations-jobs (148, the single largest category), customer-success-jobs
+// (66), and people-hr-jobs (26) — are real categories the filter must cover.
+// Labels keep the design's abbreviated tone ("Software Eng", "DevOps/Cloud").
 const CATEGORIES = [
+  { slug:"operations-jobs",           label:"Operations" },
   { slug:"software-engineering-jobs", label:"Software Eng" },
-  { slug:"devops-cloud-jobs",         label:"DevOps/Cloud" },
+  { slug:"sales-jobs",                label:"Sales" },
+  { slug:"customer-success-jobs",     label:"Customer Success" },
   { slug:"data-ai-jobs",              label:"Data & AI" },
   { slug:"product-jobs",              label:"Product" },
-  { slug:"design-jobs",               label:"Design" },
-  { slug:"sales-jobs",                label:"Sales" },
-  { slug:"customer-success-jobs",     label:"CS" },
   { slug:"marketing-jobs",            label:"Marketing" },
-  { slug:"operations-jobs",           label:"Operations" },
-  { slug:"people-hr-jobs",            label:"HR" },
+  { slug:"people-hr-jobs",            label:"People & HR" },
+  { slug:"devops-cloud-jobs",         label:"DevOps/Cloud" },
+  { slug:"design-jobs",               label:"Design" },
 ];
+const SORTS = ["newest", "salary"];
 
-export default function Filters() {
+// "12 min ago" / "3 hrs ago" — matches the spec's count-line wording
+// (spec lines 76-85: "128,431 roles · updated 12 min ago").
+function formatUpdated(updatedAt) {
+  if (!updatedAt) return null;
+  const ms = Date.now() - new Date(updatedAt).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hr${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+export default function Filters({ initialCount = 0, pollOnly = false }) {
   const router = useRouter();
   const pathname = usePathname();
   const sp = useSearchParams();
+  const [updatedAt, setUpdatedAt] = useState(null);
 
   const get = (k) => sp.get(k) || "";
   const set = (k, v) => {
@@ -43,23 +68,49 @@ export default function Filters() {
 
   const remote = get("remote"), type = get("type"), salary_min = get("salary_min");
   const category = get("category"), days = get("days");
-  const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location");
+  // Real fit ranking needs corpus comparison against a parsed resume — that
+  // is plan 2's job, not this one's. Until it lands this stays permanently
+  // disabled: sorting by a fit nothing computes would present an arbitrary
+  // order as a ranking. An injected ?sort=fit still clamps back to newest
+  // below.
+  const fitSortEnabled = false;
+  const rawSort = get("sort");
+  const sort = (fitSortEnabled ? [...SORTS, "fit"] : SORTS).includes(rawSort) ? rawSort : "newest";
+  const hasFilters = remote || type || salary_min || category || days || get("ats") || get("location") || rawSort;
+  // /api/live-count answers an unfiltered, sitewide question, so its number
+  // can't be trusted whenever this result set is scoped: `pollOnly` forces
+  // that (always true for callers whose whole page is scoped, e.g. /search
+  // and /remote, since their scoping isn't always visible in `hasFilters` —
+  // /search's `q` isn't tracked above, /remote's scope isn't a URL param at
+  // all), and otherwise falls back to this page's own filter state.
+  const scopedResults = pollOnly || Boolean(hasFilters);
 
   const clearAll = () => {
     const next = new URLSearchParams(sp.toString());
-    ["ats","location","remote","type","salary_min","category","days","page"].forEach((k) => next.delete(k));
+    ["ats","location","remote","type","salary_min","category","days","page","sort"].forEach((k) => next.delete(k));
     router.push(`${pathname}?${next.toString()}`);
   };
 
+  // LiveJobCount already owns the fetch/poll cycle for /api/live-count; this
+  // just reads updatedAt off its snapshots instead of firing a second fetch.
+  const handleSnapshot = useCallback((body) => {
+    if (body?.updatedAt) setUpdatedAt(body.updatedAt);
+  }, []);
+
+  const updatedLabel = formatUpdated(updatedAt);
+
   return (
-    <div className="filters-strip">
-      <span className="filter-label">Filter:</span>
-      <button className={`filter-toggle${remote === "1" ? " active" : ""}`}
+    <div className="filter-bar">
+      <span className="filter-count">
+        <b><LiveJobCount initialCount={initialCount} onSnapshot={handleSnapshot} pollOnly={scopedResults} /></b> roles
+        {updatedLabel ? ` · updated ${updatedLabel}` : ""}
+      </span>
+      <button type="button" className="filter-toggle" aria-pressed={remote === "1"}
         onClick={() => set("remote", remote === "1" ? "" : "1")}>
-        🌍 Remote
+        Remote
       </button>
       <select className="filter-select" value={type} onChange={(e) => set("type", e.target.value)}>
-        <option value="">All types</option>
+        <option value="">Any type</option>
         {EMP_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
       </select>
       <select className="filter-select" value={salary_min} onChange={(e) => set("salary_min", e.target.value)}>
@@ -72,7 +123,20 @@ export default function Filters() {
       <select className="filter-select" value={days} onChange={(e) => set("days", e.target.value)}>
         {DAYS_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
-      {hasFilters && <button className="filter-clear" onClick={clearAll}>✕ Clear</button>}
+      {hasFilters && <button type="button" className="filter-clear" onClick={clearAll}>Clear</button>}
+      <span className="filter-spacer" />
+      <select className="sort-select" value={sort}
+        onChange={(e) => set("sort", e.target.value === "newest" ? "" : e.target.value)}>
+        <option value="newest">Sort: newest</option>
+        <option value="salary">Sort: salary</option>
+        <option
+          value="fit"
+          disabled={!fitSortEnabled}
+          title={fitSortEnabled ? undefined : "Available once you scan a resume"}
+        >
+          Sort: best fit
+        </option>
+      </select>
     </div>
   );
 }

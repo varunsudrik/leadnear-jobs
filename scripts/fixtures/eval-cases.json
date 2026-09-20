@@ -1,0 +1,49 @@
+[
+  {
+    "name": "backend-normalisation",
+    "text": "SKILLS\nGolang, K8s, Postgres, gRPC\nEXPERIENCE\n- Built services handling 2M records daily",
+    "expectSkills": ["Go", "Kubernetes", "PostgreSQL", "gRPC"],
+    "forbidSkills": ["Golang", "K8s", "Postgres"]
+  },
+  {
+    "name": "no-invention",
+    "text": "SKILLS\nExcel, PowerPoint\nEXPERIENCE\n- Managed the monthly reporting pack",
+    "expectSkills": ["Excel", "PowerPoint"],
+    "forbidSkills": ["Python", "SQL", "Tableau"]
+  },
+  {
+    "name": "impact-detection",
+    "text": "EXPERIENCE\n- Responsible for the billing service\n- Cut infra cost by 32% in one quarter",
+    "expectImpactContains": "billing",
+    "forbidImpactContains": "32%"
+  },
+  {
+    "name": "non-technical-role",
+    "text": "SKILLS\nPhlebotomy, IV insertion, Epic EHR, BLS certified\nEXPERIENCE\nSt Mary's Hospital - Registered Nurse\n- Triaged patients in a 40-bed emergency department",
+    "expectSkills": ["Epic"],
+    "forbidSkills": ["Python", "JavaScript", "AWS", "Excel"]
+  },
+  {
+    "name": "sparse-resume-no-padding",
+    "text": "SUMMARY\nRecent graduate seeking an entry-level position.\nEXPERIENCE\nRetail associate, 2023-2024\n- Helped customers on the shop floor",
+    "expectSkills": [],
+    "forbidSkills": ["Python", "SQL", "Excel", "Leadership", "Communication", "Teamwork"]
+  },
+  {
+    "name": "short-token-acronyms",
+    "text": "SKILLS\nProficient in C, R and Go. Also SQL and shell scripting.\nEXPERIENCE\n- Wrote embedded firmware in C for ARM targets",
+    "expectSkills": ["C", "R", "Go", "SQL"],
+    "forbidSkills": ["Rust", "Golang", "C++", "C#"]
+  },
+  {
+    "name": "all-bullets-measured",
+    "text": "EXPERIENCE\n- Reduced p99 latency from 480ms to 190ms across 12 services\n- Cut monthly infra spend by $14k\n- Grew the team from 3 to 9 engineers",
+    "forbidImpactContains": "latency"
+  },
+  {
+    "name": "job-titles-are-not-skills",
+    "text": "EXPERIENCE\nSenior Backend Engineer at Northwind Labs\nEngineering Manager at Solvent\nSKILLS\nTerraform, Kafka",
+    "expectSkills": ["Terraform", "Kafka"],
+    "forbidSkills": ["Senior Backend Engineer", "Engineering Manager", "Northwind Labs", "Solvent"]
+  }
+]
