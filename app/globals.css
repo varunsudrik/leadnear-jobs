@@ -296,6 +296,34 @@ img { max-width: 100%; }
 .fit-badge.good   { background: var(--bg2); color: var(--text3); }
 .fit-badge.low    { background: transparent; color: var(--text4); }
 
+/* The short factual "matches N of M skills" line /matches attaches under a
+   JobCard via its optional `reason` prop. Same left inset as .jc-foot so it
+   lines up under the title/company text rather than the avatar. */
+.job-card .jc-reason { font-size: 11.5px; color: var(--text4); margin-top: 6px; padding-left: 43px; }
+
+/* ─── Matches page (/matches) — Strong/Good/Low groups ───────────────
+   Direction C's "C Matches" screen (docs/superpowers/specs/direction-c.html)
+   groups ranked jobs under a dot + label + count header per tier. Reuses
+   .job-card/.fit-badge for the rows themselves; only the group chrome here
+   is new, since nothing existing already drew a labeled, colored group
+   header. */
+.match-group { margin-bottom: 22px; }
+.match-group-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 4px 12px; font-size: 13px; font-weight: 600;
+}
+.match-group-label { display: inline-flex; align-items: center; gap: 8px; }
+.match-group-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+.match-group-dot.strong { background: var(--accent); }
+.match-group-dot.good   { background: var(--text4); }
+.match-group-dot.low    { background: var(--border); }
+.match-group-count { font-family: var(--font-mono), monospace; color: var(--text4); font-weight: 400; }
+.match-rows { display: flex; flex-direction: column; gap: 10px; }
+/* Low-fit roles collapse behind a native <details> — no client JS needed for
+   a plain expand/collapse. */
+.match-group-low > summary { cursor: pointer; list-style: none; }
+.match-group-low > summary::-webkit-details-marker { display: none; }
+
 /* ─── Home shell + hero (Direction C — spec lines 61–75) ───────────
    The section is 1440px, not the 1160px .container used elsewhere: C Home
    is a two-column working surface, and .container's measure would crush the

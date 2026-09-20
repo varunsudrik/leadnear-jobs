@@ -2,18 +2,15 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { latestScan, scanQuota } from "@/lib/resume/store.mjs";
+import { rankJobs, bucketByOverlap, DEFAULT_LIMIT } from "@/lib/resume/match.mjs";
+import MatchesList from "@/components/MatchesList";
 
-// Real ranking needs corpus comparison against a parsed resume — plan 2's
-// job. Task 9 retired the hash-based fit layer (the old fit-tier module, its
-// job-bucketing helper, and the resume-fixture module it shared) that used
-// to bucket a cohort of jobs here into Strong/Good/Low: a fabricated ranking attached to real,
-// named employers and their real postings is worse than none, because a
-// visitor cannot tell it's fake. Until plan 2 ships, this route is a "no
-// matches yet" empty state — but WHICH empty state depends on the viewer:
-// nobody gets a ranking today, but "come back after you scan" is false for
-// someone who already has (and reads as "you get to burn another of your 3
-// free scans for nothing"), so this reads the session and the scan store
-// the same way app/resume/page.jsx does, and picks the honest copy.
+// Signed-out and no-scan-yet stay honest empty states (nothing to rank
+// without a resume). Signed-in-with-a-scan now does the real thing: rank
+// live jobs against the scan's stored skill vector via lib/resume/match.mjs
+// (design doc section 4) and render them Strong/Good/Low. This reads the
+// session and the scan store the same way app/resume/page.jsx does, and
+// picks the copy/behaviour that matches what the viewer has actually done.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -86,29 +83,13 @@ export default async function MatchesPage() {
     );
   }
 
-  // Signed in, already scanned: the broken case this task exists to fix.
-  // Nobody gets a ranking yet, but this viewer already did the one thing the
-  // old copy told them to do — so it says so by name, sends them to the
-  // result they already have instead of a second upload button, and does
-  // not put a date on ranking (we don't have one).
-  return (
-    <div className="console-shell">
-      <h1 className="rs-title" style={{ marginBottom: 16 }}>Matches</h1>
-      <div className="empty-box">
-        <div className="em-icon">🎯</div>
-        <p>No matches yet</p>
-        <p style={{ color: "var(--text3)", marginTop: ".5rem", fontSize: ".9rem" }}>
-          Your resume — {scan.filename} — is already scanned. Ranking it against
-          live postings isn&apos;t available yet, so there&apos;s nothing new to
-          upload here.
-        </p>
-        <Link href="/resume" className="ru-browse" style={{ marginTop: "1rem", display: "inline-block" }}>
-          View your scan
-        </Link>
-        {quota.remaining > 0 && (
-          <div className="ru-hint mono">{quota.remaining} of {quota.quota} free scans left</div>
-        )}
-      </div>
-    </div>
-  );
+  // Signed in, already scanned: the real ranking. rankJobs sanitizes the
+  // stored skill list itself and hands back that sanitized list alongside
+  // the rows — bucketByOverlap's skillCount and MatchesList's reason lines
+  // both have to divide by that same (post-sanitize) count, not scan.skills
+  // itself, or a blank/duplicate skill entry would silently disagree with
+  // what the ranking query actually matched against.
+  const { rows, skills } = await rankJobs({ skills: scan.skills, limit: DEFAULT_LIMIT });
+  const buckets = bucketByOverlap(rows, skills.length);
+  return <MatchesList scan={scan} buckets={buckets} skills={skills} quota={quota} />;
 }

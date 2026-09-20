@@ -8,7 +8,7 @@ import { fmtSalary, fmtDate, initials } from "@/lib/format";
 // job.fit (plan 2).
 const FIT_LABEL = { strong: "Strong fit", good: "Good fit", low: "Low fit" };
 
-export default function JobCard({ job, selected = false, onSelect = null }) {
+export default function JobCard({ job, selected = false, onSelect = null, reason = null }) {
   const href = `/${job.job_slug}`;
   const salary = fmtSalary(job);
   const locations = Array.isArray(job.locations) ? job.locations.slice(0, 3) : [];
@@ -55,6 +55,10 @@ export default function JobCard({ job, selected = false, onSelect = null }) {
         <span className="jc-salary">{salary ?? "—"}</span>
         {fit ? <span className={`fit-badge ${fit}`}>{FIT_LABEL[fit]}</span> : null}
       </div>
+      {/* /matches (lib/resume/match.mjs's matchReason) is the only caller
+          today: a short factual line — skill overlap count, one named
+          missing skill — never AI prose and never a fabricated percentage. */}
+      {reason ? <div className="jc-reason">{reason}</div> : null}
     </Link>
   );
 }
