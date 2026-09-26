@@ -41,7 +41,9 @@
     "job-skills:migrate": "node scripts/add-job-skills-tables.mjs",
     "job-skills:extract": "node scripts/extract-job-skills.mjs",
     "job-skills:stats": "node scripts/rebuild-skill-stats.mjs",
-    "skill-stats:check": "node scripts/check-skill-stats.mjs"
+    "skill-stats:check": "node scripts/check-skill-stats.mjs",
+    "job-skills:eval": "node scripts/eval-job-skills.mjs",
+    "matches:smoke": "node scripts/smoke-matches.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
