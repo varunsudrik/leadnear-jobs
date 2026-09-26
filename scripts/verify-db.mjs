@@ -19,6 +19,10 @@ const JOB_TABLES = [
   "salary_tier_stats", "blocked_ips",
 ];
 
+// Created by scripts/add-job-skills-tables.mjs (npm run job-skills:migrate);
+// /jobs/matches ranks against them.
+const SKILL_TABLES = ["job_skills", "job_skill_scans"];
+
 // Queries in lib/jobs.js depend on these specifically: idx_jobs_search backs
 // the full-text path, unaccent backs slug generation.
 const REQUIRED_INDEXES = ["idx_jobs_search", "idx_jobs_job_slug", "jobs_apply_url_md5_key"];
@@ -43,8 +47,12 @@ try {
   const missingJobTables = JOB_TABLES.filter((t) => !present.has(t));
   check(missingJobTables.length === 0, `${JOB_TABLES.length} job board tables`, missingJobTables.join(", "));
 
-  // Everything that is not a job board table came from `prisma db push`.
-  const prismaTables = [...present].filter((t) => !JOB_TABLES.includes(t));
+  const missingSkillTables = SKILL_TABLES.filter((t) => !present.has(t));
+  check(missingSkillTables.length === 0, `${SKILL_TABLES.length} job skill tables`, missingSkillTables.length ? `missing ${missingSkillTables.join(", ")} — run npm run job-skills:migrate` : "");
+
+  // Everything that is neither a job board nor a job skill table came from
+  // `prisma db push`.
+  const prismaTables = [...present].filter((t) => !JOB_TABLES.includes(t) && !SKILL_TABLES.includes(t));
   check(prismaTables.length >= 40, `${prismaTables.length} leadnear (Prisma) tables`, "expected >= 40");
   // Note the casing: the MySQL original ran with lower_case_table_names=1 and
   // so stored these as `user`, `linkedindata`, … PostgreSQL preserves the
