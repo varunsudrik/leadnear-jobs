@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { decodeEntities, toLines, plainText, headingLevel, requirementsSection } from "../lib/skills/sections.mjs";
+import { bodyText, decodeEntities, toLines, plainText, headingLevel, requirementsSection } from "../lib/skills/sections.mjs";
 
 // Real postings from staging (scripts/fixtures/export-job-descriptions.mjs
 // records why each one is here). Synthetic fixtures alone passed while the
@@ -78,6 +78,19 @@ assert.deepEqual(
 );
 assert.deepEqual(requirementsSection("<p>We are hiring.</p>"), { text: "We are hiring.", source: "body" });
 assert.deepEqual(requirementsSection(null), { text: "", source: "body" });
+
+// ─── bodyText (no requirements section to target) ───────────────────────────
+// Company blurbs, perks and EEO text are dropped; responsibilities are kept.
+assert.equal(
+  bodyText("About us\nWe are Acme, trusted by AWS and Databricks.\nWhat you'll do\nBuild services with Python.\nBenefits\nHome Office stipend"),
+  "What you'll do\nBuild services with Python."
+);
+assert.equal(bodyText("<p>No headings at all.</p><p>Every line stays.</p>"), "No headings at all.\nEvery line stays.");
+// The body fallback of requirementsSection uses it too.
+assert.deepEqual(
+  requirementsSection("<h2>Who we are</h2><p>A bank.</p><h2>The role</h2><p>Manage home loans.</p>"),
+  { text: "The role\nManage home loans.", source: "body" }
+);
 
 // ─── requirementsSection: real postings ─────────────────────────────────────
 // smartrecruiters: JSON-LD Qualifications with a nested bold sub-heading

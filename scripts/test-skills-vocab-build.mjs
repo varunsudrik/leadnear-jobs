@@ -124,6 +124,31 @@ assert.deepEqual(aggregateVocab(undefined), []);
   assert.deepEqual(selectProseAliases(undefined, samples), []);
 }
 
+// Aliases compete as they do in extraction: "Office" earns no credit for "MS
+// Office" texts (the longer alias wins them) and is judged only on what it
+// catches alone.
+{
+  const sample = (text, ...listed) => ({
+    text,
+    canonicals: new Set(listed.map(([, canonical]) => canonical.toLowerCase())),
+    names: new Set(listed.map(([name]) => name.toLowerCase())),
+  });
+  const samples = [
+    ...[1, 2, 3, 4, 5].map(() => sample("MS Office skills", ["MS Office", "Microsoft Office"])),
+    ...[1, 2, 3, 4, 5].map(() => sample("Home Office stipend")),
+  ];
+  const [office] = selectProseAliases(
+    [{ canonical: "Microsoft Office", aliases: ["MS Office", "Office"], sampleCount: 5 }],
+    samples
+  );
+  assert.deepEqual(office.proseAliases, ["Microsoft Office", "MS Office"]);
+}
+// Aliases that may never match prose are left out of proseAliases entirely.
+assert.deepEqual(
+  selectProseAliases([{ canonical: "Chartered Accountant", aliases: ["CA"], sampleCount: 3 }], [])[0].proseAliases,
+  ["Chartered Accountant"]
+);
+
 // ─── renderVocabModule ──────────────────────────────────────────────────────
 {
   const source = renderVocabModule({ version: 1, skills: [{ canonical: "Go", aliases: ["Go"], sampleCount: 3 }] });

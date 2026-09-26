@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { aliasClass, buildIndex, canonicalizeSkills, getIndex, matchableInProse, vocabVersion } from "../lib/skills/vocab.mjs";
-import { extractJobSkills, skillsForDescription, toSkillRows } from "../lib/skills/extract.mjs";
+import { extractJobSkills, matchAliases, skillsForDescription, toSkillRows } from "../lib/skills/extract.mjs";
 
 const fixture = (md5) =>
   readFileSync(new URL(`./fixtures/job-descriptions/${md5}.html`, import.meta.url), "utf8");
@@ -51,6 +51,10 @@ assert.deepEqual(x("R&D budget"), []);
 assert.deepEqual(x("R.J. Smith"), []);
 assert.deepEqual(x("C/C++ firmware"), ["C++", "C"]);
 assert.deepEqual(x("C-suite stakeholders"), []);
+// Accented letters are letters: no "R" inside "Réseau", no "C" inside "Çelik".
+assert.deepEqual(x("les Medicentres du Réseau de l'Arc"), []);
+assert.deepEqual(x("Çelik Holding"), []);
+assert.deepEqual(x("Statistics in R."), ["R"]);
 
 // ─── Boundaries and longest match ───────────────────────────────────────────
 assert.deepEqual(x("JavaScript not Java"), ["JavaScript", "Java"]);
@@ -105,6 +109,15 @@ assert.deepEqual(x(null), []);
   assert.deepEqual(extractJobSkills("knowledge management tools", gated), ["Knowledge Management"]);
   assert.deepEqual(canonicalizeSkills(["knowledge"], gated).known, ["Knowledge Management"]);
 }
+
+// ─── matchAliases ───────────────────────────────────────────────────────────
+// Per-match detail: passes in order, text order within a pass; the longer
+// alias wins its span, so "React Native" yields no separate "React".
+assert.deepEqual(matchAliases("React Native and React.js with Go, Rust", index), [
+  { text: "React Native", canonical: "React Native", pass: "insensitive" },
+  { text: "React.js", canonical: "React", pass: "insensitive" },
+  { text: "Go", canonical: "Go", pass: "short" },
+]);
 
 // ─── Index ──────────────────────────────────────────────────────────────────
 // An alias claimed by an earlier skill is not reassigned by a later one.
