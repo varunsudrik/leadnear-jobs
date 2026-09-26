@@ -17,14 +17,18 @@ import { requirementsSection } from "../lib/skills/sections.mjs";
 import { vocabVersion } from "../lib/skills/vocab.mjs";
 import {
   LIVE_JOBS_IN_SAMPLE_ORDER_SQL,
+  MIN_ALIAS_PRECISION,
   MIN_SAMPLE_COUNT,
+  PROMPT_VERSION,
   SAMPLE_SALT,
   SAMPLE_SIZE,
   aggregateVocab,
+  canonicalKey,
   extractSkillsWithLlm,
   groundedSkills,
   isUsableDescription,
   renderVocabModule,
+  selectProseAliases,
   stratifiedSample,
 } from "../lib/skills/vocab-build.mjs";
 
@@ -41,7 +45,9 @@ if (!process.env.OPENROUTER_API_KEY) {
 
 const version = vocabVersion() + 1;
 const cacheDir = ".cache/skill-vocab";
-const cachePath = `${cacheDir}/v${version}-${SAMPLE_SALT}.jsonl`;
+// Keyed on what determines the answers, not the vocabulary version, so a
+// rebuild that only changes aggregation reuses them for free.
+const cachePath = `${cacheDir}/${SAMPLE_SALT}-p${PROMPT_VERSION}-${MODEL.replace(/[^a-z0-9]+/gi, "_")}.jsonl`;
 mkdirSync(cacheDir, { recursive: true });
 
 const pool = new pg.Pool(buildPgConfig({ max: 1 }));
@@ -106,8 +112,14 @@ if (failed / sampleIds.length > MAX_FAILURE_RATE) {
   process.exit(1);
 }
 
-const results = sampleIds.filter((id) => cached.has(id)).map((id) => ({ skills: cached.get(id) }));
-const skills = aggregateVocab(results);
+const answered = sampleIds.filter((id) => cached.has(id));
+const results = answered.map((id) => ({ skills: cached.get(id) }));
+const samples = answered.map((id) => ({
+  text: requirementsSection(byId.get(id).description).text,
+  canonicals: new Set(cached.get(id).map((s) => canonicalKey(s.canonical))),
+  names: new Set(cached.get(id).map((s) => canonicalKey(s.name))),
+}));
+const skills = selectProseAliases(aggregateVocab(results), samples);
 const vocab = {
   version,
   builtAt: new Date().toISOString().slice(0, 10),
@@ -115,6 +127,7 @@ const vocab = {
   sampleSalt: SAMPLE_SALT,
   sampleSize: results.length,
   minSampleCount: MIN_SAMPLE_COUNT,
+  minAliasPrecision: MIN_ALIAS_PRECISION,
   skills,
 };
 writeFileSync("lib/skills/vocab-data.mjs", renderVocabModule(vocab));
@@ -124,6 +137,9 @@ writeFileSync(
 );
 
 const aliasCount = skills.reduce((n, s) => n + s.aliases.length, 0);
+const proseCount = skills.reduce((n, s) => n + s.proseAliases.length, 0);
+const unmatchable = skills.filter((s) => !s.proseAliases.length).length;
+console.log(`prose matching: ${proseCount} aliases kept of ${aliasCount + skills.length} candidates; ${unmatchable} skills match resumes only`);
 console.log(`\nvocabulary v${version}: ${skills.length} skills, ${aliasCount} aliases, from ${results.length} jobs (${failed} failed)`);
 console.log("top 25:", skills.slice(0, 25).map((s) => `${s.canonical} (${s.sampleCount})`).join(", "));
 console.log("wrote lib/skills/vocab-data.mjs and scripts/fixtures/skill-vocab-sample.json");

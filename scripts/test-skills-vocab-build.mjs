@@ -8,6 +8,7 @@ import {
   groundedSkills,
   isUsableDescription,
   renderVocabModule,
+  selectProseAliases,
   stratifiedSample,
 } from "../lib/skills/vocab-build.mjs";
 
@@ -85,6 +86,43 @@ assert.equal(aggregateVocab([job(["Rust", "Rust"]), job(["Rust", "Rust"])], { mi
 }
 assert.ok(SOFT_SKILLS.has("problem solving"));
 assert.deepEqual(aggregateVocab(undefined), []);
+
+// ─── selectProseAliases ─────────────────────────────────────────────────────
+{
+  const sample = (text, ...listed) => ({
+    text,
+    canonicals: new Set(listed.map(([, canonical]) => canonical.toLowerCase())),
+    names: new Set(listed.map(([name]) => name.toLowerCase())),
+  });
+  const samples = [
+    // "Knowledge" appears in six texts; the model named a skill for it in one.
+    sample("Knowledge of Python", ["Python", "Python"], ["Knowledge", "Knowledge Management"]),
+    sample("Knowledge of Python", ["Python", "Python"]),
+    sample("Knowledge of Python", ["Python", "Python"]),
+    sample("Knowledge of Python", ["Python", "Python"]),
+    sample("Knowledge of Python", ["Python", "Python"]),
+    sample("Knowledge of accounts"),
+    // "Azure" is filed under canonical "Azure", not "Microsoft Azure": still
+    // agreement, because the surface name matches.
+    ...[1, 2, 3, 4, 5].map(() => sample("Azure pipelines", ["Azure", "Azure"])),
+  ];
+  const selected = selectProseAliases(
+    [
+      { canonical: "Python", aliases: ["Python"], sampleCount: 5 },
+      { canonical: "Knowledge Management", aliases: ["Knowledge"], sampleCount: 3 },
+      { canonical: "Microsoft Azure", aliases: ["Azure"], sampleCount: 5 },
+    ],
+    samples
+  );
+  assert.deepEqual(selected.map((s) => s.proseAliases), [
+    ["Python"], // 5 of 5
+    ["Knowledge Management"], // canonical never matched (support 0) so kept; "Knowledge" 1 of 6: dropped
+    ["Microsoft Azure", "Azure"],
+  ]);
+  // Everything else about the skill is carried through untouched.
+  assert.deepEqual(selected[1].aliases, ["Knowledge"]);
+  assert.deepEqual(selectProseAliases(undefined, samples), []);
+}
 
 // ─── renderVocabModule ──────────────────────────────────────────────────────
 {

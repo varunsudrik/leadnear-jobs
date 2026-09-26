@@ -94,6 +94,18 @@ assert.deepEqual(x(null), []);
   assert.equal(matchableInProse("Kubernetes", "Kubernetes"), true);
 }
 
+// ─── proseAliases ───────────────────────────────────────────────────────────
+// Only aliases that passed the build's precision check match running text;
+// every alias still maps a resume's skill list.
+{
+  const gated = buildIndex({
+    skills: [{ canonical: "Knowledge Management", aliases: ["Knowledge"], proseAliases: ["Knowledge Management"] }],
+  });
+  assert.deepEqual(extractJobSkills("Knowledge of SQL", gated), []);
+  assert.deepEqual(extractJobSkills("knowledge management tools", gated), ["Knowledge Management"]);
+  assert.deepEqual(canonicalizeSkills(["knowledge"], gated).known, ["Knowledge Management"]);
+}
+
 // ─── Index ──────────────────────────────────────────────────────────────────
 // An alias claimed by an earlier skill is not reassigned by a later one.
 {

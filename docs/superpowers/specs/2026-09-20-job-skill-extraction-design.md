@@ -431,6 +431,14 @@ unchanged.
 9. **Ordering is `match_rank = coverage × n/(n+1)`,** n = the job's skill count; tiers still use raw
    coverage plus the thin-job guard. Without it, 3–4-skill jobs at 100% outranked an 11-skill job
    at 86%.
+11. **The model's sampled answers decide which aliases may match prose.** An alias is matched in
+    running text only if, across the 2,000 sampled jobs, the model listed that text (or its skill) in at
+    least 35% of the texts the alias matches (support ≥ 5; below that it is kept). Vocabulary v1
+    without this put generic words at the top of extraction — "Knowledge" → Knowledge Management on 30%
+    of staging jobs (model agreed 6/686), "data" 7/476, "Software" 4/374 — against Python 152/160 and
+    Excel 164/185. v2 keeps 1,637 of 2,724 candidate aliases; 112 skills map resumes only. Staging
+    extraction went from 97,995 rows led by Knowledge Management/Data/Operations to 35,089 led by
+    Microsoft Office/Excel/Python/SQL/AWS; 7,884 of 10,000 jobs carry at least one skill.
 10. **Scraper gaps found, out of scope here:** 272 of 275 breezy descriptions on staging are page-template
     placeholders (`%BUTTON_APPLY_TO_POSITION%`); lever stores only the intro paragraphs and drops the
     `lists` field where requirements live (381 of 385 lever fallbacks never mention requirements).
