@@ -2,7 +2,14 @@
 // scripts/seed-from-prod.mjs — copy a slice of live job data into the target
 // database, so this project has realistic content to serve.
 //
-//   npm run db:seed
+//   npm run db:seed                                      newest live jobs, worldwide
+//   node scripts/seed-from-prod.mjs --country=india       newest live jobs in one country
+//   node scripts/seed-from-prod.mjs --country=india --limit=5000
+//
+// The two modes differ in how they treat job_locations on the target. The
+// default mode clears the whole table and re-copies it for the jobs it copied
+// (see below). --country mode is additive: it replaces location rows only for
+// the jobs it copies, so jobs already on the target keep theirs.
 //
 // Source is PROD_DATABASE_URL and is treated as strictly READ ONLY: this script
 // issues SELECT statements against it and nothing else. Every write goes to
@@ -27,7 +34,22 @@ import { buildPgConfig, describeTarget } from "../lib/pg-config.mjs";
 
 loadEnvFile(path.join(process.cwd(), ".env.local"));
 
-const JOB_LIMIT = Number(process.env.SEED_JOB_LIMIT || 5000);
+const args = Object.fromEntries(
+  process.argv.slice(2).map((arg) => {
+    const [key, ...rest] = arg.replace(/^--/, "").split("=");
+    return [key, rest.join("=")];
+  })
+);
+const COUNTRY = args.country ? args.country.toLowerCase() : null;
+if (COUNTRY !== null && !/^[a-z0-9-]+$/.test(COUNTRY)) {
+  console.error(`--country must be a country_slug such as "india", got "${args.country}"`);
+  process.exit(1);
+}
+const JOB_LIMIT = Number(args.limit || process.env.SEED_JOB_LIMIT || 5000);
+if (!Number.isInteger(JOB_LIMIT) || JOB_LIMIT <= 0) {
+  console.error(`--limit must be a positive integer, got "${args.limit}"`);
+  process.exit(1);
+}
 const BATCH = Number(process.env.SEED_BATCH_SIZE || 200);
 
 if (!process.env.PROD_DATABASE_URL) {
@@ -125,11 +147,8 @@ async function copyTable({ table, selectSql, params = [], conflictClause, label 
   return { read: rows.length, written };
 }
 
-try {
-  console.log(`Source (read-only): ${sourceUrl.hostname}:${sourceUrl.port}${sourceUrl.pathname}`);
-  console.log(`Target            : ${describeTarget()}`);
-  console.log(`Copying the newest ${JOB_LIMIT} live jobs\n`);
-
+// Default mode: the newest live jobs worldwide.
+async function seedNewest() {
   // 1. Jobs — newest live listings. NULLS LAST keeps undated rows from
   //    monopolising a DESC ordering.
   const jobs = await copyTable({
@@ -166,10 +185,64 @@ try {
                     limit $1
                  )`,
     params: [JOB_LIMIT],
-    // job_locations has no unique constraint to key on, so a re-run would
-    // duplicate. Cleared below instead.
     conflictClause: "",
   });
+  return { jobs, locations };
+}
+
+// --country mode: the newest live jobs with a location in one country.
+//
+// Two steps on purpose. Selecting only apply_url_md5, ordered by posted_at
+// over dated rows, lets production's planner walk idx_jobs_posted newest-first
+// and probe idx_locations_job_md5 per row, stopping at the limit. Asking for
+// `select *` with `nulls last` in one query instead plans a parallel sequential
+// scan of the whole jobs table (checked with EXPLAIN, 2026-09-26). Full rows
+// are then fetched by exact md5 through the unique index.
+async function seedCountry(country) {
+  const { rows: picked } = await source.query(
+    `select j.apply_url_md5 from jobs j
+      where j.status = 'success' and j.posted_at is not null
+        and exists (select 1 from job_locations l
+                     where l.job_md5 = j.apply_url_md5 and l.country_slug = $2)
+      order by j.posted_at desc
+      limit $1`,
+    [JOB_LIMIT, country]
+  );
+  const md5s = picked.map((r) => r.apply_url_md5);
+  console.log(`  ${md5s.length} live jobs in "${country}" selected from production`);
+  if (!md5s.length) return { jobs: { read: 0, written: 0 }, locations: { read: 0, written: 0 } };
+
+  const jobs = await copyTable({
+    table: "jobs",
+    label: "jobs",
+    selectSql: "select * from jobs where apply_url_md5 = any($1) order by posted_at desc",
+    params: [md5s],
+    conflictClause: "on conflict (apply_url_md5) do nothing",
+  });
+
+  // Replace locations for these jobs only; everything else on the target is
+  // left exactly as it was.
+  const cleared = await target.query("delete from job_locations where job_md5 = any($1)", [md5s]);
+  if (cleared.rowCount) console.log(`  job_locations: replaced ${cleared.rowCount} existing rows for these jobs`);
+
+  const locations = await copyTable({
+    table: "job_locations",
+    label: "job_locations",
+    selectSql: "select * from job_locations where job_md5 = any($1)",
+    params: [md5s],
+    conflictClause: "",
+  });
+  return { jobs, locations };
+}
+
+try {
+  console.log(`Source (read-only): ${sourceUrl.hostname}:${sourceUrl.port}${sourceUrl.pathname}`);
+  console.log(`Target            : ${describeTarget()}`);
+  console.log(COUNTRY
+    ? `Copying the newest ${JOB_LIMIT} live jobs in "${COUNTRY}" (additive)\n`
+    : `Copying the newest ${JOB_LIMIT} live jobs\n`);
+
+  const { jobs, locations } = COUNTRY ? await seedCountry(COUNTRY) : await seedNewest();
 
   // 3. Blocked IPs — small, and the backoffice reads it.
   const blocked = await copyTable({
