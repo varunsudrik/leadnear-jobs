@@ -129,10 +129,12 @@ decl(".fit-badge.good", "background: var(--bg2)");
 decl(".fit-badge.low", "background: transparent");
 
 // ─── Pagination ───
-// The range row keeps spec line 103; the two bare arrows it specified were
-// replaced by a numbered pager modelled on naukri.com (product decision,
-// 2026-09-26) so a viewer can jump to a page.
-decl(".pager", "justify-content: space-between");
+// Spec line 103's range-left/arrows-right row was replaced (product decision,
+// 2026-09-26) by a centred numbered pager modelled on naukri.com, with the
+// range beneath it, so a viewer can jump to a page.
+decl(".pager", "flex-direction: column");
+decl(".pager", "align-items: center");
+decl(".pager-controls", "justify-content: center");
 decl(".pager", "padding: 6px 6px 0");
 decl(".pager", "font-size: 12px");
 decl(".pager-range", "font-family: var(--font-mono), monospace");

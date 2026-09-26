@@ -4,15 +4,16 @@ import { useSearchParams, usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { pageWindow } from "@/lib/pagination.mjs";
 
-// Range on the left ("21–40 of 234", mono), numbered pager on the right:
-// Previous · up to ten page numbers · Next, modelled on naukri.com so a
+// Numbered pager, centred — Previous · up to ten page numbers · Next — with
+// the range ("21–40 of 234 jobs", mono) beneath it. Modelled on naukri.com so a
 // viewer can jump straight to a page. This replaces Direction C's two bare
 // arrows (spec line 103), which only ever moved one page at a time.
 //
 // Renders whenever there are results at all: on a single page the range still
 // tells you the count.
 
-// On phones only the pages within this distance of the current one show.
+// Where space is short only the pages within this distance of the current one
+// show ("far" are hidden); on the narrowest screens the "edge" ones go too.
 const NEAR = 2;
 
 export default function Pagination({ total, pageSize = 20 }) {
@@ -47,8 +48,6 @@ export default function Pagination({ total, pageSize = 20 }) {
 
   return (
     <nav className="pager" aria-label="Pagination">
-      {/* En-dash (U+2013) between the bounds, per the design. */}
-      <span className="pager-range">{first}–{last} of {total.toLocaleString()}</span>
       <div className="pager-controls">
         {step(page - 1, page > 1, "Previous page", (
           <>
@@ -57,7 +56,8 @@ export default function Pagination({ total, pageSize = 20 }) {
           </>
         ))}
         {totalPages > 1 && pageWindow(page, totalPages).map((n) => {
-          const far = Math.abs(n - page) > NEAR ? " far" : "";
+          const distance = Math.abs(n - page);
+          const far = distance > NEAR ? " far" : distance === NEAR ? " edge" : "";
           return n === page ? (
             <span key={n} className={`pager-num current${far}`} aria-current="page">{n}</span>
           ) : (
@@ -71,6 +71,8 @@ export default function Pagination({ total, pageSize = 20 }) {
           </>
         ))}
       </div>
+      {/* En-dash (U+2013) between the bounds, per the design. */}
+      <span className="pager-range">{first}–{last} of {total.toLocaleString()} jobs</span>
     </nav>
   );
 }

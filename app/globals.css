@@ -1070,16 +1070,19 @@ img { max-width: 100%; }
    that 8px. app/search/page.jsx and components/JobListLayout.jsx have no such
    column: there .pager is a plain sibling of .job-list, so without this it sat
    6px under the last card where the old pager sat 32px. */
+/* Centred and stacked: the pager on its own row, the "41–60 of 234" range
+   beneath it, so the row stays balanced however many page numbers show. In
+   the split view it centres within the list column. */
 .pager {
-  display: flex; justify-content: space-between; align-items: center;
-  flex-wrap: wrap; gap: 12px;
+  container-type: inline-size;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 6px 6px 0; font-size: 12px; color: var(--text3); margin-top: 2rem;
 }
 .job-list-col > .pager { margin-top: 0; }
 .pager-range { font-family: var(--font-mono), monospace; }
 /* Numbered pager, modelled on naukri.com: pill Previous/Next, round page
    numbers, the current page filled. */
-.pager-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pager-controls { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .pager-step {
   display: inline-flex; align-items: center; gap: 6px;
   height: 40px; padding: 0 18px;
@@ -1098,12 +1101,22 @@ img { max-width: 100%; }
 }
 .pager-num:hover { background: var(--bg2); }
 .pager-num.current, .pager-num.current:hover { background: var(--text); color: #fff; }
-/* Phones: ten numbers plus labelled buttons do not fit 400px. Keep the pages
-   within two of the current one, and chevron-only Previous/Next. */
-@media (max-width: 640px) {
+/* Ten numbers plus labelled buttons need ~640px. Where the pager has less —
+   a phone, or the split view's list column even on a wide screen — keep the
+   pages within two of the current one and chevron-only Previous/Next. A
+   container query, not a media query: the window width says nothing about
+   how wide the list column is. */
+@container (max-width: 660px) {
+  /* 2 × 42 + 5 × 34 + 6 × 4 = 278px: one row inside a 375px phone's 299px. */
+  .pager-controls { gap: 4px; }
+  .pager-num { min-width: 34px; }
   .pager-num.far { display: none; }
   .pager-step { padding: 0 12px; }
   .pager-step-label { display: none; }
+}
+/* 320px phones: three numbers (2 × 42 + 3 × 34 + 4 × 4 = 202px). */
+@container (max-width: 290px) {
+  .pager-num.edge { display: none; }
 }
 
 /* ─── Remote hero card ───────────────────────── */
