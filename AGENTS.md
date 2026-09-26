@@ -113,6 +113,18 @@ and passes an explicit `ssl` object instead. Build every pool through
 Note libpq (the Python importer) uses the weaker, original meaning of
 `require`, so `DB_SSLMODE=require` is correct there.
 
+### `db:push` refuses to drop anything — keep it that way
+
+Prisma does not know the job board's tables exist (they are raw SQL), so on a
+populated database `prisma db push` computes `DROP TABLE` for every one of them
+— `jobs`, `job_locations`, the rollups, `job_skills` (13 tables on staging).
+`npm run db:push` goes through `scripts/prisma.mjs`, which runs Prisma's diff
+first and refuses if it contains `DROP TABLE` or `DROP COLUMN`, and blocks
+`--force-reset`, `--accept-data-loss`, `migrate reset` and `migrate dev`
+outright. `npm run db:diff` shows the SQL without applying it. On a fresh, empty
+database the diff is purely additive, so the README's setup order still works.
+Do not run `npx prisma db push` directly against a shared database.
+
 ### Prisma CLI ignores `.env.local`
 
 It reads `.env` only. Rather than duplicating credentials, run it through the
