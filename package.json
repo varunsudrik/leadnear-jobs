@@ -44,7 +44,9 @@
     "skill-stats:check": "node scripts/check-skill-stats.mjs",
     "job-skills:eval": "node scripts/eval-job-skills.mjs",
     "matches:smoke": "node scripts/smoke-matches.mjs",
-    "pagination:test": "node scripts/test-pagination.mjs"
+    "pagination:test": "node scripts/test-pagination.mjs",
+    "db:diff": "node scripts/prisma.mjs diff",
+    "prisma-guard:test": "node scripts/test-prisma-guard.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
