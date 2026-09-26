@@ -23,6 +23,7 @@
   --radius:       18px;
   --radius-sm:    10px;
   --radius-pill:  999px;
+  --auth-nav-width: 186px; /* header auth slot: scan pill + gap + avatar (182px) + rounding headroom */
   --shadow:       0 1px 3px rgba(21,23,28,.06), 0 0 0 1px rgba(21,23,28,.05);
   /* The job card's own shadow is lighter than --shadow, which dresses the
      larger 18px-radius surfaces (the preview pane). Spec line 89: cards use
@@ -1935,12 +1936,20 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   color: var(--accent);
   background: var(--accent-tint);
 }
+/* The auth slot is one fixed footprint in every state — loading, signed in
+   (scan pill 144px + 8px gap + 30px avatar = 182px, plus a little headroom
+   for sub-pixel text widths), signed out ("Log in",
+   right-aligned). It used to size to its content: a 74px placeholder while
+   the session and quota loaded, then 182px, so the flexible search field
+   beside it visibly shrank ~2s after every page load. */
 .site-header .nav-actions {
   display: none;
   flex: 0 0 auto;
   align-items: center;
+  justify-content: flex-end;
   gap: .5rem;
   margin: 0;
+  min-width: var(--auth-nav-width);
 }
 .site-header .nav-login {
   padding: .625rem 1.5rem;
@@ -1961,7 +1970,7 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   line-height: 1.25rem;
 }
 .site-header .nav-primary:hover { color: white; background: var(--accent); }
-.site-header .auth-nav-placeholder { width: 74px; height: 40px; }
+.site-header .auth-nav-placeholder { width: var(--auth-nav-width); height: 40px; }
 .scan-pips {
   display: inline-flex;
   align-items: center;
