@@ -128,15 +128,19 @@ decl(".fit-badge.strong", "background: var(--accent-tint)");
 decl(".fit-badge.good", "background: var(--bg2)");
 decl(".fit-badge.low", "background: transparent");
 
-// ─── Pagination (spec line 103) ───
+// ─── Pagination ───
+// The range row keeps spec line 103; the two bare arrows it specified were
+// replaced by a numbered pager modelled on naukri.com (product decision,
+// 2026-09-26) so a viewer can jump to a page.
 decl(".pager", "justify-content: space-between");
 decl(".pager", "padding: 6px 6px 0");
 decl(".pager", "font-size: 12px");
 decl(".pager-range", "font-family: var(--font-mono), monospace");
-decl(".pager-arrows", "gap: 6px");
-decl(".pager-btn", "width: 28px");
-decl(".pager-btn", "height: 28px");
-decl(".pager-btn", "box-shadow: 0 0 0 1px rgba(21,23,28,.07)");
+decl(".pager-controls", "gap: 6px");
+decl(".pager-step", "border-radius: var(--radius-pill)");
+decl(".pager-step", "height: 40px");
+decl(".pager-num", "height: 36px");
+decl(".pager-num", "border-radius: var(--radius-pill)");
 
 // ─── Preview pane (spec lines 105-133) ───
 decl(".job-preview .jp-actions", "gap: 7px");

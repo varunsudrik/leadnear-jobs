@@ -1072,21 +1072,39 @@ img { max-width: 100%; }
    6px under the last card where the old pager sat 32px. */
 .pager {
   display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
   padding: 6px 6px 0; font-size: 12px; color: var(--text3); margin-top: 2rem;
 }
 .job-list-col > .pager { margin-top: 0; }
 .pager-range { font-family: var(--font-mono), monospace; }
-.pager-arrows { display: flex; gap: 6px; }
-.pager-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 0; background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.07);
-  border-radius: var(--radius-pill); width: 28px; height: 28px;
-  font-family: inherit; font-weight: 600; color: var(--text2);
-  cursor: pointer; transition: background .15s, color .15s;
+/* Numbered pager, modelled on naukri.com: pill Previous/Next, round page
+   numbers, the current page filled. */
+.pager-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pager-step {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 40px; padding: 0 18px;
+  border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--bg);
+  font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text2);
+  text-decoration: none; cursor: pointer; transition: border-color .15s, color .15s;
 }
-.pager-btn:hover { background: var(--text); color: #fff; }
-.pager-btn:disabled { color: #c3c3cb; cursor: default; }
-.pager-btn:disabled:hover { background: var(--bg); color: #c3c3cb; }
+.pager-step:hover { border-color: var(--text); color: var(--text); }
+.pager-step:disabled { color: var(--text4); cursor: default; }
+.pager-step:disabled:hover { border-color: var(--border); color: var(--text4); }
+.pager-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 36px; padding: 0 6px; border-radius: var(--radius-pill);
+  font-size: 14px; font-weight: 500; color: var(--text);
+  text-decoration: none; transition: background .15s, color .15s;
+}
+.pager-num:hover { background: var(--bg2); }
+.pager-num.current, .pager-num.current:hover { background: var(--text); color: #fff; }
+/* Phones: ten numbers plus labelled buttons do not fit 400px. Keep the pages
+   within two of the current one, and chevron-only Previous/Next. */
+@media (max-width: 640px) {
+  .pager-num.far { display: none; }
+  .pager-step { padding: 0 12px; }
+  .pager-step-label { display: none; }
+}
 
 /* ─── Remote hero card ───────────────────────── */
 .remote-hero-card {

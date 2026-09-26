@@ -1,14 +1,20 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams, usePathname } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { pageWindow } from "@/lib/pagination.mjs";
 
-// Direction C's pager (spec line 103): the range on the left in mono, two
-// round arrows on the right. The numbered page list the old pager rendered
-// does not appear anywhere in the design.
+// Range on the left ("21–40 of 234", mono), numbered pager on the right:
+// Previous · up to ten page numbers · Next, modelled on naukri.com so a
+// viewer can jump straight to a page. This replaces Direction C's two bare
+// arrows (spec line 103), which only ever moved one page at a time.
 //
-// Unlike the old one, this renders whenever there are results at all rather
-// than only past page 2 — the range reading "1-20 of 128,431" is the point of
-// the row, and on a single-page result set it still tells you the count.
+// Renders whenever there are results at all: on a single page the range still
+// tells you the count.
+
+// On phones only the pages within this distance of the current one show.
+const NEAR = 2;
+
 export default function Pagination({ total, pageSize = 20 }) {
   const sp = useSearchParams();
   const pathname = usePathname();
@@ -30,22 +36,40 @@ export default function Pagination({ total, pageSize = 20 }) {
     return `${pathname}?${next.toString()}`;
   };
 
-  // At an edge the arrow becomes a real disabled <button>, not a styled-dead
-  // <Link>: it must not be focusable and must not navigate.
-  const arrow = (targetPage, enabled, label, glyph) =>
+  // At an edge Previous/Next become real disabled <button>s, not styled-dead
+  // <Link>s: they must not be focusable and must not navigate.
+  const step = (targetPage, enabled, label, children) =>
     enabled ? (
-      <Link href={href(targetPage)} className="pager-btn" aria-label={label}>{glyph}</Link>
+      <Link href={href(targetPage)} className="pager-step" aria-label={label}>{children}</Link>
     ) : (
-      <button type="button" className="pager-btn" disabled aria-label={label}>{glyph}</button>
+      <button type="button" className="pager-step" disabled aria-label={label}>{children}</button>
     );
 
   return (
     <nav className="pager" aria-label="Pagination">
       {/* En-dash (U+2013) between the bounds, per the design. */}
       <span className="pager-range">{first}–{last} of {total.toLocaleString()}</span>
-      <div className="pager-arrows">
-        {arrow(page - 1, page > 1, "Previous page", "‹")}
-        {arrow(page + 1, page < totalPages, "Next page", "›")}
+      <div className="pager-controls">
+        {step(page - 1, page > 1, "Previous page", (
+          <>
+            <ChevronLeft size={16} aria-hidden="true" />
+            <span className="pager-step-label">Previous</span>
+          </>
+        ))}
+        {totalPages > 1 && pageWindow(page, totalPages).map((n) => {
+          const far = Math.abs(n - page) > NEAR ? " far" : "";
+          return n === page ? (
+            <span key={n} className={`pager-num current${far}`} aria-current="page">{n}</span>
+          ) : (
+            <Link key={n} href={href(n)} className={`pager-num${far}`} aria-label={`Page ${n}`}>{n}</Link>
+          );
+        })}
+        {step(page + 1, page < totalPages, "Next page", (
+          <>
+            <span className="pager-step-label">Next</span>
+            <ChevronRight size={16} aria-hidden="true" />
+          </>
+        ))}
       </div>
     </nav>
   );
