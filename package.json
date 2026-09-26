@@ -34,7 +34,8 @@
     "resume-store:test": "node scripts/test-resume-store.mjs",
     "resume-eval:test": "node scripts/test-resume-eval.mjs",
     "match:test": "node scripts/test-resume-match.mjs",
-    "skills-sections:test": "node scripts/test-skills-sections.mjs"
+    "skills-sections:test": "node scripts/test-skills-sections.mjs",
+    "skills-extract:test": "node scripts/test-skills-extract.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
