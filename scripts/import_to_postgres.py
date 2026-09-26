@@ -772,12 +772,50 @@ def _execmany(conn, sql, rows):
     cur.executemany(sql, rows)
     cur.close()
 
+# skill_stats sources — same SQL as lib/skills/skill-stats.mjs; keep in step.
+SKILL_STATS_FROM_JOB_SKILLS = """
+    INSERT INTO skill_stats (skill, job_count)
+    SELECT js.skill, COUNT(*)
+    FROM job_skills js
+    JOIN jobs j ON j.apply_url_md5 = js.job_md5
+    WHERE j.status = 'success'
+    GROUP BY js.skill
+"""
+
+SKILL_STATS_FROM_TAGS = """
+    INSERT INTO skill_stats (skill, job_count)
+    SELECT BTRIM(tag.skill), COUNT(DISTINCT j.db_id)
+    FROM jobs j
+    CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(j.tags, '[]'::jsonb)) AS tag(skill)
+    WHERE j.status='success' AND BTRIM(tag.skill) != ''
+    GROUP BY BTRIM(tag.skill)
+"""
+
+def rebuild_skill_stats(conn):
+    """Mirror of rebuildSkillStats() in lib/skills/skill-stats.mjs.
+
+    Builds skill_stats from job_skills when it holds skills for live jobs,
+    otherwise from jobs.tags as before, so a schema run can never empty it.
+    The table-existence check comes first: a database without job_skills
+    would otherwise raise and abort the whole stats rebuild.
+    """
+    present = _exec(conn, "SELECT to_regclass('public.job_skills') IS NOT NULL AS present").fetchone()["present"]
+    ready = present and _exec(conn, """
+        SELECT EXISTS (
+          SELECT 1 FROM job_skills js JOIN jobs j ON j.apply_url_md5 = js.job_md5
+          WHERE j.status = 'success'
+        ) AS ready
+    """).fetchone()["ready"]
+    _exec(conn, "DELETE FROM skill_stats")
+    _exec(conn, SKILL_STATS_FROM_JOB_SKILLS if ready else SKILL_STATS_FROM_TAGS)
+    print(f"  🔤  skill_stats rebuilt from {'job_skills' if ready else 'jobs.tags'}")
+
 def rebuild_stats(conn):
     print("  🔄  Rebuilding aggregate stats …")
+    # skill_stats is not truncated here: rebuild_skill_stats() replaces it.
     _exec(conn, """
         TRUNCATE TABLE companies, location_stats, site_metrics, title_stats,
-                       country_stats, remote_title_stats, salary_tier_stats,
-                       skill_stats
+                       country_stats, remote_title_stats, salary_tier_stats
     """)
     _exec(conn, """
         INSERT INTO companies (slug, name, job_count)
@@ -829,14 +867,7 @@ def rebuild_stats(conn):
         WHERE status='success' AND canonical_title != '' AND canonical_title != 'Other'
         GROUP BY canonical_title
     """)
-    _exec(conn, """
-        INSERT INTO skill_stats (skill, job_count)
-        SELECT BTRIM(tag.skill), COUNT(DISTINCT j.db_id)
-        FROM jobs j
-        CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(j.tags, '[]'::jsonb)) AS tag(skill)
-        WHERE j.status='success' AND BTRIM(tag.skill) != ''
-        GROUP BY BTRIM(tag.skill)
-    """)
+    rebuild_skill_stats(conn)
     _exec(conn, """
         INSERT INTO country_stats (country_slug, country_label, job_count)
         SELECT jl.country_slug, MAX(jl.country_label), COUNT(DISTINCT jl.job_md5)

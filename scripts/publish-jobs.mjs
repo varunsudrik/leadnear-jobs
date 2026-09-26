@@ -2,6 +2,7 @@ import path from "node:path";
 import pg from "pg";
 import { loadEnvFile } from "../lib/load-env.mjs";
 import { buildPgConfig } from "../lib/pg-config.mjs";
+import { rebuildSkillStats } from "../lib/skills/skill-stats.mjs";
 
 const root = process.cwd();
 loadEnvFile(path.join(root, ".env.local"));
@@ -48,10 +49,11 @@ async function refreshAggregates(client) {
         job_count BIGINT DEFAULT 0
       )
     `);
+    // skill_stats is not truncated here: rebuildSkillStats() replaces it below,
+    // choosing job_skills or jobs.tags as its source.
     await client.query(`
       TRUNCATE TABLE companies, location_stats, site_metrics, title_stats,
-                     country_stats, remote_title_stats, salary_tier_stats,
-                     skill_stats
+                     country_stats, remote_title_stats, salary_tier_stats
     `);
     await client.query(`
       INSERT INTO companies (slug, name, job_count)
@@ -94,14 +96,8 @@ async function refreshAggregates(client) {
       WHERE status='success' AND canonical_title NOT IN ('', 'Other')
       GROUP BY canonical_title
     `);
-    await client.query(`
-      INSERT INTO skill_stats (skill, job_count)
-      SELECT BTRIM(skill), COUNT(DISTINCT j.db_id)
-      FROM jobs j
-      CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(j.tags, '[]'::jsonb)) AS tag(skill)
-      WHERE j.status='success' AND BTRIM(skill) != ''
-      GROUP BY BTRIM(skill)
-    `);
+    const skillStats = await rebuildSkillStats(client);
+    console.log(`skill_stats: ${skillStats.rows} skills, built from ${skillStats.source}`);
     await client.query(`
       INSERT INTO country_stats (country_slug, country_label, job_count)
       SELECT jl.country_slug, MAX(jl.country_label), COUNT(DISTINCT jl.job_md5)
