@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { latestScan, scanQuota } from "@/lib/resume/store.mjs";
-import { rankJobs, bucketByCoverage, DEFAULT_LIMIT } from "@/lib/resume/match.mjs";
+import { rankJobs, bucketByCoverage, dedupePostings, DEFAULT_LIMIT } from "@/lib/resume/match.mjs";
 import MatchesList from "@/components/MatchesList";
 
 // Signed-out and no-scan-yet stay honest empty states (nothing to rank
@@ -86,7 +86,8 @@ export default async function MatchesPage() {
   // skills onto the skill vocabulary and returns that mapped list alongside the
   // rows; MatchesList's copy counts from it, not from scan.skills.
   const ranking = await rankJobs({ skills: scan.skills, limit: DEFAULT_LIMIT });
-  const buckets = bucketByCoverage(ranking.rows);
+  // One card per role: the same role posted per location merges (spec §8.1).
+  const buckets = bucketByCoverage(dedupePostings(ranking.rows));
   return (
     <MatchesList
       scan={scan}

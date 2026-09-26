@@ -1,5 +1,5 @@
 import JobCard from "@/components/JobCard";
-import { matchReason } from "@/lib/resume/match.mjs";
+import { cardReason } from "@/lib/resume/match.mjs";
 import { fmtDate } from "@/lib/format";
 
 const TIER_LABEL = { strong: "Strong", good: "Good", low: "Low" };
@@ -21,7 +21,7 @@ function TierGroup({ tier, rows }) {
         <JobCard
           key={row.db_id}
           job={{ ...row, fit: row.fit }}
-          reason={matchReason(row)}
+          reason={cardReason(row)}
         />
       ))}
     </div>

@@ -7,6 +7,9 @@ import {
   tierFor,
   bucketByCoverage,
   matchReason,
+  postingKey,
+  dedupePostings,
+  cardReason,
 } from "../lib/resume/match.mjs";
 
 // ─── sanitizeSkills ─────────────────────────────────────────────────────────
@@ -59,5 +62,37 @@ assert.equal(matchReason({}), "No listed requirements to compare");
 assert.equal(matchReason(undefined), "No listed requirements to compare");
 // A readout, never a percentage.
 assert.doesNotMatch(matchReason({ matched: ["Go"], missing: ["Rust"] }), /%/);
+
+// ─── postingKey / dedupePostings ────────────────────────────────────────────
+assert.equal(postingKey({ company_slug: "dialpad", title: "Sr. Software Engineer, Applied AI" }), "dialpad|sr software engineer applied ai");
+assert.equal(postingKey({ company_slug: "", company: "Acme Corp", title: "Data Engineer" }), "acme corp|data engineer");
+assert.equal(postingKey({ company_slug: "", company: "", title: "Data Engineer" }), null);
+assert.equal(postingKey({ company_slug: "beta", title: "सॉफ्टवेयर इंजीनियर" }), null);
+{
+  const rows = [
+    { db_id: 1, company_slug: "dialpad", title: "Sr. Software Engineer, Applied AI", locations: ["denver"] },
+    { db_id: 2, company_slug: "acme", title: "Data Engineer", locations: [] },
+    { db_id: 3, company_slug: "dialpad", title: "sr software engineer applied ai", locations: ["austin", "denver"] },
+    { db_id: 4, company_slug: "", company: "", title: "Data Engineer", locations: [] },
+    { db_id: 5, company_slug: "", company: "", title: "Data Engineer", locations: [] },
+    { db_id: 6, company_slug: "beta", title: "सॉफ्टवेयर इंजीनियर", locations: [] },
+    { db_id: 7, company_slug: "beta", title: "सॉफ्टवेयर इंजीनियर", locations: [] },
+  ];
+  const deduped = dedupePostings(rows);
+  // Punctuation and case differences merge; rows with no usable key never do.
+  assert.deepEqual(deduped.map((r) => r.db_id), [1, 2, 4, 5, 6, 7]);
+  // The first (highest-ranked) row represents the group; locations union in order.
+  assert.deepEqual(deduped[0].locations, ["denver", "austin"]);
+  assert.equal(deduped[0].postingCount, 2);
+  assert.equal(deduped[1].postingCount, 1);
+  // The input is not mutated.
+  assert.deepEqual(rows[0].locations, ["denver"]);
+  assert.equal("postingCount" in rows[0], false);
+}
+assert.deepEqual(dedupePostings(undefined), []);
+
+// ─── cardReason ─────────────────────────────────────────────────────────────
+assert.equal(cardReason({ matched: ["Go"], missing: ["Rust"], postingCount: 3 }), "Covers 1 of 2 requirements · missing Rust · 3 postings");
+assert.equal(cardReason({ matched: ["Go"], missing: ["Rust"], postingCount: 1 }), "Covers 1 of 2 requirements · missing Rust");
 
 console.log("resume-match ok");
