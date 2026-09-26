@@ -3,9 +3,13 @@ import { cardReason } from "@/lib/resume/match.mjs";
 import { fmtDate } from "@/lib/format";
 
 const TIER_LABEL = { strong: "Strong", good: "Good", low: "Low" };
+// Low is collapsed and the least actionable tier; rendering all of it made the
+// page ~590 KB of HTML on staging. The count still shows the full number.
+const LOW_SHOWN = 40;
 
 function TierGroup({ tier, rows }) {
   if (!rows.length) return null;
+  const shown = tier === "low" ? rows.slice(0, LOW_SHOWN) : rows;
   const head = (
     <div className="match-group-head">
       <span className="match-group-label">
@@ -17,13 +21,18 @@ function TierGroup({ tier, rows }) {
   );
   const list = (
     <div className="match-rows">
-      {rows.map((row) => (
+      {shown.map((row) => (
         <JobCard
           key={row.db_id}
           job={{ ...row, fit: row.fit }}
           reason={cardReason(row)}
         />
       ))}
+      {shown.length < rows.length && (
+        <p style={{ color: "var(--text3)", fontSize: ".85rem", margin: ".5rem 0 0" }}>
+          {rows.length - shown.length} more low matches not shown.
+        </p>
+      )}
     </div>
   );
 
