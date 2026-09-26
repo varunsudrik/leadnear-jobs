@@ -30,7 +30,8 @@ import {
 
 loadEnvFile(".env.local");
 
-const CONCURRENCY = 8;
+// ~50 jobs/minute at 8 in flight (measured); override with SKILL_VOCAB_CONCURRENCY.
+const CONCURRENCY = Number(process.env.SKILL_VOCAB_CONCURRENCY || 24);
 const TIMEOUT_MS = 30000;
 const MAX_FAILURE_RATE = 0.05;
 if (!process.env.OPENROUTER_API_KEY) {

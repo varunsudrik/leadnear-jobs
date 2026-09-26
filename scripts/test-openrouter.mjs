@@ -74,6 +74,12 @@ assert.equal(typeof sent.seed, "number");
 assert.equal(sent.reasoning.effort, "low");
 assert.equal(sent.provider.data_collection, "deny");
 
+// reasoningEffort "none" turns thinking off explicitly; the default above stays "low".
+sent = null;
+const m4b = await import(`../lib/ai/openrouter.mjs?v=${Date.now()}f`);
+await m4b.chat({ system: "s", user: "u", reasoningEffort: "none" });
+assert.deepEqual(sent.reasoning, { enabled: false });
+
 // Without a schema there must be no response_format key at all: an empty
 // object is sent as {} and rejected by the API.
 sent = null;
