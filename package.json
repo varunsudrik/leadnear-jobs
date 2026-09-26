@@ -32,7 +32,19 @@
     "resume-extract:test": "node scripts/test-resume-extract.mjs",
     "resume-score:test": "node scripts/test-resume-score.mjs",
     "resume-store:test": "node scripts/test-resume-store.mjs",
-    "resume-eval:test": "node scripts/test-resume-eval.mjs"
+    "resume-eval:test": "node scripts/test-resume-eval.mjs",
+    "match:test": "node scripts/test-resume-match.mjs",
+    "skills-sections:test": "node scripts/test-skills-sections.mjs",
+    "skills-extract:test": "node scripts/test-skills-extract.mjs",
+    "skills-vocab-build:test": "node scripts/test-skills-vocab-build.mjs",
+    "skills:vocab": "node scripts/build-skill-vocab.mjs",
+    "job-skills:migrate": "node scripts/add-job-skills-tables.mjs",
+    "job-skills:extract": "node scripts/extract-job-skills.mjs",
+    "job-skills:stats": "node scripts/rebuild-skill-stats.mjs",
+    "skill-stats:check": "node scripts/check-skill-stats.mjs",
+    "job-skills:eval": "node scripts/eval-job-skills.mjs",
+    "matches:smoke": "node scripts/smoke-matches.mjs",
+    "pagination:test": "node scripts/test-pagination.mjs"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",

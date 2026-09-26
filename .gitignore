@@ -49,3 +49,6 @@ next-env.d.ts
 
 # subagent-driven-development scratch (ledger, briefs, review packages)
 .superpowers/
+
+# skill vocabulary build and evaluation caches (scripts/build-skill-vocab.mjs)
+/.cache/

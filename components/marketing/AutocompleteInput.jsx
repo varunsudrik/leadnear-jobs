@@ -15,10 +15,16 @@ export default function AutocompleteInput({ value, onChange, kind, label, placeh
   const [highlighted, setHighlighted] = useState(-1);
   const requestRef = useRef(0);
   const selectedQueryRef = useRef("");
+  // Suggestions are for what the viewer is typing. A value that arrives
+  // pre-filled (the results page seeds this box from ?q=) must not fetch and
+  // open the menu on load: the box was never focused, so no blur ever closes it.
+  const editedRef = useRef(false);
+  const inputRef = useRef(null);
   const listId = useId();
   const query = value.trim();
 
   useEffect(() => {
+    if (!editedRef.current) return undefined;
     if (selectedQueryRef.current === query) {
       selectedQueryRef.current = "";
       setSuggestions([]);
@@ -41,7 +47,9 @@ export default function AutocompleteInput({ value, onChange, kind, label, placeh
         if (requestId !== requestRef.current) return;
         setSuggestions(Array.isArray(payload.suggestions) ? payload.suggestions : []);
         setHighlighted(-1);
-        setOpen(true);
+        // Only while the box still has focus: a response landing after the
+        // viewer clicked away or submitted must not reopen the menu.
+        setOpen(document.activeElement === inputRef.current);
       } catch {
         if (requestId === requestRef.current) {
           setSuggestions([]);
@@ -88,7 +96,11 @@ export default function AutocompleteInput({ value, onChange, kind, label, placeh
     <div className="marketing-field relative min-w-0 flex-1">
       <input
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        ref={inputRef}
+        onChange={(event) => {
+          editedRef.current = true;
+          onChange(event.target.value);
+        }}
         onFocus={() => query.length >= 2 && suggestions.length > 0 && selectedQueryRef.current !== query && setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={handleKeyDown}

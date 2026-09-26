@@ -23,6 +23,7 @@
   --radius:       18px;
   --radius-sm:    10px;
   --radius-pill:  999px;
+  --auth-nav-width: 186px; /* header auth slot: scan pill + gap + avatar (182px) + rounding headroom */
   --shadow:       0 1px 3px rgba(21,23,28,.06), 0 0 0 1px rgba(21,23,28,.05);
   /* The job card's own shadow is lighter than --shadow, which dresses the
      larger 18px-radius surfaces (the preview pane). Spec line 89: cards use
@@ -295,6 +296,34 @@ img { max-width: 100%; }
 .fit-badge.strong { background: var(--accent-tint); color: var(--accent-hover); }
 .fit-badge.good   { background: var(--bg2); color: var(--text3); }
 .fit-badge.low    { background: transparent; color: var(--text4); }
+
+/* The short factual "matches N of M skills" line /matches attaches under a
+   JobCard via its optional `reason` prop. Same left inset as .jc-foot so it
+   lines up under the title/company text rather than the avatar. */
+.job-card .jc-reason { font-size: 11.5px; color: var(--text4); margin-top: 6px; padding-left: 43px; }
+
+/* ─── Matches page (/matches) — Strong/Good/Low groups ───────────────
+   Direction C's "C Matches" screen (docs/superpowers/specs/direction-c.html)
+   groups ranked jobs under a dot + label + count header per tier. Reuses
+   .job-card/.fit-badge for the rows themselves; only the group chrome here
+   is new, since nothing existing already drew a labeled, colored group
+   header. */
+.match-group { margin-bottom: 22px; }
+.match-group-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 4px 12px; font-size: 13px; font-weight: 600;
+}
+.match-group-label { display: inline-flex; align-items: center; gap: 8px; }
+.match-group-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+.match-group-dot.strong { background: var(--accent); }
+.match-group-dot.good   { background: var(--text4); }
+.match-group-dot.low    { background: var(--border); }
+.match-group-count { font-family: var(--font-mono), monospace; color: var(--text4); font-weight: 400; }
+.match-rows { display: flex; flex-direction: column; gap: 10px; }
+/* Low-fit roles collapse behind a native <details> — no client JS needed for
+   a plain expand/collapse. */
+.match-group-low > summary { cursor: pointer; list-style: none; }
+.match-group-low > summary::-webkit-details-marker { display: none; }
 
 /* ─── Home shell + hero (Direction C — spec lines 61–75) ───────────
    The section is 1440px, not the 1160px .container used elsewhere: C Home
@@ -1042,23 +1071,54 @@ img { max-width: 100%; }
    that 8px. app/search/page.jsx and components/JobListLayout.jsx have no such
    column: there .pager is a plain sibling of .job-list, so without this it sat
    6px under the last card where the old pager sat 32px. */
+/* Centred and stacked: the pager on its own row, the "41–60 of 234" range
+   beneath it, so the row stays balanced however many page numbers show. In
+   the split view it centres within the list column. */
 .pager {
-  display: flex; justify-content: space-between; align-items: center;
+  container-type: inline-size;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 6px 6px 0; font-size: 12px; color: var(--text3); margin-top: 2rem;
 }
 .job-list-col > .pager { margin-top: 0; }
 .pager-range { font-family: var(--font-mono), monospace; }
-.pager-arrows { display: flex; gap: 6px; }
-.pager-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  border: 0; background: var(--bg); box-shadow: 0 0 0 1px rgba(21,23,28,.07);
-  border-radius: var(--radius-pill); width: 28px; height: 28px;
-  font-family: inherit; font-weight: 600; color: var(--text2);
-  cursor: pointer; transition: background .15s, color .15s;
+/* Numbered pager, modelled on naukri.com: pill Previous/Next, round page
+   numbers, the current page filled. */
+.pager-controls { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.pager-step {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 40px; padding: 0 18px;
+  border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--bg);
+  font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text2);
+  text-decoration: none; cursor: pointer; transition: border-color .15s, color .15s;
 }
-.pager-btn:hover { background: var(--text); color: #fff; }
-.pager-btn:disabled { color: #c3c3cb; cursor: default; }
-.pager-btn:disabled:hover { background: var(--bg); color: #c3c3cb; }
+.pager-step:hover { border-color: var(--text); color: var(--text); }
+.pager-step:disabled { color: var(--text4); cursor: default; }
+.pager-step:disabled:hover { border-color: var(--border); color: var(--text4); }
+.pager-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 36px; padding: 0 6px; border-radius: var(--radius-pill);
+  font-size: 14px; font-weight: 500; color: var(--text);
+  text-decoration: none; transition: background .15s, color .15s;
+}
+.pager-num:hover { background: var(--bg2); }
+.pager-num.current, .pager-num.current:hover { background: var(--text); color: #fff; }
+/* Ten numbers plus labelled buttons need ~640px. Where the pager has less —
+   a phone, or the split view's list column even on a wide screen — keep the
+   pages within two of the current one and chevron-only Previous/Next. A
+   container query, not a media query: the window width says nothing about
+   how wide the list column is. */
+@container (max-width: 660px) {
+  /* 2 × 42 + 5 × 34 + 6 × 4 = 278px: one row inside a 375px phone's 299px. */
+  .pager-controls { gap: 4px; }
+  .pager-num { min-width: 34px; }
+  .pager-num.far { display: none; }
+  .pager-step { padding: 0 12px; }
+  .pager-step-label { display: none; }
+}
+/* 320px phones: three numbers (2 × 42 + 3 × 34 + 4 × 4 = 202px). */
+@container (max-width: 290px) {
+  .pager-num.edge { display: none; }
+}
 
 /* ─── Remote hero card ───────────────────────── */
 .remote-hero-card {
@@ -1876,12 +1936,20 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   color: var(--accent);
   background: var(--accent-tint);
 }
+/* The auth slot is one fixed footprint in every state — loading, signed in
+   (scan pill 144px + 8px gap + 30px avatar = 182px, plus a little headroom
+   for sub-pixel text widths), signed out ("Log in",
+   right-aligned). It used to size to its content: a 74px placeholder while
+   the session and quota loaded, then 182px, so the flexible search field
+   beside it visibly shrank ~2s after every page load. */
 .site-header .nav-actions {
   display: none;
   flex: 0 0 auto;
   align-items: center;
+  justify-content: flex-end;
   gap: .5rem;
   margin: 0;
+  min-width: var(--auth-nav-width);
 }
 .site-header .nav-login {
   padding: .625rem 1.5rem;
@@ -1902,7 +1970,7 @@ a.jd-pill-link:hover { color: var(--accent-hover); }
   line-height: 1.25rem;
 }
 .site-header .nav-primary:hover { color: white; background: var(--accent); }
-.site-header .auth-nav-placeholder { width: 74px; height: 40px; }
+.site-header .auth-nav-placeholder { width: var(--auth-nav-width); height: 40px; }
 .scan-pips {
   display: inline-flex;
   align-items: center;
