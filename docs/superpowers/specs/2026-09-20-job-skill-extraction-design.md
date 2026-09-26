@@ -428,17 +428,10 @@ unchanged.
    publish.
 8. **IDF is smoothed, `ln(1 + N/df)`,** so a skill present in every job still weighs more than zero;
    `N` is `site_metrics.total_jobs` rather than a per-request `count(*)`.
-9. **Ordering is `match_rank = coverage × n/(n+1)`,** n = the job's skill count; tiers still use raw
-   coverage plus the thin-job guard. Without it, 3–4-skill jobs at 100% outranked an 11-skill job
-   at 86%.
-11. **The model's sampled answers decide which aliases may match prose.** An alias is matched in
-    running text only if, across the 2,000 sampled jobs, the model listed that text (or its skill) in at
-    least 35% of the texts the alias matches (support ≥ 5; below that it is kept). Vocabulary v1
-    without this put generic words at the top of extraction — "Knowledge" → Knowledge Management on 30%
-    of staging jobs (model agreed 6/686), "data" 7/476, "Software" 4/374 — against Python 152/160 and
-    Excel 164/185. v2 keeps 1,637 of 2,724 candidate aliases; 112 skills map resumes only. Staging
-    extraction went from 97,995 rows led by Knowledge Management/Data/Operations to 35,089 led by
-    Microsoft Office/Excel/Python/SQL/AWS; 7,884 of 10,000 jobs carry at least one skill.
+9. **Ordering is `match_rank = coverage × n/(n+2)`,** n = the job's skill count — as if every job
+   listed two more skills the resume lacks — while tiers still use raw coverage plus the thin-job
+   guard. The prototype's n/(n+1) was tuned on a 55-skill vocabulary; with vocabulary v2 jobs average
+   ~5 skills and 2-skill jobs at 100% still took the top slots.
 10. **Scraper gaps found, out of scope here:** 272 of 275 breezy descriptions on staging are page-template
     placeholders (`%BUTTON_APPLY_TO_POSITION%`); lever stores only the intro paragraphs and drops the
     `lists` field where requirements live (381 of 385 lever fallbacks never mention requirements).

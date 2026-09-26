@@ -2,22 +2,21 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { latestScan, scanQuota } from "@/lib/resume/store.mjs";
-import { rankJobs, bucketByOverlap, DEFAULT_LIMIT } from "@/lib/resume/match.mjs";
+import { rankJobs, bucketByCoverage, DEFAULT_LIMIT } from "@/lib/resume/match.mjs";
 import MatchesList from "@/components/MatchesList";
 
 // Signed-out and no-scan-yet stay honest empty states (nothing to rank
-// without a resume). Signed-in-with-a-scan now does the real thing: rank
-// live jobs against the scan's stored skill vector via lib/resume/match.mjs
-// (design doc section 4) and render them Strong/Good/Low. This reads the
-// session and the scan store the same way app/resume/page.jsx does, and
-// picks the copy/behaviour that matches what the viewer has actually done.
+// without a resume). Signed-in with a scan ranks live jobs against the
+// scan's skills using each job's extracted skill list (lib/resume/match.mjs,
+// docs/superpowers/specs/2026-09-20-job-skill-extraction-design.md §8) and
+// renders them Strong/Good/Low. This reads the session and the scan store the
+// same way app/resume/page.jsx does.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Your matches | LeadNear Jobs",
   description: "Open roles ranked against your resume.",
-  // Nothing here is per-user or rankable yet, so it stays out of the index —
-  // same reasoning as when this page showed demo content, different cause.
+  // Per-user content: never indexed.
   robots: "noindex",
 };
 
@@ -38,7 +37,7 @@ export default async function MatchesPage() {
           <p>No matches yet</p>
           <p style={{ color: "var(--text3)", marginTop: ".5rem", fontSize: ".9rem" }}>
             Matches come from your resume. Sign in to scan one and we&apos;ll
-            rank open roles here once ranking is live.
+            rank open roles against it.
           </p>
           <Link
             href={{ pathname: "/signin", query: { callbackUrl: "/resume" } }}
@@ -66,7 +65,7 @@ export default async function MatchesPage() {
           <p>No matches yet</p>
           <p style={{ color: "var(--text3)", marginTop: ".5rem", fontSize: ".9rem" }}>
             Matches come from your resume. Scan one and we&apos;ll rank open roles
-            here once ranking is live.
+            against it.
           </p>
           {/* .ru-browse and .ru-hint are ResumeUpload.jsx's own classes, reused
               verbatim here rather than adding new CSS for a second dark pill
@@ -83,13 +82,19 @@ export default async function MatchesPage() {
     );
   }
 
-  // Signed in, already scanned: the real ranking. rankJobs sanitizes the
-  // stored skill list itself and hands back that sanitized list alongside
-  // the rows — bucketByOverlap's skillCount and MatchesList's reason lines
-  // both have to divide by that same (post-sanitize) count, not scan.skills
-  // itself, or a blank/duplicate skill entry would silently disagree with
-  // what the ranking query actually matched against.
-  const { rows, skills } = await rankJobs({ skills: scan.skills, limit: DEFAULT_LIMIT });
-  const buckets = bucketByOverlap(rows, skills.length);
-  return <MatchesList scan={scan} buckets={buckets} skills={skills} quota={quota} />;
+  // Signed in, already scanned: the real ranking. rankJobs maps the stored
+  // skills onto the skill vocabulary and returns that mapped list alongside the
+  // rows; MatchesList's copy counts from it, not from scan.skills.
+  const ranking = await rankJobs({ skills: scan.skills, limit: DEFAULT_LIMIT });
+  const buckets = bucketByCoverage(ranking.rows);
+  return (
+    <MatchesList
+      scan={scan}
+      buckets={buckets}
+      skills={ranking.skills}
+      unknownSkills={ranking.unknown}
+      available={ranking.available}
+      quota={quota}
+    />
+  );
 }
