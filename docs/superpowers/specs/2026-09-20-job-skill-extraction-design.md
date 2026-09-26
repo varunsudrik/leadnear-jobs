@@ -326,6 +326,20 @@ does not land under 2s the task investigates rather than reporting success.
 
 ---
 
+### 8.1 Deduplication (added 2026-09-26)
+
+Measured on staging: test@test.com's top 300 ranked rows are 257 distinct roles. Every duplicate
+group comes from a single source, and most have *different* descriptions — the same role posted
+per location (Dialpad ×5 across Denver, Austin, …), not scraper double-counting.
+
+- **Key:** `company_slug` (falling back to lower-cased `company`) + the title lower-cased with every
+  run of non-alphanumerics collapsed to one space. A row with no company or an empty title key (a
+  title in a non-Latin script) is never merged.
+- **Merge:** the highest-ranked row represents the group; the others' locations are appended to its
+  `locations` (order kept, no repeats) and `postingCount` records the group size.
+- Applied after ranking, before tiering, on `/jobs/matches` only. The header count is distinct
+  roles. The reason line gains `· N postings` when N > 1.
+
 ## 9. Files
 
 **Create**
@@ -378,3 +392,43 @@ does not land under 2s the task investigates rather than reporting success.
 - The scraper-side `ld_job.get("skills")` change (separate, additive, later).
 - Seniority, years-of-experience, location or salary matching.
 - Re-scoring the resume side — `lib/resume/extract.mjs` is unchanged.
+
+## 12. Plan-time decisions (2026-09-26)
+
+Each was forced by staging data while the plan was validated; the spec text above is otherwise
+unchanged.
+
+1. **Sections are found on normalised text lines, not HTML tags.** Greenhouse stores HTML
+   entity-escaped (`&lt;h2&gt;`), lever stores plain text with `•` bullets. `<h1>`–`<h6>` and ALL-CAPS
+   lines are *hard* headings (they set the state); whole-line bold, colon-ended and keyword lines are
+   *soft* (they turn requirements on, or off only for a clearly different section). Measured 76.3% of
+   9,863 staging descriptions targeted; §1's 82% was a looser production regex. The `jsonld` block is
+   mostly smartrecruiters, not icims.
+2. **A requirements section with no vocabulary skills falls back to the whole description**, tier
+   `body` (e.g. oraclecloud postings whose "Qualifications" lists only degrees).
+3. **The vocabulary is `lib/skills/vocab-data.mjs`, an ES module, not `vocab.json`:** a JSON import
+   resolves differently under plain `node` and Next's bundler — the same reason `match.mjs` keeps its
+   own pool.
+4. **Aliases are the surface forms postings actually use** (a model-reported name is kept only if it
+   occurs literally in the text it read), matched by class: 1–2 characters exact-case with context
+   rules; distinctive ones (digit, `+#./`, 2+ capitals, 8+ characters) case-insensitive; the rest
+   exact-case. Ordering uses code units, so the generated file is identical on every machine.
+5. **The sample is drawn from staging** (`DATABASE_URL`, itself a production sample), keeping
+   `seed-from-prod.mjs` the only production reader, as AGENTS.md requires.
+6. **A second table, `job_skill_scans(job_md5, vocab_version, source, skill_count, scanned_at)`,** so a
+   job with zero skills is not re-read on every incremental run, and bumping the vocabulary version
+   re-scans everything.
+7. **`skill_stats` falls back to the original `jobs.tags` query** when `job_skills` is missing or holds
+   nothing for live jobs — never emptied, never left stale. The table-existence check runs first
+   because production has no `job_skills` table: an unguarded query would throw and roll back every
+   publish.
+8. **IDF is smoothed, `ln(1 + N/df)`,** so a skill present in every job still weighs more than zero;
+   `N` is `site_metrics.total_jobs` rather than a per-request `count(*)`.
+9. **Ordering is `match_rank = coverage × n/(n+1)`,** n = the job's skill count; tiers still use raw
+   coverage plus the thin-job guard. Without it, 3–4-skill jobs at 100% outranked an 11-skill job
+   at 86%.
+10. **Scraper gaps found, out of scope here:** 272 of 275 breezy descriptions on staging are page-template
+    placeholders (`%BUTTON_APPLY_TO_POSITION%`); lever stores only the intro paragraphs and drops the
+    `lists` field where requirements live (381 of 385 lever fallbacks never mention requirements).
+    Both need scraper fixes; extraction yields nothing for them.
+
