@@ -150,6 +150,13 @@ GROUP BY js.skill
 `skill_stats` stays in the existing `TRUNCATE` list, so the rebuild is atomic
 within the transaction that already exists.
 
+**There are two rebuild paths, and both must change.** `rebuild_stats()` in
+`scripts/import_to_postgres.py:833` runs the identical `tags` query, and
+`npm run db:schema` invokes it — AGENTS.md names that as the standard way to
+regenerate aggregates. Repointing `publish-jobs.mjs` alone would be undone by the
+next `db:schema` run. Both get the same new query and the same empty-table guard
+below.
+
 #### Deploy hazard: the repoint must not run before the backfill
 
 `publish-jobs.mjs` `TRUNCATE`s `skill_stats` before rebuilding it. If the
@@ -344,6 +351,7 @@ does not land under 2s the task investigates rather than reporting success.
 | `lib/resume/match.mjs` | join `job_skills`, IDF coverage, new `matchReason` |
 | `components/MatchesList.jsx` | render requirement-based reason lines |
 | `scripts/publish-jobs.mjs:98` | rebuild `skill_stats` from `job_skills` |
+| `scripts/import_to_postgres.py:833` | same repoint in `rebuild_stats()`, same guard |
 | `scripts/verify-db.mjs:18` | add `job_skills` to the expected-tables list |
 | `package.json` | register the three suites and two scripts |
 
