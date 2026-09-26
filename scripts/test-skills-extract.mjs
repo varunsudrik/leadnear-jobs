@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { aliasClass, buildIndex, canonicalizeSkills, getIndex, vocabVersion } from "../lib/skills/vocab.mjs";
+import { aliasClass, buildIndex, canonicalizeSkills, getIndex, matchableInProse, vocabVersion } from "../lib/skills/vocab.mjs";
 import { extractJobSkills, skillsForDescription, toSkillRows } from "../lib/skills/extract.mjs";
 
 const fixture = (md5) =>
@@ -35,7 +35,7 @@ assert.equal(aliasClass("Go"), "short");
 assert.equal(aliasClass("Spring"), "sensitive");
 assert.equal(aliasClass("Excel"), "sensitive");
 assert.equal(aliasClass("Kubernetes"), "insensitive"); // 8+ characters
-assert.equal(aliasClass("AWS"), "insensitive"); // two or more capitals
+assert.equal(aliasClass("AWS"), "sensitive"); // short acronyms keep their casing
 assert.equal(aliasClass("Node.js"), "insensitive"); // punctuation
 
 // ─── Short aliases: ordinary words far more often than skills ───────────────
@@ -67,6 +67,32 @@ assert.deepEqual(x("advanced excel reports"), ["Excel"]);
 assert.deepEqual(x("EXCEL"), []);
 assert.deepEqual(x(""), []);
 assert.deepEqual(x(null), []);
+
+// ─── Hazards found in the first generated vocabulary (v1) ───────────────────
+{
+  const hazards = buildIndex({
+    skills: [
+      { canonical: "SAFe", aliases: ["SAFe"] },
+      { canonical: "Chartered Accountant", aliases: ["CA"] },
+      { canonical: "MI", aliases: ["MI"] },
+      { canonical: "OnePlus", aliases: ["1+"] },
+      { canonical: "Artificial Intelligence", aliases: ["AI"] },
+    ],
+  });
+  const h = (text) => extractJobSkills(text, hazards);
+  assert.deepEqual(h("A safe working environment"), []);
+  assert.deepEqual(h("SAFe certification"), ["SAFe"]);
+  assert.deepEqual(h("Los Angeles, CA"), []); // California, not Chartered Accountant
+  assert.deepEqual(h("Detroit, MI 48201"), []); // Michigan
+  assert.deepEqual(h("1+ years of experience"), []); // not a phone brand
+  assert.deepEqual(h("Experience with AI tools"), []); // abbreviation of a longer name
+  // Excluded from prose, still usable for a resume's discrete skill list.
+  assert.deepEqual(canonicalizeSkills(["CA", "AI"], hazards).known, ["Chartered Accountant", "Artificial Intelligence"]);
+  assert.equal(matchableInProse("Go", "Go"), true);
+  assert.equal(matchableInProse("GO", "Go"), false);
+  assert.equal(matchableInProse("CO", "CO"), false);
+  assert.equal(matchableInProse("Kubernetes", "Kubernetes"), true);
+}
 
 // ─── Index ──────────────────────────────────────────────────────────────────
 // An alias claimed by an earlier skill is not reassigned by a later one.

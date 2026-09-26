@@ -410,9 +410,13 @@ unchanged.
    resolves differently under plain `node` and Next's bundler — the same reason `match.mjs` keeps its
    own pool.
 4. **Aliases are the surface forms postings actually use** (a model-reported name is kept only if it
-   occurs literally in the text it read), matched by class: 1–2 characters exact-case with context
-   rules; distinctive ones (digit, `+#./`, 2+ capitals, 8+ characters) case-insensitive; the rest
-   exact-case. Ordering uses code units, so the generated file is identical on every machine.
+   occurs literally in the text it read), matched by class: aliases with a digit or `+#./`, or 8+
+   characters, case-insensitive; other 3–7 letter aliases exact-case (so `SAFe` never matches "safe");
+   1–2 character aliases only when they are the skill's own name (Go, R, C, C#) and not a US,
+   Canadian or Indian state or time-zone code (the v1 vocabulary mapped `CA`, `CO`, `MI` and `1+` to
+   skills, which every "Denver, CO" and "1+ years" would have matched). Excluded aliases still map a
+   resume's discrete skill list. Ordering uses code units, so the generated file is identical on
+   every machine.
 5. **The sample is drawn from staging** (`DATABASE_URL`, itself a production sample), keeping
    `seed-from-prod.mjs` the only production reader, as AGENTS.md requires.
 6. **A second table, `job_skill_scans(job_md5, vocab_version, source, skill_count, scanned_at)`,** so a
