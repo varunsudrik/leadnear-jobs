@@ -63,6 +63,15 @@ try {
   assert.equal(missing.source, "tags");
   await client.query("ROLLBACK TO SAVEPOINT missing");
   console.log("  ok  missing job_skills table falls back to jobs.tags without error");
+
+  // 4. A backfill part-way through (about half the live jobs scanned) must not
+  //    publish counts from that fraction: it stays on jobs.tags.
+  await client.query("SAVEPOINT partial");
+  await client.query(`DELETE FROM job_skill_scans WHERE job_md5 < '8'`);
+  const partial = await rebuildSkillStats(client);
+  assert.equal(partial.source, "tags");
+  await client.query("ROLLBACK TO SAVEPOINT partial");
+  console.log("  ok  a part-finished backfill stays on jobs.tags");
 } finally {
   await client.query("ROLLBACK").catch(() => {});
   client.release();

@@ -791,21 +791,34 @@ SKILL_STATS_FROM_TAGS = """
     GROUP BY BTRIM(tag.skill)
 """
 
+# Share of live jobs with a job_skill_scans row before job_skills is trusted —
+# MIN_SCAN_COVERAGE in lib/skills/skill-stats.mjs; keep in step.
+MIN_SCAN_COVERAGE = 0.95
+
 def rebuild_skill_stats(conn):
     """Mirror of rebuildSkillStats() in lib/skills/skill-stats.mjs.
 
-    Builds skill_stats from job_skills when it holds skills for live jobs,
-    otherwise from jobs.tags as before, so a schema run can never empty it.
-    The table-existence check comes first: a database without job_skills
-    would otherwise raise and abort the whole stats rebuild.
+    Builds skill_stats from job_skills once extraction covers nearly every
+    live job, otherwise from jobs.tags as before, so a schema run can neither
+    empty it nor publish counts from a part-finished backfill. The
+    table-existence check comes first: a database without the job skill
+    tables would otherwise raise and abort the whole stats rebuild.
     """
-    present = _exec(conn, "SELECT to_regclass('public.job_skills') IS NOT NULL AS present").fetchone()["present"]
-    ready = present and _exec(conn, """
-        SELECT EXISTS (
-          SELECT 1 FROM job_skills js JOIN jobs j ON j.apply_url_md5 = js.job_md5
-          WHERE j.status = 'success'
-        ) AS ready
-    """).fetchone()["ready"]
+    present = _exec(conn, """
+        SELECT to_regclass('public.job_skills') IS NOT NULL
+           AND to_regclass('public.job_skill_scans') IS NOT NULL AS present
+    """).fetchone()["present"]
+    ready = False
+    if present:
+        row = _exec(conn, """
+            SELECT EXISTS (
+                     SELECT 1 FROM job_skills js JOIN jobs j ON j.apply_url_md5 = js.job_md5
+                      WHERE j.status = 'success') AS has_skills,
+                   (SELECT count(*) FROM jobs WHERE status = 'success') AS live,
+                   (SELECT count(*) FROM job_skill_scans s JOIN jobs j ON j.apply_url_md5 = s.job_md5
+                     WHERE j.status = 'success') AS scanned
+        """).fetchone()
+        ready = bool(row["has_skills"]) and row["live"] > 0 and row["scanned"] / row["live"] >= MIN_SCAN_COVERAGE
     _exec(conn, "DELETE FROM skill_stats")
     _exec(conn, SKILL_STATS_FROM_JOB_SKILLS if ready else SKILL_STATS_FROM_TAGS)
     print(f"  🔤  skill_stats rebuilt from {'job_skills' if ready else 'jobs.tags'}")

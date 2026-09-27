@@ -1,6 +1,6 @@
 import JobCard from "@/components/JobCard";
 import { cardReason } from "@/lib/resume/match.mjs";
-import { fmtDate } from "@/lib/format";
+import { fmtDate } from "@/lib/format.mjs";
 
 const TIER_LABEL = { strong: "Strong", good: "Good", low: "Low" };
 // Low is collapsed and the least actionable tier; rendering all of it made the
@@ -60,7 +60,7 @@ function TierGroup({ tier, rows }) {
 // Why there is nothing to show, in the order a viewer can act on it.
 function emptyReason({ available, skills, unknownSkills }) {
   if (!available) {
-    return "Job skills have not been extracted on this database yet. Your scan is saved; matches appear once they are.";
+    return "Matching isn't ready yet: job skills are still being prepared. Your scan is saved, and matches will appear here once they are.";
   }
   if (!skills.length) {
     const n = unknownSkills.length;
