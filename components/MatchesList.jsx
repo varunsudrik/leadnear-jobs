@@ -69,15 +69,18 @@ function emptyReason({ available, skills, unknownSkills }) {
   return `None of the live postings list any of the ${skills.length} skills we recognised on your resume.`;
 }
 
-export default function MatchesList({ scan, buckets, skills, unknownSkills = [], available = true, quota }) {
+// `capped`: more jobs share the resume's skills than the ranking fetched, so
+// the list is the top of them and the header says so, with the full count.
+export default function MatchesList({ scan, buckets, skills, unknownSkills = [], available = true, candidateTotal = 0, capped = false, quota }) {
   const total = buckets.strong.length + buckets.good.length + buckets.low.length;
   return (
     <div className="console-shell">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-          <h1 className="rs-title">{total} matches</h1>
+          <h1 className="rs-title">{capped ? `Top ${total} matches` : `${total} matches`}</h1>
           <span style={{ fontSize: 12.5, color: "var(--text3)" }}>
             from {scan.filename} · scanned {fmtDate(scan.createdAt)} · {skills.length} skills recognised
+            {capped ? ` · ${candidateTotal.toLocaleString()} jobs share your skills` : ""}
           </span>
         </div>
         {quota.remaining > 0 && (

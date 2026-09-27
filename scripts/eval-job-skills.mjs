@@ -221,7 +221,7 @@ async function calibrate() {
       console.log("ok: thresholds leave Strong a selective, non-empty slice");
     }
   } finally {
-    await globalThis._resumeMatchPgPool?.end();
+    await globalThis._postgresPool?.end();
   }
 }
 
