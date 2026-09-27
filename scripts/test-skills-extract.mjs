@@ -61,6 +61,10 @@ assert.deepEqual(x("JavaScript not Java"), ["JavaScript", "Java"]);
 assert.deepEqual(x("MySQL only"), ["MySQL"]); // no "SQL" inside "MySQL"
 assert.deepEqual(x("React Native apps"), ["React Native"]); // no second "React"
 assert.deepEqual(x("Spring Boot"), ["Spring"]);
+// A short alias right after a longer skill is still found: earlier matches are
+// blanked with a non-space placeholder, so "Go" does not look like a line start.
+assert.deepEqual(x("Kubernetes Go experience"), ["Kubernetes", "Go"]);
+assert.deepEqual(x("Java Go Rust"), ["Java", "Go"]);
 
 // ─── Case ───────────────────────────────────────────────────────────────────
 assert.deepEqual(x("kubernetes and k8s"), ["Kubernetes"]); // insensitive, deduped
@@ -156,7 +160,7 @@ assert.deepEqual(skillsForDescription(null, index), { skills: [], source: "body"
 {
   const rows = toSkillRows(
     [
-      { apply_url_md5: "a", description: fixture("0215b108f224ed5ac1c4121c410dd754") },
+      { apply_url_md5: "a", description: fixture("0215b108f224ed5ac1c4121c410dd754"), description_md5: "md5-a" },
       { apply_url_md5: "b", description: "<p>nothing here</p>" },
     ],
     index
@@ -164,7 +168,12 @@ assert.deepEqual(skillsForDescription(null, index), { skills: [], source: "body"
   assert.deepEqual(rows.skillRows, { jobMd5: ["a"], skill: ["HubSpot"], source: ["section"] });
   // Every job gets a scan row, including one with no skills, so an incremental
   // run does not keep re-reading it.
-  assert.deepEqual(rows.scanRows, { jobMd5: ["a", "b"], source: ["section", "body"], skillCount: [1, 0] });
+  assert.deepEqual(rows.scanRows, {
+    jobMd5: ["a", "b"],
+    source: ["section", "body"],
+    skillCount: [1, 0],
+    descriptionMd5: ["md5-a", null], // carried through from the batch query
+  });
 }
 
 // ─── The generated vocabulary loads ─────────────────────────────────────────
