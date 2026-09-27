@@ -5,7 +5,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { getJobCached, getRelatedJobs } from "@/lib/jobs";
-import { fmtSalary, fmtDate, initials } from "@/lib/format";
+import { fmtSalary, fmtDate, initials } from "@/lib/format.mjs";
 import { decodeEntities, sanitiseHtml as sanitise } from "@/lib/sanitize";
 import { buildJobPostingJsonLd } from "@/lib/job-jsonld";
 import { formatAtsLabel } from "@/lib/ats";

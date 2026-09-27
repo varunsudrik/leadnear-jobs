@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { fmtSalary, fmtDate, initials } from "@/lib/format";
+import { fmtSalary, fmtDate, initials } from "@/lib/format.mjs";
 
 // The only consumer of this label set, now that the old fit-layer module is
 // gone — moved here rather than deleted outright because job.fit still uses these

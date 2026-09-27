@@ -31,7 +31,7 @@ const mode = process.argv[2] || "publish";
 // instead -- as this script used to -- flushes every job page on the site.
 const AGGREGATE_TAG = "jobs-aggregates";
 
-// Mirrors titleSlug() in lib/format.js, which is what /titles links with and
+// Mirrors titleSlug() in lib/format.mjs, which is what /titles links with and
 // what the /title/[slug] route expects.
 function titleSlug(canonicalTitle = "") {
   return `${canonicalTitle

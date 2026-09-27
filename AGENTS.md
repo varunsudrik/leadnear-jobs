@@ -44,7 +44,7 @@ Prisma handles this transparently; **hand-written SQL must double-quote them**.
 **gotcha — connection ceiling.** The Aiven plan allows **20 connections total**
 across the app, Prisma, every script and any open `psql`. `DB_POOL_MAX`
 defaults to 5 for this reason. Do not raise it casually, and do not create a
-`PrismaClient` or `Pool` outside the singletons in `lib/prisma.js` and
+`PrismaClient` or `Pool` outside the singletons in `lib/prisma.mjs` and
 `lib/db.js` — a hot-reload leak exhausts the budget within a few edits.
 
 ### `PROD_DATABASE_URL` — live production. READ ONLY. Never write.
