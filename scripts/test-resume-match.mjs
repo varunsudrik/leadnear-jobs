@@ -10,7 +10,9 @@ import {
   postingKey,
   dedupePostings,
   cardReason,
+  rankJobs,
 } from "../lib/resume/match.mjs";
+import { buildIndex } from "../lib/skills/vocab.mjs";
 
 // ─── sanitizeSkills ─────────────────────────────────────────────────────────
 assert.deepEqual(sanitizeSkills(["React", " Node.js ", "", "  ", "React", "node.js"]), ["React", "Node.js"]);
@@ -94,5 +96,40 @@ assert.deepEqual(dedupePostings(undefined), []);
 // ─── cardReason ─────────────────────────────────────────────────────────────
 assert.equal(cardReason({ matched: ["Go"], missing: ["Rust"], postingCount: 3 }), "Covers 1 of 2 requirements · missing Rust · 3 postings");
 assert.equal(cardReason({ matched: ["Go"], missing: ["Rust"], postingCount: 1 }), "Covers 1 of 2 requirements · missing Rust");
+
+// ─── rankJobs availability (no database: a stand-in pool) ───────────────────
+// rankJobs takes the app's shared pool from globalThis (lib/pg-pool.mjs), so a
+// stand-in there answers its queries. Three states the page must tell apart.
+{
+  const index = buildIndex({ skills: [{ canonical: "Python", aliases: ["Python"] }] });
+  const standIn = (answer) => {
+    globalThis._postgresPool = { query: async (sql) => answer(sql) };
+  };
+  // Tables exist, extraction ran, nothing shares the skills: available, empty.
+  standIn((sql) => ({ rows: sql.includes("AS scanned") ? [{ scanned: true }] : [] }));
+  let result = await rankJobs({ skills: ["Python", "Cobol"], index });
+  assert.deepEqual(result, { rows: [], skills: ["Python"], unknown: ["Cobol"], available: true, candidateTotal: 0 });
+  // Tables migrated but never extracted (mid-rollout): unavailable, not "no matches".
+  standIn((sql) => ({ rows: sql.includes("AS scanned") ? [{ scanned: false }] : [] }));
+  result = await rankJobs({ skills: ["Python"], index });
+  assert.equal(result.available, false);
+  // Tables not migrated at all: Postgres undefined_table (42P01) -> unavailable.
+  standIn(() => { throw Object.assign(new Error('relation "job_skills" does not exist'), { code: "42P01" }); });
+  result = await rankJobs({ skills: ["Python"], index });
+  assert.equal(result.available, false);
+  // Any other database error still surfaces.
+  standIn(() => { throw Object.assign(new Error("connection reset"), { code: "08006" }); });
+  await assert.rejects(rankJobs({ skills: ["Python"], index }), /connection reset/);
+  // Rows come back with the candidate count computed before the LIMIT.
+  standIn(() => ({ rows: [{ db_id: 1, candidateTotal: 1291 }, { db_id: 2, candidateTotal: 1291 }] }));
+  result = await rankJobs({ skills: ["Python"], index });
+  assert.equal(result.candidateTotal, 1291);
+  assert.equal(result.rows.length, 2);
+  // No recognised skills never touches the database.
+  standIn(() => { throw new Error("must not query"); });
+  result = await rankJobs({ skills: ["Cobol"], index });
+  assert.deepEqual(result, { rows: [], skills: [], unknown: ["Cobol"], available: true, candidateTotal: 0 });
+  delete globalThis._postgresPool;
+}
 
 console.log("resume-match ok");

@@ -76,6 +76,21 @@ assert.deepEqual(
   requirementsSection("Requirements:\nSQL and Python experience\nDocker"),
   { text: "SQL and Python experience\nDocker", source: "section" }
 );
+// Inside a company blurb, "Experience: …" is prose, not a heading; only a
+// strong inline heading ("Requirements: …") opens requirements there.
+assert.deepEqual(
+  requirementsSection("About us\nExperience: 20 years serving AWS customers\nRequirements:\n• Python"),
+  { text: "• Python", source: "section" }
+);
+assert.deepEqual(
+  requirementsSection("Experience: 5+ years of Python\nAbout us\nA bank."),
+  { text: "5+ years of Python", source: "section" }
+);
+// An empty Qualifications heading elsewhere does not make the tier "jsonld".
+assert.deepEqual(
+  requirementsSection("<h3>Requirements</h3><p>SQL</p><h2>Qualifications</h2>"),
+  { text: "SQL", source: "section" }
+);
 assert.deepEqual(requirementsSection("<p>We are hiring.</p>"), { text: "We are hiring.", source: "body" });
 assert.deepEqual(requirementsSection(null), { text: "", source: "body" });
 
@@ -106,11 +121,13 @@ assert.deepEqual(
   ]);
 }
 // smartrecruiters, French: ALL-CAPS bold headings reset state, so "QUI NOUS
-// SOMMES" (about us) and "CE QUE NOUS OFFRONS" (benefits) stay out.
+// SOMMES" (about us) and "CE QUE NOUS OFFRONS" (benefits) stay out. Its
+// <h2>Qualifications</h2> is empty; the lines come from "QUI VOUS ÊTES", so the
+// tier is "section", not "jsonld".
 {
   const d = fixture("01d39d5344915c6cd908ddf16e4cf025");
   const text = requirementsSection(d).text;
-  assert.equal(requirementsSection(d).source, "jsonld");
+  assert.equal(requirementsSection(d).source, "section");
   assert.equal(lines(d).length, 11);
   assert.equal(lines(d)[0], "Nous recherchons des collaborateurs ayant...");
   assert.doesNotMatch(text, /Le groupe H&M/);

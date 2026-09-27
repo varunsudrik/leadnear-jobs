@@ -14,7 +14,7 @@ import { loadEnvFile } from "../lib/load-env.mjs";
 import { buildPgConfig } from "../lib/pg-config.mjs";
 import { MODEL } from "../lib/resume/model.mjs";
 import { requirementsSection } from "../lib/skills/sections.mjs";
-import { vocabVersion } from "../lib/skills/vocab.mjs";
+import CURRENT_VOCAB from "../lib/skills/vocab-data.mjs";
 import {
   LIVE_JOBS_IN_SAMPLE_ORDER_SQL,
   MIN_ALIAS_PRECISION,
@@ -43,7 +43,6 @@ if (!process.env.OPENROUTER_API_KEY) {
   process.exit(1);
 }
 
-const version = vocabVersion() + 1;
 const cacheDir = ".cache/skill-vocab";
 // Keyed on what determines the answers, not the vocabulary version, so a
 // rebuild that only changes aggregation reuses them for free.
@@ -120,6 +119,15 @@ const samples = answered.map((id) => ({
   names: new Set(cached.get(id).map((s) => canonicalKey(s.name))),
 }));
 const skills = selectProseAliases(aggregateVocab(results), samples);
+
+// An identical vocabulary keeps its version and is not rewritten: a new version
+// makes the next job-skills:extract re-scan every live job (690k in
+// production) for no change.
+if (CURRENT_VOCAB.sampleSalt === SAMPLE_SALT && JSON.stringify(CURRENT_VOCAB.skills) === JSON.stringify(skills)) {
+  console.log(`\nvocabulary unchanged — keeping v${CURRENT_VOCAB.version}; nothing written.`);
+  process.exit(0);
+}
+const version = Number(CURRENT_VOCAB.version ?? 0) + 1;
 const vocab = {
   version,
   builtAt: new Date().toISOString().slice(0, 10),

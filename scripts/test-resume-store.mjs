@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 
 // A minimal in-memory stand-in for Prisma, injected through the same global
-// singleton lib/prisma.js already uses to survive Next's hot-reload (see its
+// singleton lib/prisma.mjs already uses to survive Next's hot-reload (see its
 // own comment there). This is what lets the redact-vs-delete distinction —
 // the whole point of this suite's newest test — be exercised for real, with
 // actual row state moving through saveScan/redactScans/scanQuota/latestScan,
 // instead of only asserting which Prisma method name gets called. It must be
-// installed BEFORE lib/resume/store.mjs is first imported, since lib/prisma.js
+// installed BEFORE lib/resume/store.mjs is first imported, since lib/prisma.mjs
 // only builds a real PrismaClient when this global is absent.
 function makeFakePrisma() {
   let rows = [];

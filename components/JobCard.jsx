@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { fmtSalary, fmtDate, initials } from "@/lib/format";
+import { fmtSalary, fmtDate, initials } from "@/lib/format.mjs";
 
 // The only consumer of this label set, now that the old fit-layer module is
 // gone — moved here rather than deleted outright because job.fit still uses these
@@ -55,9 +55,10 @@ export default function JobCard({ job, selected = false, onSelect = null, reason
         <span className="jc-salary">{salary ?? "—"}</span>
         {fit ? <span className={`fit-badge ${fit}`}>{FIT_LABEL[fit]}</span> : null}
       </div>
-      {/* /matches (lib/resume/match.mjs's matchReason) is the only caller
-          today: a short factual line — skill overlap count, one named
-          missing skill — never AI prose and never a fabricated percentage. */}
+      {/* /matches is the only caller today (lib/resume/match.mjs cardReason):
+          a factual readout of the job's own requirements — "Covers 4 of 5
+          requirements · missing X, Y · 3 postings" — never AI prose and never
+          a percentage. */}
       {reason ? <div className="jc-reason">{reason}</div> : null}
     </Link>
   );

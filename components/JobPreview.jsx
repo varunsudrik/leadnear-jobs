@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatAtsLabel } from "@/lib/ats";
-import { fmtSalary, fmtDate } from "@/lib/format";
+import { fmtSalary, fmtDate } from "@/lib/format.mjs";
 import { decodeEntities, sanitiseHtml } from "@/lib/sanitize";
 import { getPreviewBreakpointQuery } from "@/lib/previewBreakpoint";
 

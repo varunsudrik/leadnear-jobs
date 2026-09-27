@@ -1,9 +1,22 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { latestScan, scanQuota } from "@/lib/resume/store.mjs";
 import { rankJobs, bucketByCoverage, dedupePostings, DEFAULT_LIMIT } from "@/lib/resume/match.mjs";
+import { vocabVersion } from "@/lib/skills/vocab.mjs";
 import MatchesList from "@/components/MatchesList";
+
+// A scan's skills never change, so its ranking is cached rather than re-run on
+// every visit: at production scale one common skill makes tens of thousands of
+// candidate jobs to aggregate. Keyed by scan and vocabulary version (the
+// function's arguments are part of the key); ten minutes so new and expired
+// jobs still show up. Dates come back as ISO strings, which fmtDate accepts.
+const rankScan = unstable_cache(
+  async (scanId, skills) => rankJobs({ skills, limit: DEFAULT_LIMIT }),
+  ["matches-rank", `vocab-${vocabVersion()}`],
+  { revalidate: 600 }
+);
 
 // Signed-out and no-scan-yet stay honest empty states (nothing to rank
 // without a resume). Signed-in with a scan ranks live jobs against the
@@ -85,7 +98,7 @@ export default async function MatchesPage() {
   // Signed in, already scanned: the real ranking. rankJobs maps the stored
   // skills onto the skill vocabulary and returns that mapped list alongside the
   // rows; MatchesList's copy counts from it, not from scan.skills.
-  const ranking = await rankJobs({ skills: scan.skills, limit: DEFAULT_LIMIT });
+  const ranking = await rankScan(scan.id, scan.skills);
   // One card per role: the same role posted per location merges (spec §8.1).
   const buckets = bucketByCoverage(dedupePostings(ranking.rows));
   return (
@@ -95,6 +108,8 @@ export default async function MatchesPage() {
       skills={ranking.skills}
       unknownSkills={ranking.unknown}
       available={ranking.available}
+      candidateTotal={ranking.candidateTotal}
+      capped={ranking.candidateTotal > ranking.rows.length}
       quota={quota}
     />
   );

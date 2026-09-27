@@ -1,6 +1,7 @@
 // Batch skill extraction into job_skills (spec §7).
 //
 //   npm run job-skills:extract            live jobs not yet scanned with this vocabulary version
+//                                         and this exact description
 //   npm run job-skills:extract -- --all   every live job
 //
 // Deterministic and free: the vocabulary (lib/skills/vocab-data.mjs) matched
@@ -36,7 +37,7 @@ try {
       `SELECT (SELECT count(*) FROM job_skills)::int AS skills, (SELECT count(*) FROM job_skill_scans)::int AS scans`
     )).rows[0];
   const before = await counts();
-  console.log(`vocabulary v${version}: ${index.canonicalByAlias.size} aliases; ${all ? "every live job" : "unscanned live jobs only"}`);
+  console.log(`vocabulary v${version}: ${index.canonicalByAlias.size} aliases; ${all ? "every live job" : "live jobs unscanned at this version or with a changed description"}`);
   console.log(`before: job_skills ${before.skills} rows, job_skill_scans ${before.scans} rows`);
 
   const started = Date.now();
@@ -44,11 +45,13 @@ try {
   let processed = 0;
   for (;;) {
     const { rows: jobs } = await client.query(
-      `SELECT j.apply_url_md5, j.description FROM jobs j
+      `SELECT j.apply_url_md5, j.description, md5(COALESCE(j.description, '')) AS description_md5
+         FROM jobs j
         WHERE j.status = 'success' AND j.apply_url_md5 > $1
           AND ($2::boolean OR NOT EXISTS (
             SELECT 1 FROM job_skill_scans s
-             WHERE s.job_md5 = j.apply_url_md5 AND s.vocab_version = $3))
+             WHERE s.job_md5 = j.apply_url_md5 AND s.vocab_version = $3
+               AND s.description_md5 = md5(COALESCE(j.description, ''))))
         ORDER BY j.apply_url_md5
         LIMIT $4`,
       [after, all, version, BATCH]
@@ -64,12 +67,13 @@ try {
         [skillRows.jobMd5, skillRows.skill, skillRows.source]
       );
       await client.query(
-        `INSERT INTO job_skill_scans (job_md5, vocab_version, source, skill_count)
-         SELECT m, $2, s, c FROM unnest($1::text[], $3::text[], $4::int[]) AS t(m, s, c)
+        `INSERT INTO job_skill_scans (job_md5, vocab_version, source, skill_count, description_md5)
+         SELECT m, $2, s, c, d FROM unnest($1::text[], $3::text[], $4::int[], $5::text[]) AS t(m, s, c, d)
          ON CONFLICT (job_md5) DO UPDATE
            SET vocab_version = EXCLUDED.vocab_version, source = EXCLUDED.source,
-               skill_count = EXCLUDED.skill_count, scanned_at = NOW()`,
-        [scanRows.jobMd5, version, scanRows.source, scanRows.skillCount]
+               skill_count = EXCLUDED.skill_count, description_md5 = EXCLUDED.description_md5,
+               scanned_at = NOW()`,
+        [scanRows.jobMd5, version, scanRows.source, scanRows.skillCount, scanRows.descriptionMd5]
       );
       await client.query("COMMIT");
     } catch (error) {

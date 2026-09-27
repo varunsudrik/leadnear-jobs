@@ -6,7 +6,8 @@
 //                   tier it came from.
 // job_skill_scans — one row per job scanned, with the vocabulary version, so
 //                   jobs with zero skills are not re-read on every
-//                   incremental run and a new vocabulary re-scans everything.
+//                   incremental run, a new vocabulary re-scans everything,
+//                   and a changed description re-scans that job.
 //
 // Keyed by job_md5 = jobs.apply_url_md5, the same convention job_locations
 // uses, with no declared foreign key (also like job_locations). Idempotent,
@@ -35,6 +36,10 @@ const STATEMENTS = [
      skill_count   INTEGER     NOT NULL,
      scanned_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
    )`,
+  // md5 of the description the scan read, so a job whose description changes
+  // (a re-scrape rewrites its requirements) is scanned again. Added after the
+  // table first shipped, hence ADD COLUMN IF NOT EXISTS.
+  `ALTER TABLE job_skill_scans ADD COLUMN IF NOT EXISTS description_md5 VARCHAR(32)`,
 ];
 
 const pool = new pg.Pool(buildPgConfig({ max: 1 }));

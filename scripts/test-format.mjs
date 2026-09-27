@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { fmtSalary, initials } from "../lib/format.js";
+import { fmtSalary, initials } from "../lib/format.mjs";
 
 // Absent salary stays null — the em-dash is applied by the card, not here,
 // because other callers depend on null to omit the field entirely.

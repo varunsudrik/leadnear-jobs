@@ -25,7 +25,7 @@
 import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { initials } from "@/lib/format";
+import { initials } from "@/lib/format.mjs";
 import ScanPips from "@/components/ScanPips";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";

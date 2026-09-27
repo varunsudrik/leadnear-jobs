@@ -8,7 +8,7 @@
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/prisma.mjs";
 
 // Cost 10 matches what leadnear-main hashes with, so hashes stay comparable
 // between the two databases.
